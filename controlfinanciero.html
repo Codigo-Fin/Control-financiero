@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Financiero & Lista de Mercado por Categoría y Día</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Font 'Outfit' -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SheetJS for Excel export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- html2pdf.js for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Chart.js for Pie/Donut Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #090d16 0%, #111827 40%, #06201b 100%);
+            min-height: 100vh;
+        }
+
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-6px) rotate(0.5deg); }
+        }
+
+        @keyframes floatDelay {
+            0%, 100% { transform: translateY(-4px) rotate(-0.5deg); }
+            50% { transform: translateY(4px) rotate(0.5deg); }
+        }
+
+        .floating-card-1 {
+            animation: floatSlow 6s ease-in-out infinite;
+        }
+
+        .floating-card-2 {
+            animation: floatDelay 7s ease-in-out infinite;
+        }
+
+        .glass-panel {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(52, 211, 153, 0.35);
+            box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.4);
+        }
+
+        .custom-checkbox {
+            appearance: none;
+            width: 1.1rem;
+            height: 1.1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 0.375rem;
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .custom-checkbox:checked {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        .custom-checkbox:checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen flex flex-col justify-between">
+
+    <div class="fixed top-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
+    <div class="fixed bottom-10 right-10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="max-w-6xl mx-auto w-full z-10 space-y-5" id="printable-area">
+
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl text-emerald-400">
+                        <i class="fa-solid fa-wallet text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
+                            Control Financiero & Mercado
+                        </h1>
+                        <p class="text-slate-400 text-xs">Agrupación por Categoría, Combustible (Nafta/GNC) y Control Día a Día</p>
+                    </div>
+                </div>
+
+                <!-- Sleek Month Navigation Bar -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-1 gap-1 shadow-inner">
+                        <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-emerald-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        
+                        <div class="flex items-center gap-1.5 px-2">
+                            <i class="fa-regular fa-calendar-days text-emerald-400 text-xs"></i>
+                            <select id="header-month-select" class="bg-transparent text-emerald-300 font-bold text-xs sm:text-sm focus:outline-none cursor-pointer py-1">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+
+                        <button id="next-month-btn" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-emerald-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="toggleMonthDrawer()" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-emerald-400"></i>
+                        <span id="drawer-toggle-text">Ver Calendario Anual</span>
+                        <i id="drawer-arrow" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                    </button>
+
+                    <button onclick="openSalaryModal()" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Ajustar Sueldo</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="month-drawer" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Resumen por Meses del Año</span>
+                    <span class="text-[11px] text-slate-500">Haz clic en un mes para seleccionarlo</span>
+                </div>
+                <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                    <!-- Loaded dynamically via JS -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- Sueldo / Ingresos -->
+                <div class="bg-slate-900/50 p-4 rounded-2xl border border-emerald-500/20 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Ingresos Totales</span>
+                        <div class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-arrow-down-left"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="stat-salary" class="text-2xl font-bold text-emerald-400">$0</span>
+                        <span class="text-[10px] text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded-full">Sueldo + Extra</span>
+                    </div>
+                </div>
+
+                <!-- Total Egresos -->
+                <div class="bg-slate-900/50 p-4 rounded-2xl border border-rose-500/20 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Egresos del Mes</span>
+                        <div class="w-7 h-7 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-arrow-up-right"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="stat-expenses" class="text-2xl font-bold text-rose-400">$0</span>
+                        <span class="text-[10px] text-rose-400/80 bg-rose-500/10 px-2 py-0.5 rounded-full">Gastos</span>
+                    </div>
+                </div>
+
+                <!-- Patrimonio Neto -->
+                <div class="bg-slate-900/50 p-4 rounded-2xl border border-teal-500/30 flex flex-col justify-between">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[11px] font-medium text-slate-300 uppercase tracking-wider">Patrimonio Neto</span>
+                        <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-baseline justify-between">
+                        <span id="stat-networth" class="text-2xl font-bold text-teal-300">$0</span>
+                        <span id="networth-badge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold">Disponible</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
+                <span class="text-xs text-slate-400 font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-share-nodes text-emerald-400"></i>
+                    <span>Exportar y Compartir Resumen Mensual:</span>
+                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="downloadPDF()" title="Descargar PDF" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-pdf text-rose-400"></i>
+                        <span>Descargar PDF</span>
+                    </button>
+                    <button onclick="downloadExcel()" title="Descargar Excel" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-excel text-emerald-400"></i>
+                        <span>Descargar Excel</span>
+                    </button>
+                    <button onclick="shareWhatsApp()" title="Compartir vía WhatsApp" class="bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-brands fa-whatsapp text-emerald-400 text-sm"></i>
+                        <span>Compartir vía WhatsApp</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <section class="space-y-3">
+            <form id="add-transaction-form" class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row flex-wrap gap-2.5 items-end shadow-lg">
+                <div class="flex-1 min-w-[140px]">
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Concepto / Producto</label>
+                    <input type="text" id="input-name" placeholder="Ej. Nafta YPF, Cebolla, Cena..." required
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-500">
+                </div>
+
+                <div class="w-full sm:w-32">
+                    <label class="block text-[10px] font-medium text-emerald-400 mb-1">📅 Día / Fecha exacto</label>
+                    <input type="date" id="input-date" required
+                        class="w-full bg-slate-900/80 border border-emerald-500/40 rounded-xl px-2 py-1.5 text-xs focus:outline-none focus:border-emerald-400 text-white cursor-pointer">
+                </div>
+
+                <div class="w-full sm:w-20">
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Cantidad</label>
+                    <input type="number" step="any" min="0.01" id="input-qty" placeholder="1" required
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-500">
+                </div>
+
+                <div class="w-full sm:w-20">
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Unidad</label>
+                    <input type="text" id="input-unit" placeholder="kilos, lts"
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-500">
+                </div>
+
+                <div class="w-full sm:w-28">
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Precio Unit. ($)</label>
+                    <input type="number" step="0.01" min="0" id="input-price" placeholder="1000" required
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 text-white placeholder-slate-500">
+                </div>
+
+                <div class="w-full sm:w-32">
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Categoría</label>
+                    <select id="input-category" 
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-500 text-white cursor-pointer">
+                        <option value="Combustible">⛽ Combustible (Nafta/GNC)</option>
+                        <option value="Almacén">🌾 Almacén</option>
+                        <option value="Verdulería">🥬 Verdulería</option>
+                        <option value="Carnicería">🍗 Carnicería</option>
+                        <option value="Cena">🍽️ Cena</option>
+                        <option value="Servicios">💡 Servicios</option>
+                        <option value="Otros">✍️ Otros (Escribir...)</option>
+                    </select>
+                </div>
+
+                <!-- Subtype selector for Combustible (Nafta vs GNC) -->
+                <div id="fuel-subtype-wrapper" class="w-full sm:w-28">
+                    <label class="block text-[10px] font-medium text-amber-400 mb-1">Tipo Combustible</label>
+                    <select id="input-fuel-type" 
+                        class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-2 py-1.5 text-xs focus:outline-none focus:border-amber-400 text-amber-300 font-semibold cursor-pointer">
+                        <option value="Nafta">⛽ Nafta</option>
+                        <option value="GNC">🚗 GNC</option>
+                    </select>
+                </div>
+
+                <div id="custom-cat-wrapper" class="w-full sm:w-32 hidden">
+                    <label class="block text-[10px] font-medium text-emerald-400 mb-1">Escribir Categoría</label>
+                    <input type="text" id="input-custom-category" placeholder="Ej. Mecánica"
+                        class="w-full bg-slate-900 border border-emerald-500/50 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-400 text-white placeholder-slate-500">
+                </div>
+
+                <div class="w-full sm:w-28">
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Tipo</label>
+                    <select id="input-type" 
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-1.5 text-xs focus:outline-none focus:border-emerald-500 text-white cursor-pointer">
+                        <option value="egreso">🔴 Egreso</option>
+                        <option value="ingreso">🟢 Ingreso Extra</option>
+                    </select>
+                </div>
+
+                <div class="w-full sm:w-auto flex items-center justify-between sm:justify-end gap-2">
+                    <span id="calculated-total-preview" class="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md">Total: $0</span>
+                    <button type="submit" 
+                        class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-1.5 rounded-xl text-xs transition-all shadow-md shadow-emerald-500/20 active:scale-95 flex items-center gap-1.5 h-[34px]">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Agregar</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Category Expense Distribution Chart Section -->
+            <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-emerald-400 text-sm"></i>
+                        <h3 class="font-bold text-sm text-white">Distribución de Gastos por Categoría del Mes</h3>
+                    </div>
+                    <span id="chart-month-badge" class="text-[10px] bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full font-semibold">
+                        <!-- Month text -->
+                    </span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div class="h-48 md:h-56 relative flex items-center justify-center">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div class="md:col-span-2">
+                        <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
+                <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0" id="filter-container">
+                    <!-- Dynamic category filter buttons -->
+                </div>
+
+                <div class="relative w-full sm:w-56">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="search-input" placeholder="Buscar concepto o día..." 
+                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500 transition-colors text-white placeholder-slate-500">
+                </div>
+            </div>
+        </section>
+
+        <main>
+            <div id="category-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                <!-- Dynamically rendered unified Category Cards -->
+            </div>
+
+            <div id="empty-state" class="hidden glass-panel rounded-3xl p-8 text-center my-4">
+                <i class="fa-solid fa-receipt text-3xl text-slate-600 mb-2 block"></i>
+                <h3 class="text-sm font-medium text-slate-300">No hay registros para el mes o filtro seleccionado</h3>
+                <p class="text-xs text-slate-500 mt-1">Agrega gastos o selecciona un mes diferente en el navegador superior.</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="max-w-6xl mx-auto w-full mt-6 z-10">
+        <div class="glass-panel p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-circle-info text-emerald-400 text-xs"></i>
+                <span>Haz clic en un ítem para marcarlo como pagado/comprado.</span>
+            </div>
+            <div class="flex items-center gap-2 ml-auto">
+                <button id="reset-btn" class="hover:text-rose-400 bg-slate-800/80 border border-white/10 px-3 py-1 rounded-xl transition-colors flex items-center gap-1.5 text-xs">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    <span>Restablecer Lista Base</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Salary Adjustment Modal -->
+    <div id="salary-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-emerald-500/30">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-white text-base">Ajustar Sueldo Mensual</h3>
+                <button onclick="closeSalaryModal()" class="text-slate-400 hover:text-white text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400">Configura tu ingreso base habitual. Se usará para calcular el patrimonio neto disponible.</p>
+            <div>
+                <label class="block text-[10px] font-medium text-slate-400 mb-1">Monto del Sueldo ($)</label>
+                <input type="number" id="modal-salary-input" placeholder="Ej. 500000"
+                    class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white font-bold">
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeSalaryModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">Cancelar</button>
+                <button onclick="saveSalaryModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900/90 border border-emerald-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toast-message" class="text-xs font-medium"></span>
+    </div>
+
+    <script>
+        const getCurrentMonthStr = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            return `${year}-${month}`;
+        };
+
+        const getTodayDateStr = () => {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        const MONTH_NAMES_ES = [
+            'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+            'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ];
+
+        function formatMonthName(monthStr) {
+            if (!monthStr || monthStr === 'all') return 'Todos los meses';
+            const parts = monthStr.split('-');
+            const year = parts[0];
+            const month = parts[1];
+            const mIdx = parseInt(month, 10) - 1;
+            if (isNaN(mIdx) || mIdx < 0 || mIdx > 11) return monthStr;
+            return `${MONTH_NAMES_ES[mIdx]} ${year}`;
+        }
+
+        function formatDateDisplay(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length < 3) return dateStr;
+            const day = parts[2];
+            const mIdx = parseInt(parts[1], 10) - 1;
+            const monthName = MONTH_NAMES_ES[mIdx] ? MONTH_NAMES_ES[mIdx].substring(0, 3) : '';
+            return `Día ${day} ${monthName}`;
+        }
+
+        function formatMoney(amount) {
+            return new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'ARS',
+                maximumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        function formatNumberRaw(amount) {
+            return new Intl.NumberFormat('es-AR', {
+                maximumFractionDigits: 0
+            }).format(Math.round(amount || 0));
+        }
+
+        const currentM = getCurrentMonthStr();
+        const todayDate = getTodayDateStr();
+        const activeYear = parseInt(currentM.split('-')[0], 10);
+
+        function generateFullYearMonths(year) {
+            const list = [];
+            for (let i = 1; i <= 12; i++) {
+                const mStr = String(i).padStart(2, '0');
+                list.push(`${year}-${mStr}`);
+            }
+            return list;
+        }
+
+        const INITIAL_PRODUCTS = [
+            { id: '1', name: 'Papa', date: `${currentM}-02`, qtyNum: 1, unit: 'kilo', unitPrice: 1200, price: 1200, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🥔', completed: false },
+            { id: '2', name: 'Cebolla', date: `${currentM}-02`, qtyNum: 2, unit: 'kilos', unitPrice: 900, price: 1800, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🧅', completed: false },
+            { id: '3', name: 'Tomate', date: `${currentM}-05`, qtyNum: 1, unit: 'kilo', unitPrice: 2200, price: 2200, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🍅', completed: false },
+            { id: '4', name: 'Zanahoria', date: `${currentM}-05`, qtyNum: 1, unit: 'kilo', unitPrice: 1000, price: 1000, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🥕', completed: false },
+            { id: '5', name: 'Morrón', date: `${currentM}-08`, qtyNum: 1, unit: 'kilo', unitPrice: 2800, price: 2800, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🫑', completed: false },
+            { id: '6', name: 'Espinaca', date: `${currentM}-08`, qtyNum: 1, unit: 'kilo', unitPrice: 1500, price: 1500, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🥬', completed: false },
+            { id: '7', name: 'Arroz', date: `${currentM}-10`, qtyNum: 1, unit: 'paquete', unitPrice: 1600, price: 1600, category: 'Almacén', type: 'egreso', month: currentM, icon: '🌾', completed: false },
+            { id: '8', name: 'Pollo', date: `${currentM}-12`, qtyNum: 1, unit: 'kilo', unitPrice: 4200, price: 4200, category: 'Carnicería', type: 'egreso', month: currentM, icon: '🍗', completed: false },
+            { id: '9', name: 'Nafta Super YPF', date: `${currentM}-14`, fuelType: 'Nafta', qtyNum: 20, unit: 'lts', unitPrice: 1100, price: 22000, category: 'Combustible', type: 'egreso', month: currentM, icon: '⛽', completed: true },
+            { id: '10', name: 'Carga GNC', date: `${currentM}-18`, fuelType: 'GNC', qtyNum: 15, unit: 'm³', unitPrice: 550, price: 8250, category: 'Combustible', type: 'egreso', month: currentM, icon: '🚗', completed: true },
+            { id: '11', name: 'Cena Familiar Pizzería', date: `${currentM}-20`, qtyNum: 1, unit: 'unid', unitPrice: 18500, price: 18500, category: 'Cena', type: 'egreso', month: currentM, icon: '🍽️', completed: true }
+        ];
+
+        const CATEGORY_ICONS = {
+            'Combustible': '⛽',
+            'Almacén': '🌾',
+            'Verdulería': '🥬',
+            'Carnicería': '🍗',
+            'Cena': '🍽️',
+            'Panadería': '🥐',
+            'Merienda': '🥞',
+            'Servicios': '💡',
+            'Mecánica': '🚗',
+            'Alquiler': '🏠',
+            'Salud': '💊',
+            'Otros': '🛒'
+        };
+
+        const CHART_COLORS = [
+            '#10b981', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', 
+            '#06b6d4', '#f97316', '#84cc16', '#6366f1', '#d946ef'
+        ];
+
+        function getCategoryEmoji(catName) {
+            if (!catName) return '🛒';
+            const c = catName.toLowerCase().trim();
+            if (c.includes('combustible') || c.includes('nafta') || c.includes('gnc')) return '⛽';
+            if (c.includes('almacen') || c.includes('almacén')) return '🌾';
+            if (c.includes('verduler') || c.includes('verdulería')) return '🥬';
+            if (c.includes('carnicer') || c.includes('carnicería')) return '🍗';
+            if (c.includes('cena')) return '🍽️';
+            if (c.includes('panader') || c.includes('panadería')) return '🥐';
+            if (c.includes('merienda')) return '🥞';
+            if (c.includes('servicio')) return '💡';
+            if (c.includes('mecanic') || c.includes('mecánica')) return '🚗';
+            if (c.includes('alquiler')) return '🏠';
+            if (c.includes('salud') || c.includes('farmacia')) return '💊';
+            return CATEGORY_ICONS[catName] || '🛒';
+        }
+
+        function getEmoji(name, category, fuelType) {
+            if (category === 'Combustible' || fuelType) {
+                return fuelType === 'GNC' ? '🚗' : '⛽';
+            }
+            const n = (name || '').toLowerCase();
+            const c = (category || '').toLowerCase();
+            if (c.includes('panaderia') || c.includes('panadería')) return '🥐';
+            if (c.includes('merienda')) return '🥞';
+            if (c.includes('cena') || n.includes('pizza')) return '🍕';
+            if (n.includes('gnc')) return '🚗';
+            if (n.includes('nafta')) return '⛽';
+            if (n.includes('papa')) return '🥔';
+            if (n.includes('cebolla')) return '🧅';
+            if (n.includes('tomate')) return '🍅';
+            if (n.includes('zanahoria')) return '🥕';
+            if (n.includes('morron') || n.includes('morrón')) return '🫑';
+            if (n.includes('espinaca')) return '🥬';
+            if (n.includes('arroz')) return '🌾';
+            if (n.includes('pollo')) return '🍗';
+            if (n.includes('carne') || n.includes('asado')) return '🥩';
+            return getCategoryEmoji(category);
+        }
+
+        let salary = parseFloat(localStorage.getItem('fin_salary')) || 500000;
+        let products = JSON.parse(localStorage.getItem('fin_products')) || [...INITIAL_PRODUCTS];
+        
+        products = products.map(p => {
+            const m = p.month || currentM;
+            const d = p.date || `${m}-01`;
+            return { ...p, month: m, date: d };
+        });
+
+        let selectedMonthFilter = currentM;
+        let currentFilter = 'all';
+        let searchQuery = '';
+        let myChart = null;
+
+        const categoryCardsGrid = document.getElementById('category-cards-grid');
+        const emptyState = document.getElementById('empty-state');
+        const addForm = document.getElementById('add-transaction-form');
+        const searchInput = document.getElementById('search-input');
+        const filterContainer = document.getElementById('filter-container');
+        const headerMonthSelect = document.getElementById('header-month-select');
+        const annualMonthsGrid = document.getElementById('annual-months-grid');
+
+        // Form elements
+        const inputName = document.getElementById('input-name');
+        const inputDate = document.getElementById('input-date');
+        const inputQty = document.getElementById('input-qty');
+        const inputUnit = document.getElementById('input-unit');
+        const inputPrice = document.getElementById('input-price');
+        const inputCategory = document.getElementById('input-category');
+        const inputFuelType = document.getElementById('input-fuel-type');
+        const fuelSubtypeWrapper = document.getElementById('fuel-subtype-wrapper');
+        const inputCustomCategory = document.getElementById('input-custom-category');
+        const customCatWrapper = document.getElementById('custom-cat-wrapper');
+        const inputType = document.getElementById('input-type');
+        const calculatedTotalPreview = document.getElementById('calculated-total-preview');
+
+        // Set default date to today
+        inputDate.value = todayDate;
+
+        function saveData() {
+            localStorage.setItem('fin_salary', salary.toString());
+            localStorage.setItem('fin_products', JSON.stringify(products));
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMessage.textContent = message;
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-base';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-rose-400 text-base';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        function toggleMonthDrawer() {
+            const drawer = document.getElementById('month-drawer');
+            const arrow = document.getElementById('drawer-arrow');
+            const toggleText = document.getElementById('drawer-toggle-text');
+            
+            if (drawer.classList.contains('hidden')) {
+                drawer.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+                toggleText.textContent = 'Ocultar Calendario';
+            } else {
+                drawer.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+                toggleText.textContent = 'Ver Calendario Anual';
+            }
+        }
+
+        function openSalaryModal() {
+            document.getElementById('modal-salary-input').value = salary;
+            const modal = document.getElementById('salary-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSalaryModal() {
+            const modal = document.getElementById('salary-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveSalaryModal() {
+            const val = parseFloat(document.getElementById('modal-salary-input').value);
+            if (!isNaN(val) && val >= 0) {
+                salary = val;
+                saveData();
+                renderApp();
+                closeSalaryModal();
+                showToast('Sueldo actualizado con éxito');
+            }
+        }
+
+        function populateMonthSelectors() {
+            const yearMonths = generateFullYearMonths(activeYear);
+            
+            // Header dropdown
+            headerMonthSelect.innerHTML = '';
+            yearMonths.forEach(mStr => {
+                const opt = document.createElement('option');
+                opt.value = mStr;
+                opt.textContent = formatMonthName(mStr);
+                opt.className = 'bg-slate-900 text-white';
+                if (mStr === selectedMonthFilter) opt.selected = true;
+                headerMonthSelect.appendChild(opt);
+            });
+
+            // Annual drawer grid
+            annualMonthsGrid.innerHTML = '';
+            yearMonths.forEach(mStr => {
+                const btn = document.createElement('button');
+                const isSelected = mStr === selectedMonthFilter;
+                const mProducts = products.filter(p => p.month === mStr);
+                const mExpenses = mProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (p.price || 0) : acc, 0);
+
+                btn.className = `p-2.5 rounded-2xl border text-left transition-all ${
+                    isSelected 
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold shadow-md' 
+                        : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-300'
+                }`;
+
+                btn.innerHTML = `
+                    <div class="text-[11px] font-semibold">${formatMonthName(mStr).split(' ')[0]}</div>
+                    <div class="text-[10px] text-slate-400 mt-0.5">${formatMoney(mExpenses)}</div>
+                `;
+
+                btn.onclick = () => {
+                    selectedMonthFilter = mStr;
+                    headerMonthSelect.value = mStr;
+                    renderApp();
+                };
+                annualMonthsGrid.appendChild(btn);
+            });
+        }
+
+        function updateFormSubtypes() {
+            const cat = inputCategory.value;
+            if (cat === 'Combustible') {
+                fuelSubtypeWrapper.classList.remove('hidden');
+                customCatWrapper.classList.add('hidden');
+            } else if (cat === 'Otros') {
+                customCatWrapper.classList.remove('hidden');
+                fuelSubtypeWrapper.classList.add('hidden');
+            } else {
+                fuelSubtypeWrapper.classList.add('hidden');
+                customCatWrapper.classList.add('hidden');
+            }
+        }
+
+        function updatePricePreview() {
+            const qty = parseFloat(inputQty.value) || 0;
+            const unitP = parseFloat(inputPrice.value) || 0;
+            const total = qty * unitP;
+            calculatedTotalPreview.textContent = `Total: ${formatMoney(total)}`;
+        }
+
+        inputCategory.addEventListener('change', updateFormSubtypes);
+        inputQty.addEventListener('input', updatePricePreview);
+        inputPrice.addEventListener('input', updatePricePreview);
+
+        addForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const name = inputName.value.trim();
+            const dateVal = inputDate.value || todayDate;
+            const monthVal = dateVal.substring(0, 7);
+            const qtyNum = parseFloat(inputQty.value) || 1;
+            const unit = inputUnit.value.trim() || 'unid';
+            const unitPrice = parseFloat(inputPrice.value) || 0;
+            const totalPrice = qtyNum * unitPrice;
+            const typeVal = inputType.value;
+
+            let categoryVal = inputCategory.value;
+            let fuelTypeVal = null;
+
+            if (categoryVal === 'Combustible') {
+                fuelTypeVal = inputFuelType.value;
+            } else if (categoryVal === 'Otros') {
+                categoryVal = inputCustomCategory.value.trim() || 'Otros';
+            }
+
+            const newProduct = {
+                id: Date.now().toString(),
+                name,
+                date: dateVal,
+                month: monthVal,
+                qtyNum,
+                unit,
+                unitPrice,
+                price: totalPrice,
+                category: categoryVal,
+                fuelType: fuelTypeVal,
+                type: typeVal,
+                icon: getEmoji(name, categoryVal, fuelTypeVal),
+                completed: false
+            };
+
+            products.unshift(newProduct);
+            saveData();
+
+            // Reset form input values
+            inputName.value = '';
+            inputQty.value = '';
+            inputUnit.value = '';
+            inputPrice.value = '';
+            inputCustomCategory.value = '';
+            calculatedTotalPreview.textContent = 'Total: $0';
+
+            // Select month of added transaction if different
+            selectedMonthFilter = monthVal;
+
+            renderApp();
+            showToast(`"${name}" agregado correctamente`);
+        });
+
+        function renderCategoryChart(monthProducts) {
+            const ctx = document.getElementById('categoryPieChart').getContext('2d');
+            const chartBadge = document.getElementById('chart-month-badge');
+            const legendGrid = document.getElementById('chart-legend-grid');
+
+            chartBadge.textContent = formatMonthName(selectedMonthFilter);
+
+            // Group egresos by category
+            const categoryTotals = {};
+            monthProducts.filter(p => p.type === 'egreso').forEach(p => {
+                const cat = p.category || 'Otros';
+                categoryTotals[cat] = (categoryTotals[cat] || 0) + (parseFloat(p.price) || 0);
+            });
+
+            const labels = Object.keys(categoryTotals);
+            const data = Object.values(categoryTotals);
+            const totalExpenseSum = data.reduce((a, b) => a + b, 0);
+
+            legendGrid.innerHTML = '';
+
+            if (labels.length === 0) {
+                legendGrid.innerHTML = '<div class="col-span-2 text-slate-500 text-xs py-4 text-center">Sin gastos registrados este mes</div>';
+                if (myChart) myChart.destroy();
+                return;
+            }
+
+            labels.forEach((cat, idx) => {
+                const color = CHART_COLORS[idx % CHART_COLORS.length];
+                const val = categoryTotals[cat];
+                const pct = totalExpenseSum > 0 ? ((val / totalExpenseSum) * 100).toFixed(1) : 0;
+                const emoji = getCategoryEmoji(cat);
+
+                const item = document.createElement('div');
+                item.className = 'flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-white/5';
+                item.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <span class="w-3 h-3 rounded-full" style="background-color: ${color}"></span>
+                        <span class="font-medium text-slate-200 text-xs">${emoji} ${cat}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-bold text-slate-100 text-xs">${formatMoney(val)}</span>
+                        <span class="text-[10px] text-slate-400 block">${pct}%</span>
+                    </div>
+                `;
+                legendGrid.appendChild(item);
+            });
+
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: CHART_COLORS.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#111827'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.parsed;
+                                    return ` ${context.label}: ${formatMoney(val)}`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        function shareWhatsApp() {
+            const monthProducts = products.filter(p => p.month === selectedMonthFilter);
+            const totalExpenses = monthProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
+            const extraIncome = monthProducts.reduce((acc, p) => p.type === 'ingreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
+            const totalIncome = salary + extraIncome;
+            const netWorth = totalIncome - totalExpenses;
+
+            const monthLabel = formatMonthName(selectedMonthFilter);
+
+            // Group expenses by category
+            const categoryTotals = {};
+            const categoryItems = {};
+
+            monthProducts.filter(p => p.type === 'egreso').forEach(p => {
+                const cat = p.category || 'Otros';
+                categoryTotals[cat] = (categoryTotals[cat] || 0) + (parseFloat(p.price) || 0);
+                if (!categoryItems[cat]) categoryItems[cat] = [];
+                categoryItems[cat].push(p);
+            });
+
+            let msg = `📊 *RESUMEN FINANCIERO - ${monthLabel.toUpperCase()}*\n`;
+            msg += `-----------------------------------\n`;
+            msg += `💵 *Ingresos Totales:* ${formatMoney(totalIncome)}\n`;
+            msg += `💸 *Egresos Totales:* ${formatMoney(totalExpenses)}\n`;
+            msg += `💰 *Saldo Disponible:* ${formatMoney(netWorth)}\n`;
+            msg += `-----------------------------------\n\n`;
+            msg += `📌 *GASTOS POR CATEGORÍA:*\n\n`;
+
+            const sortedCategories = Object.keys(categoryTotals).sort((a,b) => categoryTotals[b] - categoryTotals[a]);
+
+            if (sortedCategories.length === 0) {
+                msg += `_No hay gastos registrados en este mes._\n`;
+            } else {
+                sortedCategories.forEach(cat => {
+                    const catEmoji = getCategoryEmoji(cat);
+                    const catTotal = categoryTotals[cat];
+                    msg += `${catEmoji} *${cat.toUpperCase()}:* ${formatMoney(catTotal)}\n`;
+
+                    // List individual items under category with emojis
+                    categoryItems[cat].forEach(item => {
+                        const itemEmoji = getEmoji(item.name, item.category, item.fuelType);
+                        const statusStr = item.completed ? '✅' : '⏳';
+                        const qtyStr = item.qtyNum ? ` (${item.qtyNum} ${item.unit || ''})`.trim() : '';
+                        msg += `   • ${statusStr} ${itemEmoji} ${item.name}${qtyStr}: ${formatMoney(item.price)}\n`;
+                    });
+                    msg += `\n`;
+                });
+            }
+
+            msg += `\n📱 *Generado con Control Financiero & Mercado*`;
+
+            const encodedMsg = encodeURIComponent(msg);
+            window.open(`https://api.whatsapp.com/send?text=${encodedMsg}`, '_blank');
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('printable-area');
+            const opt = {
+                margin: 0.3,
+                filename: `Resumen_Financiero_${selectedMonthFilter}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, backgroundColor: '#090d16' },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+            showToast('Generando PDF...');
+        }
+
+        function downloadExcel() {
+            const monthProducts = products.filter(p => p.month === selectedMonthFilter);
+            
+            const excelData = monthProducts.map(p => ({
+                'Fecha / Día': p.date,
+                'Concepto / Producto': p.name,
+                'Categoría': p.category,
+                'Tipo Combustible': p.fuelType || '-',
+                'Cantidad': p.qtyNum,
+                'Unidad': p.unit,
+                'Precio Unitario': p.unitPrice,
+                'Precio Total': p.price,
+                'Tipo': p.type.toUpperCase(),
+                'Estado': p.completed ? 'Comprado/Pagado' : 'Pendiente'
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Resumen Mensual");
+            XLSX.writeFile(workbook, `Resumen_Financiero_${selectedMonthFilter}.xlsx`);
+            showToast('Descargando Excel...');
+        }
+
+        function toggleProductComplete(id) {
+            products = products.map(p => p.id === id ? { ...p, completed: !p.completed } : p);
+            saveData();
+            renderApp();
+        }
+
+        function deleteProduct(id) {
+            products = products.filter(p => p.id !== id);
+            saveData();
+            renderApp();
+            showToast('Registro eliminado', 'warning');
+        }
+
+        function renderApp() {
+            populateMonthSelectors();
+
+            // Filter products for active month
+            const monthProducts = products.filter(p => p.month === selectedMonthFilter);
+
+            // Compute financial summaries
+            const totalExpenses = monthProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
+            const extraIncome = monthProducts.reduce((acc, p) => p.type === 'ingreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
+            const totalIncome = salary + extraIncome;
+            const netWorth = totalIncome - totalExpenses;
+
+            document.getElementById('stat-salary').textContent = formatMoney(totalIncome);
+            document.getElementById('stat-expenses').textContent = formatMoney(totalExpenses);
+            
+            const statNetworth = document.getElementById('stat-networth');
+            const networthBadge = document.getElementById('networth-badge');
+
+            statNetworth.textContent = formatMoney(netWorth);
+            if (netWorth >= 0) {
+                statNetworth.className = 'text-2xl font-bold text-teal-300';
+                networthBadge.textContent = 'A Favor';
+                networthBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-semibold text-emerald-300 bg-emerald-500/20';
+            } else {
+                statNetworth.className = 'text-2xl font-bold text-rose-400';
+                networthBadge.textContent = 'En Déficit';
+                networthBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-semibold text-rose-300 bg-rose-500/20';
+            }
+
+            // Render category chart
+            renderCategoryChart(monthProducts);
+
+            // Dynamically build filter buttons
+            const uniqueCategories = ['all', ...new Set(monthProducts.map(p => p.category))];
+            filterContainer.innerHTML = '';
+            
+            uniqueCategories.forEach(cat => {
+                const btn = document.createElement('button');
+                const isSelected = currentFilter === cat;
+                const catEmoji = cat === 'all' ? '✨' : getCategoryEmoji(cat);
+                const label = cat === 'all' ? 'Todos' : `${catEmoji} ${cat}`;
+
+                btn.className = `px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                    isSelected 
+                        ? 'bg-emerald-500 text-slate-950 shadow-md shadow-emerald-500/20' 
+                        : 'bg-slate-900/60 border border-white/10 text-slate-300 hover:bg-slate-800'
+                }`;
+                btn.textContent = label;
+                btn.onclick = () => {
+                    currentFilter = cat;
+                    renderApp();
+                };
+                filterContainer.appendChild(btn);
+            });
+
+            // Filter products by category and search term
+            let displayedProducts = [...monthProducts];
+            
+            if (currentFilter !== 'all') {
+                displayedProducts = displayedProducts.filter(p => p.category === currentFilter);
+            }
+
+            if (searchQuery.trim() !== '') {
+                const q = searchQuery.toLowerCase();
+                displayedProducts = displayedProducts.filter(p => 
+                    p.name.toLowerCase().includes(q) || 
+                    p.category.toLowerCase().includes(q) || 
+                    p.date.includes(q)
+                );
+            }
+
+            categoryCardsGrid.innerHTML = '';
+
+            if (displayedProducts.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // Group filtered products by Category into unified Cards
+            const groupedByCategory = {};
+            displayedProducts.forEach(p => {
+                const cat = p.category || 'Otros';
+                if (!groupedByCategory[cat]) groupedByCategory[cat] = [];
+                groupedByCategory[cat].push(p);
+            });
+
+            Object.keys(groupedByCategory).forEach(cat => {
+                const catItems = groupedByCategory[cat];
+                const catEmoji = getCategoryEmoji(cat);
+                const catTotal = catItems.reduce((acc, item) => item.type === 'egreso' ? acc + item.price : acc, 0);
+
+                const card = document.createElement('div');
+                card.className = 'glass-card rounded-3xl p-5 space-y-3 flex flex-col justify-between';
+
+                let itemsHTML = '';
+                catItems.forEach(item => {
+                    const itemEmoji = getEmoji(item.name, item.category, item.fuelType);
+                    const isIncome = item.type === 'ingreso';
+
+                    itemsHTML += `
+                        <div class="flex items-center justify-between p-2.5 rounded-2xl bg-slate-900/60 border border-white/5 hover:border-white/10 transition-all ${item.completed ? 'opacity-60' : ''}">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <input type="checkbox" ${item.completed ? 'checked' : ''} 
+                                    onchange="toggleProductComplete('${item.id}')"
+                                    class="custom-checkbox flex-shrink-0">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="text-sm">${itemEmoji}</span>
+                                        <span class="text-xs font-semibold text-slate-100 ${item.completed ? 'line-through text-slate-400' : ''} truncate">${item.name}</span>
+                                        ${item.fuelType ? `<span class="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-bold">${item.fuelType}</span>` : ''}
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5 flex items-center gap-2">
+                                        <span>📅 ${formatDateDisplay(item.date)}</span>
+                                        <span>• ${item.qtyNum} ${item.unit} @ ${formatMoney(item.unitPrice)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0 pl-2">
+                                <span class="text-xs font-bold ${isIncome ? 'text-emerald-400' : 'text-slate-100'}">
+                                    ${isIncome ? '+' : ''}${formatMoney(item.price)}
+                                </span>
+                                <button onclick="deleteProduct('${item.id}')" title="Eliminar" class="text-slate-500 hover:text-rose-400 text-xs p-1 transition-colors">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between pb-2 border-b border-white/10">
+                            <div class="flex items-center gap-2">
+                                <span class="text-lg">${catEmoji}</span>
+                                <h3 class="font-bold text-sm text-white tracking-wide">${cat}</h3>
+                                <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-semibold">${catItems.length} items</span>
+                            </div>
+                            <span class="font-bold text-xs text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-xl border border-emerald-500/20">
+                                Total: ${formatMoney(catTotal)}
+                            </span>
+                        </div>
+                        <div class="space-y-2">
+                            ${itemsHTML}
+                        </div>
+                    </div>
+                `;
+
+                categoryCardsGrid.appendChild(card);
+            });
+        }
+
+        headerMonthSelect.addEventListener('change', (e) => {
+            selectedMonthFilter = e.target.value;
+            renderApp();
+        });
+
+        document.getElementById('prev-month-btn').addEventListener('click', () => {
+            const yearMonths = generateFullYearMonths(activeYear);
+            const idx = yearMonths.indexOf(selectedMonthFilter);
+            if (idx > 0) {
+                selectedMonthFilter = yearMonths[idx - 1];
+                renderApp();
+            }
+        });
+
+        document.getElementById('next-month-btn').addEventListener('click', () => {
+            const yearMonths = generateFullYearMonths(activeYear);
+            const idx = yearMonths.indexOf(selectedMonthFilter);
+            if (idx < yearMonths.length - 1) {
+                selectedMonthFilter = yearMonths[idx + 1];
+                renderApp();
+            }
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderApp();
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            if (confirm('¿Deseas restablecer la lista a los valores por defecto?')) {
+                products = [...INITIAL_PRODUCTS];
+                salary = 500000;
+                saveData();
+                renderApp();
+                showToast('Lista restablecida correctamente');
+            }
+        });
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            updateFormSubtypes();
+            renderApp();
+        };
+    </script>
+</body>
+</html>
