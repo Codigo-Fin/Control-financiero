@@ -16,6 +16,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Chart.js for Pie/Donut Chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         body {
@@ -107,6 +109,43 @@
     <div class="fixed top-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
     <div class="fixed bottom-10 right-10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
 
+    <!-- LOGIN / SIGNUP SCREEN -->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-[#090d16] via-[#111827] to-[#06201b]">
+        <div class="glass-panel rounded-3xl p-8 w-full max-w-sm space-y-5 shadow-2xl">
+            <div class="text-center space-y-1">
+                <div class="mx-auto w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-2">
+                    <i class="fa-solid fa-wallet"></i>
+                </div>
+                <h1 class="text-lg font-bold text-white">Control Financiero</h1>
+                <p class="text-xs text-slate-400">Iniciá sesión o creá tu cuenta para continuar</p>
+            </div>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Email</label>
+                    <input type="email" id="auth-email" placeholder="tu@email.com"
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white placeholder-slate-500">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-medium text-slate-400 mb-1">Contraseña</label>
+                    <input type="password" id="auth-password" placeholder="••••••••"
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white placeholder-slate-500">
+                </div>
+                <p id="auth-message" class="text-xs min-h-[16px]"></p>
+                <div class="flex flex-col gap-2 pt-1">
+                    <button id="btn-signin" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
+                        Iniciar Sesión
+                    </button>
+                    <button id="btn-signup" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition-all active:scale-95">
+                        Crear Cuenta Nueva
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APP CONTENT (oculto hasta iniciar sesión) -->
+    <div id="app-content" class="hidden w-full flex flex-col flex-1">
+
     <!-- MAIN APP CONTAINER -->
     <div class="max-w-6xl mx-auto w-full z-10 space-y-5" id="printable-area">
 
@@ -152,6 +191,11 @@
                     <button onclick="openSalaryModal()" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
                         <i class="fa-solid fa-pen-to-square"></i>
                         <span>Ajustar Sueldo</span>
+                    </button>
+
+                    <button id="btn-logout" title="Cerrar sesión" class="bg-slate-800/80 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span id="user-email-display" class="hidden sm:inline max-w-[100px] truncate"></span>
                     </button>
                 </div>
             </div>
@@ -372,11 +416,13 @@
             <div class="flex items-center gap-2 ml-auto">
                 <button id="reset-btn" class="hover:text-rose-400 bg-slate-800/80 border border-white/10 px-3 py-1 rounded-xl transition-colors flex items-center gap-1.5 text-xs">
                     <i class="fa-solid fa-rotate-left"></i>
-                    <span>Restablecer Lista Base</span>
+                    <span>Borrar Todos Mis Registros</span>
                 </button>
             </div>
         </div>
     </footer>
+
+    </div> <!-- fin app-content -->
 
     <!-- Salary Adjustment Modal -->
     <div id="salary-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
@@ -407,6 +453,17 @@
     </div>
 
     <script>
+        // ============================================
+        // CONFIGURACIÓN DE SUPABASE
+        // Reemplazá SUPABASE_ANON_KEY con tu clave completa
+        // (Supabase → Settings → API Keys → anon/public)
+        // ============================================
+        const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5cPEGAR_AQUI_TU_ANON_KEY_COMPLETA';
+
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+
         const getCurrentMonthStr = () => {
             const now = new Date();
             const year = now.getFullYear();
@@ -455,12 +512,6 @@
             }).format(amount || 0);
         }
 
-        function formatNumberRaw(amount) {
-            return new Intl.NumberFormat('es-AR', {
-                maximumFractionDigits: 0
-            }).format(Math.round(amount || 0));
-        }
-
         const currentM = getCurrentMonthStr();
         const todayDate = getTodayDateStr();
         const activeYear = parseInt(currentM.split('-')[0], 10);
@@ -473,20 +524,6 @@
             }
             return list;
         }
-
-        const INITIAL_PRODUCTS = [
-            { id: '1', name: 'Papa', date: `${currentM}-02`, qtyNum: 1, unit: 'kilo', unitPrice: 1200, price: 1200, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🥔', completed: false },
-            { id: '2', name: 'Cebolla', date: `${currentM}-02`, qtyNum: 2, unit: 'kilos', unitPrice: 900, price: 1800, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🧅', completed: false },
-            { id: '3', name: 'Tomate', date: `${currentM}-05`, qtyNum: 1, unit: 'kilo', unitPrice: 2200, price: 2200, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🍅', completed: false },
-            { id: '4', name: 'Zanahoria', date: `${currentM}-05`, qtyNum: 1, unit: 'kilo', unitPrice: 1000, price: 1000, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🥕', completed: false },
-            { id: '5', name: 'Morrón', date: `${currentM}-08`, qtyNum: 1, unit: 'kilo', unitPrice: 2800, price: 2800, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🫑', completed: false },
-            { id: '6', name: 'Espinaca', date: `${currentM}-08`, qtyNum: 1, unit: 'kilo', unitPrice: 1500, price: 1500, category: 'Verdulería', type: 'egreso', month: currentM, icon: '🥬', completed: false },
-            { id: '7', name: 'Arroz', date: `${currentM}-10`, qtyNum: 1, unit: 'paquete', unitPrice: 1600, price: 1600, category: 'Almacén', type: 'egreso', month: currentM, icon: '🌾', completed: false },
-            { id: '8', name: 'Pollo', date: `${currentM}-12`, qtyNum: 1, unit: 'kilo', unitPrice: 4200, price: 4200, category: 'Carnicería', type: 'egreso', month: currentM, icon: '🍗', completed: false },
-            { id: '9', name: 'Nafta Super YPF', date: `${currentM}-14`, fuelType: 'Nafta', qtyNum: 20, unit: 'lts', unitPrice: 1100, price: 22000, category: 'Combustible', type: 'egreso', month: currentM, icon: '⛽', completed: true },
-            { id: '10', name: 'Carga GNC', date: `${currentM}-18`, fuelType: 'GNC', qtyNum: 15, unit: 'm³', unitPrice: 550, price: 8250, category: 'Combustible', type: 'egreso', month: currentM, icon: '🚗', completed: true },
-            { id: '11', name: 'Cena Familiar Pizzería', date: `${currentM}-20`, qtyNum: 1, unit: 'unid', unitPrice: 18500, price: 18500, category: 'Cena', type: 'egreso', month: currentM, icon: '🍽️', completed: true }
-        ];
 
         const CATEGORY_ICONS = {
             'Combustible': '⛽',
@@ -548,14 +585,8 @@
             return getCategoryEmoji(category);
         }
 
-        let salary = parseFloat(localStorage.getItem('fin_salary')) || 500000;
-        let products = JSON.parse(localStorage.getItem('fin_products')) || [...INITIAL_PRODUCTS];
-        
-        products = products.map(p => {
-            const m = p.month || currentM;
-            const d = p.date || `${m}-01`;
-            return { ...p, month: m, date: d };
-        });
+        let salary = 500000;
+        let products = [];
 
         let selectedMonthFilter = currentM;
         let currentFilter = 'all';
@@ -587,11 +618,6 @@
         // Set default date to today
         inputDate.value = todayDate;
 
-        function saveData() {
-            localStorage.setItem('fin_salary', salary.toString());
-            localStorage.setItem('fin_products', JSON.stringify(products));
-        }
-
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
@@ -608,6 +634,133 @@
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
             }, 3000);
+        }
+
+        // ============================================
+        // AUTENTICACIÓN
+        // ============================================
+
+        function showLoginScreen() {
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('app-content').classList.add('hidden');
+        }
+
+        function showAppScreen() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
+            document.getElementById('user-email-display').textContent = currentUser.email;
+        }
+
+        function setAuthMessage(msg, ok = false) {
+            const el = document.getElementById('auth-message');
+            el.textContent = msg;
+            el.className = ok ? 'text-emerald-400 text-xs min-h-[16px]' : 'text-rose-400 text-xs min-h-[16px]';
+        }
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                showAppScreen();
+                await loadUserData();
+            } else {
+                showLoginScreen();
+            }
+        }
+
+        async function handleSignIn() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) { setAuthMessage('Completá email y contraseña'); return; }
+            setAuthMessage('Ingresando...', true);
+            const { data, error } = await sb.auth.signInWithPassword({ email, password });
+            if (error) { setAuthMessage(error.message); return; }
+            currentUser = data.user;
+            showAppScreen();
+            await loadUserData();
+        }
+
+        async function handleSignUp() {
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) { setAuthMessage('Completá email y contraseña'); return; }
+            if (password.length < 6) { setAuthMessage('La contraseña debe tener al menos 6 caracteres'); return; }
+            setAuthMessage('Creando cuenta...', true);
+            const { data, error } = await sb.auth.signUp({ email, password });
+            if (error) { setAuthMessage(error.message); return; }
+            if (data.session) {
+                currentUser = data.user;
+                showAppScreen();
+                await loadUserData();
+            } else {
+                setAuthMessage('Cuenta creada. Revisá tu email para confirmar, luego iniciá sesión.', true);
+            }
+        }
+
+        async function handleSignOut() {
+            await sb.auth.signOut();
+            currentUser = null;
+            products = [];
+            salary = 500000;
+            showLoginScreen();
+        }
+
+        document.getElementById('btn-signin').addEventListener('click', handleSignIn);
+        document.getElementById('btn-signup').addEventListener('click', handleSignUp);
+        document.getElementById('btn-logout').addEventListener('click', handleSignOut);
+
+        // ============================================
+        // DATOS: CARGA Y GUARDADO EN SUPABASE
+        // ============================================
+
+        async function loadUserData() {
+            const { data: settings } = await sb
+                .from('user_settings')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .maybeSingle();
+
+            if (settings) {
+                salary = parseFloat(settings.salary) || 500000;
+            } else {
+                salary = 500000;
+                await sb.from('user_settings').insert({ user_id: currentUser.id, salary });
+            }
+
+            const { data: txs, error } = await sb
+                .from('transactions')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                showToast('Error al cargar tus datos', 'warning');
+                products = [];
+            } else {
+                products = (txs || []).map(t => ({
+                    id: t.id,
+                    name: t.name,
+                    date: t.date,
+                    month: t.month,
+                    qtyNum: t.qty_num,
+                    unit: t.unit,
+                    unitPrice: t.unit_price,
+                    price: t.price,
+                    category: t.category,
+                    fuelType: t.fuel_type,
+                    type: t.type,
+                    icon: t.icon,
+                    completed: t.completed
+                }));
+            }
+
+            selectedMonthFilter = currentM;
+            renderApp();
+        }
+
+        async function saveSalaryToDB() {
+            if (!currentUser) return;
+            await sb.from('user_settings').upsert({ user_id: currentUser.id, salary });
         }
 
         function toggleMonthDrawer() {
@@ -639,11 +792,11 @@
             modal.classList.remove('flex');
         }
 
-        function saveSalaryModal() {
+        async function saveSalaryModal() {
             const val = parseFloat(document.getElementById('modal-salary-input').value);
             if (!isNaN(val) && val >= 0) {
                 salary = val;
-                saveData();
+                await saveSalaryToDB();
                 renderApp();
                 closeSalaryModal();
                 showToast('Sueldo actualizado con éxito');
@@ -653,7 +806,6 @@
         function populateMonthSelectors() {
             const yearMonths = generateFullYearMonths(activeYear);
             
-            // Header dropdown
             headerMonthSelect.innerHTML = '';
             yearMonths.forEach(mStr => {
                 const opt = document.createElement('option');
@@ -664,7 +816,6 @@
                 headerMonthSelect.appendChild(opt);
             });
 
-            // Annual drawer grid
             annualMonthsGrid.innerHTML = '';
             yearMonths.forEach(mStr => {
                 const btn = document.createElement('button');
@@ -717,8 +868,9 @@
         inputQty.addEventListener('input', updatePricePreview);
         inputPrice.addEventListener('input', updatePricePreview);
 
-        addForm.addEventListener('submit', (e) => {
+        addForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (!currentUser) return;
 
             const name = inputName.value.trim();
             const dateVal = inputDate.value || todayDate;
@@ -738,26 +890,36 @@
                 categoryVal = inputCustomCategory.value.trim() || 'Otros';
             }
 
-            const newProduct = {
-                id: Date.now().toString(),
+            const iconVal = getEmoji(name, categoryVal, fuelTypeVal);
+
+            const { data, error } = await sb.from('transactions').insert({
+                user_id: currentUser.id,
                 name,
                 date: dateVal,
                 month: monthVal,
-                qtyNum,
+                qty_num: qtyNum,
                 unit,
-                unitPrice,
+                unit_price: unitPrice,
                 price: totalPrice,
                 category: categoryVal,
-                fuelType: fuelTypeVal,
+                fuel_type: fuelTypeVal,
                 type: typeVal,
-                icon: getEmoji(name, categoryVal, fuelTypeVal),
+                icon: iconVal,
                 completed: false
-            };
+            }).select().single();
 
-            products.unshift(newProduct);
-            saveData();
+            if (error) {
+                showToast('Error al guardar: ' + error.message, 'warning');
+                return;
+            }
 
-            // Reset form input values
+            products.unshift({
+                id: data.id,
+                name, date: dateVal, month: monthVal, qtyNum, unit, unitPrice,
+                price: totalPrice, category: categoryVal, fuelType: fuelTypeVal,
+                type: typeVal, icon: iconVal, completed: false
+            });
+
             inputName.value = '';
             inputQty.value = '';
             inputUnit.value = '';
@@ -765,7 +927,6 @@
             inputCustomCategory.value = '';
             calculatedTotalPreview.textContent = 'Total: $0';
 
-            // Select month of added transaction if different
             selectedMonthFilter = monthVal;
 
             renderApp();
@@ -779,7 +940,6 @@
 
             chartBadge.textContent = formatMonthName(selectedMonthFilter);
 
-            // Group egresos by category
             const categoryTotals = {};
             monthProducts.filter(p => p.type === 'egreso').forEach(p => {
                 const cat = p.category || 'Otros';
@@ -860,7 +1020,6 @@
 
             const monthLabel = formatMonthName(selectedMonthFilter);
 
-            // Group expenses by category
             const categoryTotals = {};
             const categoryItems = {};
 
@@ -889,7 +1048,6 @@
                     const catTotal = categoryTotals[cat];
                     msg += `${catEmoji} *${cat.toUpperCase()}:* ${formatMoney(catTotal)}\n`;
 
-                    // List individual items under category with emojis
                     categoryItems[cat].forEach(item => {
                         const itemEmoji = getEmoji(item.name, item.category, item.fuelType);
                         const statusStr = item.completed ? '✅' : '⏳';
@@ -942,15 +1100,23 @@
             showToast('Descargando Excel...');
         }
 
-        function toggleProductComplete(id) {
-            products = products.map(p => p.id === id ? { ...p, completed: !p.completed } : p);
-            saveData();
+        async function toggleProductComplete(id) {
+            const p = products.find(x => x.id === id);
+            if (!p) return;
+            const newVal = !p.completed;
+
+            const { error } = await sb.from('transactions').update({ completed: newVal }).eq('id', id);
+            if (error) { showToast('Error al actualizar', 'warning'); return; }
+
+            products = products.map(x => x.id === id ? { ...x, completed: newVal } : x);
             renderApp();
         }
 
-        function deleteProduct(id) {
+        async function deleteProduct(id) {
+            const { error } = await sb.from('transactions').delete().eq('id', id);
+            if (error) { showToast('Error al eliminar', 'warning'); return; }
+
             products = products.filter(p => p.id !== id);
-            saveData();
             renderApp();
             showToast('Registro eliminado', 'warning');
         }
@@ -958,10 +1124,8 @@
         function renderApp() {
             populateMonthSelectors();
 
-            // Filter products for active month
             const monthProducts = products.filter(p => p.month === selectedMonthFilter);
 
-            // Compute financial summaries
             const totalExpenses = monthProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
             const extraIncome = monthProducts.reduce((acc, p) => p.type === 'ingreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
             const totalIncome = salary + extraIncome;
@@ -984,10 +1148,8 @@
                 networthBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-semibold text-rose-300 bg-rose-500/20';
             }
 
-            // Render category chart
             renderCategoryChart(monthProducts);
 
-            // Dynamically build filter buttons
             const uniqueCategories = ['all', ...new Set(monthProducts.map(p => p.category))];
             filterContainer.innerHTML = '';
             
@@ -1010,7 +1172,6 @@
                 filterContainer.appendChild(btn);
             });
 
-            // Filter products by category and search term
             let displayedProducts = [...monthProducts];
             
             if (currentFilter !== 'all') {
@@ -1035,7 +1196,6 @@
                 emptyState.classList.add('hidden');
             }
 
-            // Group filtered products by Category into unified Cards
             const groupedByCategory = {};
             displayedProducts.forEach(p => {
                 const cat = p.category || 'Otros';
@@ -1136,11 +1296,13 @@
             renderApp();
         });
 
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            if (confirm('¿Deseas restablecer la lista a los valores por defecto?')) {
-                products = [...INITIAL_PRODUCTS];
+        document.getElementById('reset-btn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            if (confirm('¿Deseas eliminar TODOS tus registros y reiniciar el sueldo? Esta acción no se puede deshacer.')) {
+                await sb.from('transactions').delete().eq('user_id', currentUser.id);
                 salary = 500000;
-                saveData();
+                await saveSalaryToDB();
+                products = [];
                 renderApp();
                 showToast('Lista restablecida correctamente');
             }
@@ -1149,8 +1311,9 @@
         // Initialize App on Window Load
         window.onload = function() {
             updateFormSubtypes();
-            renderApp();
+            checkSession();
         };
     </script>
 </body>
 </html>
+
