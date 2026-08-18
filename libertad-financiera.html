@@ -2,382 +2,205 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Libertad Financiera</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --border: #334155;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --primary: #10b981;
-            --danger: #f43f5e;
-            --warning: #fbbf24;
-            --purple: #a855f7;
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 12px;
-            font-size: 16px;
-            line-height: 1.4;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #090d16 0%, #111827 40%, #06201b 100%);
+            min-height: 100vh;
         }
+        @keyframes floatSlow { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-6px) rotate(0.5deg); } }
+        @keyframes floatDelay { 0%, 100% { transform: translateY(-4px) rotate(-0.5deg); } 50% { transform: translateY(4px) rotate(0.5deg); } }
+        .floating-card-1 { animation: floatSlow 6s ease-in-out infinite; }
+        .floating-card-2 { animation: floatDelay 7s ease-in-out infinite; }
+        .glass-panel { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
 
-        .container {
-            max-width: 650px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            padding: 12px 0;
-        }
-
-        .header h1 {
-            font-size: 24px;
-            margin: 0;
-            font-weight: 800;
-            background: linear-gradient(to right, #38bdf8, #a855f7);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .header p {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-top: 4px;
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 18px;
-            margin-bottom: 18px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-
-        .card h2 {
-            font-size: 18px;
-            margin-top: 0;
-            margin-bottom: 14px;
-            color: var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .hero-metric {
-            text-align: center;
-            padding: 6px 0;
-        }
-
-        .hero-metric .label {
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-        }
-
-        .hero-metric .val {
-            font-size: 28px;
-            font-weight: 800;
-            margin-top: 4px;
-        }
-
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 280px;
-            margin: 0 auto 12px auto;
-        }
-
-        .form-group {
-            margin-bottom: 14px;
-        }
-
-        label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
+        /* Efecto neón en cuadros */
+        .neon-emerald { box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 0 18px rgba(16,185,129,0.25), inset 0 0 20px rgba(16,185,129,0.04); }
+        .neon-rose { box-shadow: 0 0 0 1px rgba(244,63,94,0.35), 0 0 18px rgba(244,63,94,0.25), inset 0 0 20px rgba(244,63,94,0.04); }
+        .neon-purple { box-shadow: 0 0 0 1px rgba(168,85,247,0.35), 0 0 18px rgba(168,85,247,0.25), inset 0 0 20px rgba(168,85,247,0.04); }
+        .neon-teal { box-shadow: 0 0 0 1px rgba(45,212,191,0.35), 0 0 18px rgba(45,212,191,0.25), inset 0 0 20px rgba(45,212,191,0.04); }
+        .neon-amber { box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 0 18px rgba(251,191,36,0.25), inset 0 0 20px rgba(251,191,36,0.04); }
+        .neon-card { transition: box-shadow 0.25s ease, transform 0.2s ease; }
+        .neon-card:hover { transform: translateY(-2px); }
 
         input, select {
             width: 100%;
-            padding: 14px;
-            background-color: #0f172a;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            color: var(--text-main);
+            padding: 12px;
+            background-color: #0b1220;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #f8fafc;
             font-size: 16px;
             outline: none;
         }
+        input:focus, select:focus { border-color: #10b981; }
+        label { display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.03em; }
 
-        input:focus, select:focus {
-            border-color: var(--accent);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 15px;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .btn-primary { background-color: var(--accent); color: #0f172a; }
-        .btn-success { background-color: var(--primary); color: #0f172a; }
-        .btn-warning { background-color: var(--warning); color: #0f172a; }
-        .btn-danger { background-color: var(--danger); color: #ffffff; }
-        .btn-purple { background-color: var(--purple); color: #ffffff; }
-        .btn-secondary { background-color: var(--border); color: var(--text-main); }
-
-        .debt-item {
-            background-color: #0f172a;
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--danger);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 12px;
-        }
-
-        .debt-item.active {
-            border-left-color: var(--primary);
-            background-color: rgba(16, 185, 129, 0.05);
-        }
-
-        .debt-item.cleared {
-            border-left-color: #64748b;
-            background-color: rgba(100, 116, 139, 0.1);
-            text-decoration: line-through;
-            opacity: 0.7;
-        }
-
-        .invest-item {
-            background-color: #0f172a;
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--purple);
-            border-radius: 10px;
-            padding: 14px;
-            margin-bottom: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .debt-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .debt-info p {
-            margin: 4px 0 0 0;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .debt-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-
-        .debt-actions button {
-            padding: 10px 12px;
-            font-size: 13px;
-            border-radius: 8px;
-            flex: 1;
-        }
-
-        .history-item {
-            border-bottom: 1px solid var(--border);
-            padding: 10px 0;
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            font-size: 11px;
-            border-radius: 4px;
-            background-color: #334155;
-            color: var(--accent);
-            font-weight: 700;
-        }
-
-        .badge-min {
-            background-color: #1e3a8a;
-            color: #93c5fd;
-        }
-
-        .badge-invest {
-            background-color: #581c87;
-            color: #e9d5ff;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 13px;
-            margin-bottom: 8px;
-        }
-        .back-link:hover { color: var(--accent); }
+        .btn { width:100%; padding:13px; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; text-align:center; transition: all 0.2s ease; }
+        .btn:active { transform: scale(0.97); }
     </style>
 </head>
-<body>
+<body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen">
 
-<div class="container">
-    <a href="index.html" class="back-link">← Volver al Control Financiero</a>
+    <div class="fixed top-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
+    <div class="fixed bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
 
-    <div class="header">
-        <h1>Centro de Mando Pro</h1>
-        <p>Sistema de Liberación Financiera & Patrimonio</p>
-    </div>
+    <div class="max-w-3xl mx-auto w-full z-10 space-y-5">
 
-    <div class="card">
-        <div class="grid-2">
-            <div class="hero-metric">
-                <div class="label">Deuda Total</div>
-                <div class="val" id="totalDebt" style="color: var(--danger);">$0</div>
+        <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-400 text-sm transition-colors">
+            <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
+        </a>
+
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 text-center space-y-1">
+            <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-purple-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-2">
+                <i class="fa-solid fa-fire"></i>
             </div>
-            <div class="hero-metric">
-                <div class="label">Inversiones</div>
-                <div class="val" id="totalInvest" style="color: var(--purple);">$0</div>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
+                Centro de Mando Pro
+            </h1>
+            <p class="text-slate-400 text-sm">Sistema de Liberación Financiera & Patrimonio</p>
+        </header>
+
+        <!-- Métricas principales -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="glass-panel neon-card neon-rose rounded-2xl p-4 text-center">
+                <div class="text-xs font-bold text-rose-300 uppercase tracking-wider">Deuda Total</div>
+                <div class="text-2xl sm:text-3xl font-bold text-rose-400 mt-1" id="totalDebt">$0</div>
+            </div>
+            <div class="glass-panel neon-card neon-purple rounded-2xl p-4 text-center">
+                <div class="text-xs font-bold text-purple-300 uppercase tracking-wider">Inversiones</div>
+                <div class="text-2xl sm:text-3xl font-bold text-purple-400 mt-1" id="totalInvest">$0</div>
             </div>
         </div>
-    </div>
 
-    <div class="card">
-        <h2>Distribución de Deudas</h2>
-        <div class="chart-container">
-            <canvas id="debtPieChart"></canvas>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2 style="color: var(--purple);">Cartera de Inversiones (S&P 500 / Activos)</h2>
-        <form id="investForm">
-            <div class="form-group">
-                <label>Nombre del Activo / Acción / ETF</label>
-                <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
+        <!-- Gráfico de deudas -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie"></i> Distribución de Deudas
+            </h2>
+            <div class="max-w-[280px] mx-auto">
+                <canvas id="debtPieChart"></canvas>
             </div>
-            <div class="grid-2">
-                <div class="form-group">
-                    <label>Cantidad (Unidades)</label>
-                    <input type="number" id="investQty" step="any" placeholder="Ej: 500" required>
+        </div>
+
+        <!-- Cartera de inversiones -->
+        <div class="glass-panel neon-card neon-purple rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-purple-300 flex items-center gap-2">
+                <i class="fa-solid fa-seedling"></i> Cartera de Inversiones (S&P 500 / Activos)
+            </h2>
+            <form id="investForm" class="space-y-3">
+                <div>
+                    <label>Nombre del Activo / Acción / ETF</label>
+                    <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
                 </div>
-                <div class="form-group">
-                    <label>Precio Unitario ($)</label>
-                    <input type="number" id="investPrice" step="any" placeholder="Ej: 500" required>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label>Cantidad (Unidades)</label>
+                        <input type="number" id="investQty" step="any" placeholder="Ej: 500" required>
+                    </div>
+                    <div>
+                        <label>Precio Unitario ($)</label>
+                        <input type="number" id="investPrice" step="any" placeholder="Ej: 500" required>
+                    </div>
                 </div>
+                <button type="submit" class="btn bg-purple-500 hover:bg-purple-400 text-slate-950">Registrar en Cartera</button>
+            </form>
+            <div>
+                <label>Tus Inversiones Actuales</label>
+                <div id="investList" class="space-y-2"></div>
             </div>
-            <button type="submit" class="btn btn-purple">Registrar en Cartera</button>
-        </form>
-
-        <div style="margin-top: 16px;">
-            <label>Tus Inversiones Actuales</label>
-            <div id="investList"></div>
         </div>
-    </div>
 
-    <div class="card">
-        <h2 id="formTitle">Registrar Deuda</h2>
-        <form id="debtForm">
-            <input type="hidden" id="editingId" value="">
-            <div class="form-group">
-                <label>Acreedor / Nombre de Deuda</label>
-                <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Prestamo Juan" required>
-            </div>
-            <div class="form-group">
-                <label>Monto Total ($)</label>
-                <input type="number" id="amount" step="any" placeholder="1300" required>
-            </div>
-            <div class="form-group">
-                <label>Pago Mínimo Mensual ($)</label>
-                <input type="number" id="minPayment" step="any" placeholder="200" required>
-            </div>
-            <button type="submit" id="btnSaveDebt" class="btn btn-primary">Agregar Deuda</button>
-            <button type="button" id="btnCancelEdit" class="btn btn-secondary" style="display:none; margin-top:8px;">Cancelar Edición</button>
-        </form>
-    </div>
+        <!-- Registrar deuda -->
+        <div class="glass-panel neon-card neon-emerald rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-emerald-300 flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
+            </h2>
+            <form id="debtForm" class="space-y-3">
+                <input type="hidden" id="editingId" value="">
+                <div>
+                    <label>Acreedor / Nombre de Deuda</label>
+                    <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Préstamo Juan" required>
+                </div>
+                <div>
+                    <label>Monto Total ($)</label>
+                    <input type="number" id="amount" step="any" placeholder="1300" required>
+                </div>
+                <div>
+                    <label>Pago Mínimo Mensual ($)</label>
+                    <input type="number" id="minPayment" step="any" placeholder="200" required>
+                </div>
+                <button type="submit" id="btnSaveDebt" class="btn bg-emerald-500 hover:bg-emerald-400 text-slate-950">Agregar Deuda</button>
+                <button type="button" id="btnCancelEdit" class="btn bg-slate-800 hover:bg-slate-700 text-slate-200" style="display:none;">Cancelar Edición</button>
+            </form>
+        </div>
 
-    <div class="card">
-        <h2>Acelerador de Ingresos (Pagos Extra)</h2>
-        <form id="extraForm">
-            <div class="form-group">
-                <label>Categoría del Ingreso</label>
-                <select id="extraSourceCategory" required>
-                    <option value="E-commerce">E-commerce / Ventas Online</option>
-                    <option value="Venta de Activo">Venta de Activo / Vehículo</option>
-                    <option value="Cursos / Digital">Cursos / Libros / Digital</option>
-                    <option value="Servicios">Servicios / Trabajos</option>
-                    <option value="Otros">Otros Ingresos (Especificar)</option>
-                </select>
-            </div>
-            
-            <div class="form-group" id="otherCategoryGroup" style="display: none;">
-                <label>Especificar Origen (Otros)</label>
-                <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
-            </div>
+        <!-- Acelerador de ingresos -->
+        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
+                <i class="fa-solid fa-bolt"></i> Acelerador de Ingresos (Pagos Extra)
+            </h2>
+            <form id="extraForm" class="space-y-3">
+                <div>
+                    <label>Categoría del Ingreso</label>
+                    <select id="extraSourceCategory" required>
+                        <option value="E-commerce">E-commerce / Ventas Online</option>
+                        <option value="Venta de Activo">Venta de Activo / Vehículo</option>
+                        <option value="Cursos / Digital">Cursos / Libros / Digital</option>
+                        <option value="Servicios">Servicios / Trabajos</option>
+                        <option value="Otros">Otros Ingresos (Especificar)</option>
+                    </select>
+                </div>
+                <div id="otherCategoryGroup" style="display:none;">
+                    <label>Especificar Origen (Otros)</label>
+                    <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
+                </div>
+                <div>
+                    <label>Detalle del Ingreso</label>
+                    <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
+                </div>
+                <div>
+                    <label>Monto a Inyectar ($)</label>
+                    <input type="number" id="extraAmount" step="any" placeholder="500" required>
+                </div>
+                <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Inyectar a Deuda Prioritaria</button>
+            </form>
+        </div>
 
-            <div class="form-group">
-                <label>Detalle del Ingreso</label>
-                <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
-            </div>
-            <div class="form-group">
-                <label>Monto a Inyectar ($)</label>
-                <input type="number" id="extraAmount" step="any" placeholder="500" required>
-            </div>
-            <button type="submit" class="btn btn-success">Inyectar a Deuda Prioritaria</button>
-        </form>
-    </div>
+        <!-- Bola de nieve -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-snowflake"></i> Estrategia Bola de Nieve (Pendientes)
+            </h2>
+            <div id="debtList" class="space-y-3"></div>
+        </div>
 
-    <div class="card">
-        <h2>Estrategia Bola de Nieve (Pendientes)</h2>
-        <div id="debtList"></div>
-    </div>
+        <!-- Liquidadas -->
+        <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3 border border-slate-500/20">
+            <h2 class="font-bold text-base sm:text-lg text-slate-300 flex items-center gap-2">
+                🏁 Deudas Liquidadas (Tachadas)
+            </h2>
+            <div id="clearedList" class="space-y-2"></div>
+        </div>
 
-    <div class="card">
-        <h2>Deudas Liquidadas (Tachadas) 🏁</h2>
-        <div id="clearedList"></div>
-    </div>
+        <!-- Historial -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
+            </h2>
+            <div id="historyList" class="space-y-1"></div>
+        </div>
 
-    <div class="card">
-        <h2>Historial General de Pagos</h2>
-        <div id="historyList"></div>
     </div>
-</div>
 
 <script>
     let debts = JSON.parse(localStorage.getItem('debts_data')) || [];
@@ -508,7 +331,7 @@
         document.getElementById('minPayment').value = debt.minPayment;
         editingIdEl.value = debt.id;
 
-        formTitleEl.textContent = 'Modificar Deuda';
+        formTitleEl.innerHTML = '<i class="fa-solid fa-file-invoice-dollar"></i> Modificar Deuda';
         btnSaveDebt.textContent = 'Guardar Cambios';
         btnCancelEdit.style.display = 'block';
     }
@@ -552,7 +375,7 @@
     function resetForm() {
         debtForm.reset();
         editingIdEl.value = '';
-        formTitleEl.textContent = 'Registrar Deuda';
+        formTitleEl.innerHTML = '<i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda';
         btnSaveDebt.textContent = 'Agregar Deuda';
         btnCancelEdit.style.display = 'none';
     }
@@ -611,7 +434,7 @@
                     data: data,
                     backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#10b981', '#a855f7', '#f472b6'],
                     borderWidth: 2,
-                    borderColor: '#1e293b'
+                    borderColor: '#111827'
                 }]
             },
             options: {
@@ -629,20 +452,20 @@
 
         investList.innerHTML = '';
         if (investments.length === 0) {
-            investList.innerHTML = '<p style="text-align:center; color: var(--text-muted); font-size:14px;">Sin inversiones en cartera.</p>';
+            investList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">Sin inversiones en cartera.</p>';
         } else {
             investments.forEach(inv => {
                 const itemVal = inv.qty * inv.price;
                 const item = document.createElement('div');
-                item.className = 'invest-item';
+                item.className = 'bg-slate-950/60 border border-purple-500/20 border-l-4 border-l-purple-500 rounded-xl p-3 flex justify-between items-center gap-2';
                 item.innerHTML = `
-                    <div class="debt-info">
-                        <strong style="color:var(--text-main); font-size:15px;">${inv.name}</strong>
-                        <p>${inv.qty} u. x $${inv.price.toLocaleString()} = <strong style="color:var(--purple);">$${itemVal.toLocaleString()}</strong></p>
+                    <div class="min-w-0">
+                        <strong class="text-sm text-white block truncate">${inv.name}</strong>
+                        <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
                     </div>
-                    <div style="display:flex; gap:6px;">
-                        <button onclick="injectInvestToDebt(${inv.id})" class="btn btn-success" style="padding:6px 10px; font-size:11px; width:auto;">Inyectar a Deuda</button>
-                        <button onclick="deleteInvest(${inv.id})" class="btn btn-danger" style="padding:6px 10px; font-size:11px; width:auto;">X</button>
+                    <div class="flex gap-1.5 flex-shrink-0">
+                        <button onclick="injectInvestToDebt(${inv.id})" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Inyectar</button>
+                        <button onclick="deleteInvest(${inv.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `;
                 investList.appendChild(item);
@@ -657,24 +480,25 @@
 
         debtList.innerHTML = '';
         if (pendingDebts.length === 0) {
-            debtList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">¡No tienes deudas pendientes!</p>';
+            debtList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">¡No tienes deudas pendientes!</p>';
         } else {
             pendingDebts.forEach((debt, index) => {
                 const isTarget = index === 0;
                 const item = document.createElement('div');
-                item.className = `debt-item ${isTarget ? 'active' : ''}`;
+                item.className = `bg-slate-950/60 border rounded-xl p-4 space-y-2 ${isTarget ? 'border-emerald-500/40 border-l-4 border-l-emerald-500 bg-emerald-500/5' : 'border-rose-500/20 border-l-4 border-l-rose-500'}`;
                 item.innerHTML = `
-                    <div class="debt-header">
-                        <strong>${debt.name} ${isTarget ? '🎯 (Prioritaria)' : ''}</strong>
+                    <div class="flex items-center justify-between flex-wrap gap-1">
+                        <strong class="text-sm text-white">${debt.name}</strong>
+                        ${isTarget ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">🎯 PRIORITARIA</span>' : ''}
                     </div>
-                    <div class="debt-info">
-                        <p>Saldo Restante: <span style="color:var(--text-main); font-weight:bold;">$${debt.amount.toLocaleString()}</span></p>
+                    <div class="text-xs text-slate-400 space-y-0.5">
+                        <p>Saldo Restante: <span class="text-white font-bold">$${debt.amount.toLocaleString()}</span></p>
                         <p>Pago Mínimo Mensual: $${debt.minPayment.toLocaleString()}</p>
                     </div>
-                    <div class="debt-actions">
-                        <button onclick="payMin(${debt.id})" class="btn btn-success">Pagar Mínimo ($${debt.minPayment})</button>
-                        <button onclick="editDebt(${debt.id})" class="btn btn-warning">Editar</button>
-                        <button onclick="deleteDebt(${debt.id})" class="btn btn-danger">Borrar</button>
+                    <div class="flex gap-2 flex-wrap pt-1">
+                        <button onclick="payMin(${debt.id})" class="flex-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold px-3 py-2 rounded-lg">Pagar Mínimo</button>
+                        <button onclick="editDebt(${debt.id})" class="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold px-3 py-2 rounded-lg">Editar</button>
+                        <button onclick="deleteDebt(${debt.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold px-3 py-2 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `;
                 debtList.appendChild(item);
@@ -683,16 +507,14 @@
 
         clearedList.innerHTML = '';
         if (clearedDebts.length === 0) {
-            clearedList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Aún no hay deudas tachadas.</p>';
+            clearedList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">Aún no hay deudas tachadas.</p>';
         } else {
             clearedDebts.forEach(debt => {
                 const item = document.createElement('div');
-                item.className = 'debt-item cleared';
+                item.className = 'bg-slate-950/40 border border-slate-500/20 border-l-4 border-l-slate-500 rounded-xl p-3 flex items-center justify-between opacity-60';
                 item.innerHTML = `
-                    <div class="debt-header">
-                        <strong>✔ ${debt.name} (PAGADA)</strong>
-                        <button onclick="deleteDebt(${debt.id})" class="btn btn-danger" style="width:auto; padding:4px 8px; font-size:11px;">Eliminar</button>
-                    </div>
+                    <strong class="text-sm text-slate-300 line-through">✔ ${debt.name}</strong>
+                    <button onclick="deleteDebt(${debt.id})" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>
                 `;
                 clearedList.appendChild(item);
             });
@@ -700,20 +522,19 @@
 
         historyList.innerHTML = '';
         if (history.length === 0) {
-            historyList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Sin movimientos registrados.</p>';
+            historyList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">Sin movimientos registrados.</p>';
         } else {
             history.forEach(item => {
                 const hItem = document.createElement('div');
-                hItem.className = 'history-item';
+                hItem.className = 'flex items-center justify-between border-b border-white/5 py-2.5 gap-2';
+                const badgeClass = item.isMin ? 'bg-sky-900/60 text-sky-300' : (item.category.includes('Inversión') ? 'bg-purple-900/60 text-purple-300' : 'bg-slate-800 text-emerald-300');
                 hItem.innerHTML = `
-                    <div>
-                        <span class="badge ${item.isMin ? 'badge-min' : (item.category.includes('Inversión') ? 'badge-invest' : '')}">${item.category}</span>
-                        <strong style="margin-left: 4px;">${item.detail}</strong>
-                        <div style="font-size: 12px; color: var(--text-muted);">Acreedor: ${item.targetName} (${item.date})</div>
+                    <div class="min-w-0">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeClass}">${item.category}</span>
+                        <strong class="text-sm text-white ml-1">${item.detail}</strong>
+                        <div class="text-xs text-slate-400 mt-0.5">Acreedor: ${item.targetName} (${item.date})</div>
                     </div>
-                    <div style="font-weight: bold; color: ${item.isMin ? 'var(--accent)' : 'var(--primary)'};">
-                        -$${item.amount.toLocaleString()}
-                    </div>
+                    <div class="font-bold text-sm flex-shrink-0 ${item.isMin ? 'text-sky-400' : 'text-emerald-400'}">-$${item.amount.toLocaleString()}</div>
                 `;
                 historyList.appendChild(hItem);
             });
