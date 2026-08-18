@@ -82,6 +82,24 @@
             </div>
         </div>
 
+        <!-- Saldo a favor -->
+        <div class="glass-panel neon-card neon-emerald rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-emerald-300 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i> Saldo a Favor
+            </h2>
+            <div class="text-center">
+                <div class="text-xs font-bold text-emerald-300 uppercase tracking-wider">Total pagado / a favor</div>
+                <div class="text-3xl sm:text-4xl font-bold text-emerald-400 mt-1" id="creditBalanceDisplay">$0</div>
+            </div>
+            <div class="max-w-[240px] mx-auto">
+                <canvas id="progressPieChart"></canvas>
+            </div>
+            <button id="btnInjectCredit" class="btn bg-emerald-500 hover:bg-emerald-400 text-slate-950">
+                <i class="fa-solid fa-hand-holding-dollar"></i> Inyectar Saldo a Favor a una Deuda (opcional)
+            </button>
+            <p class="text-[11px] text-slate-500 text-center">Es tu decisión usarlo o guardarlo — no se aplica solo.</p>
+        </div>
+
         <!-- Gráfico de deudas -->
         <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
             <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
@@ -89,6 +107,26 @@
             </h2>
             <div class="max-w-[280px] mx-auto">
                 <canvas id="debtPieChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Fondos de Emergencia -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-3">
+                <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
+                    <i class="fa-solid fa-shield-halved"></i> Emergencias
+                </h2>
+                <p class="text-[11px] text-slate-500">Ej: USD 1000 o $1.500.000</p>
+                <input type="number" id="emergencyBasic" step="any" placeholder="Ej: 1500000">
+                <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+            </div>
+            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-3">
+                <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
+                    <i class="fa-solid fa-life-ring"></i> Emergencia 3 a 6 Sueldos
+                </h2>
+                <p class="text-[11px] text-slate-500">Ej: $9.000.000</p>
+                <input type="number" id="emergencyFull" step="any" placeholder="Ej: 9000000">
+                <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
             </div>
         </div>
 
@@ -121,8 +159,8 @@
         </div>
 
         <!-- Registrar deuda -->
-        <div class="glass-panel neon-card neon-emerald rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-emerald-300 flex items-center gap-2">
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
                 <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
             </h2>
             <form id="debtForm" class="space-y-3">
@@ -139,7 +177,7 @@
                     <label>Pago Mínimo Mensual ($)</label>
                     <input type="number" id="minPayment" step="any" placeholder="200" required>
                 </div>
-                <button type="submit" id="btnSaveDebt" class="btn bg-emerald-500 hover:bg-emerald-400 text-slate-950">Agregar Deuda</button>
+                <button type="submit" id="btnSaveDebt" class="btn bg-rose-500 hover:bg-rose-400 text-white">Agregar Deuda</button>
                 <button type="button" id="btnCancelEdit" class="btn bg-slate-800 hover:bg-slate-700 text-slate-200" style="display:none;">Cancelar Edición</button>
             </form>
         </div>
@@ -206,7 +244,9 @@
     let debts = JSON.parse(localStorage.getItem('debts_data')) || [];
     let investments = JSON.parse(localStorage.getItem('invest_data')) || [];
     let history = JSON.parse(localStorage.getItem('history_data')) || [];
+    let creditBalance = parseFloat(localStorage.getItem('credit_balance')) || 0;
     let pieChart = null;
+    let progressChart = null;
 
     const debtForm = document.getElementById('debtForm');
     const editingIdEl = document.getElementById('editingId');
@@ -242,7 +282,51 @@
         localStorage.setItem('debts_data', JSON.stringify(debts));
         localStorage.setItem('invest_data', JSON.stringify(investments));
         localStorage.setItem('history_data', JSON.stringify(history));
+        localStorage.setItem('credit_balance', creditBalance.toString());
     }
+
+    // Fondos de emergencia (simples, guardado local)
+    document.getElementById('emergencyBasic').value = localStorage.getItem('emergency_basic') || '';
+    document.getElementById('emergencyFull').value = localStorage.getItem('emergency_full') || '';
+    document.getElementById('btnSaveEmergencyBasic').addEventListener('click', () => {
+        localStorage.setItem('emergency_basic', document.getElementById('emergencyBasic').value);
+        alert('Meta de emergencia guardada.');
+    });
+    document.getElementById('btnSaveEmergencyFull').addEventListener('click', () => {
+        localStorage.setItem('emergency_full', document.getElementById('emergencyFull').value);
+        alert('Meta de emergencia guardada.');
+    });
+
+    // Inyectar saldo a favor a una deuda (acción opcional, el usuario decide)
+    document.getElementById('btnInjectCredit').addEventListener('click', () => {
+        if (creditBalance <= 0) { alert('Todavía no tenés saldo a favor acumulado.'); return; }
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0).sort((a, b) => a.amount - b.amount);
+        if (pendingDebts.length === 0) { alert('No tenés deudas pendientes donde inyectarlo.'); return; }
+        if (!confirm(`¿Querés usar tu saldo a favor de $${creditBalance.toLocaleString()} para pagar "${pendingDebts[0].name}"? Esto es totalmente opcional.`)) return;
+
+        const targetDebt = pendingDebts[0];
+        const used = Math.min(creditBalance, targetDebt.amount);
+        targetDebt.amount -= used;
+        creditBalance -= used;
+
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            category: 'Saldo a Favor',
+            detail: 'Inyección voluntaria de saldo a favor',
+            amount: used,
+            targetName: targetDebt.name,
+            isMin: false
+        });
+
+        if (targetDebt.amount <= 0) {
+            targetDebt.amount = 0;
+            targetDebt.cleared = true;
+            alert(`¡Felicidades! Has cancelado la deuda: ${targetDebt.name}`);
+        }
+
+        saveStorage();
+        render();
+    });
 
     investForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -349,7 +433,9 @@
         if (!debt) return;
 
         const payAmount = Math.min(debt.amount, debt.minPayment);
+        const overflow = debt.minPayment - payAmount;
         debt.amount -= payAmount;
+        if (overflow > 0) creditBalance += overflow;
 
         history.unshift({
             date: new Date().toLocaleDateString(),
@@ -394,7 +480,9 @@
         if (pendingDebts.length === 0) return alert('No hay deudas pendientes para inyectar capital.');
 
         const targetDebt = pendingDebts[0];
+        const overflow = extra > targetDebt.amount ? extra - targetDebt.amount : 0;
         targetDebt.amount -= extra;
+        if (overflow > 0) creditBalance += overflow;
 
         history.unshift({
             date: new Date().toLocaleDateString(),
@@ -446,7 +534,39 @@
         });
     }
 
+    function updateProgressChart() {
+        const ctx = document.getElementById('progressPieChart').getContext('2d');
+        const totalOwedOriginal = debts.reduce((acc, d) => acc + (d.originalAmount || d.amount), 0);
+        const totalPaid = history.reduce((acc, h) => acc + (h.amount || 0), 0);
+        const totalRemaining = debts.filter(d => !d.cleared).reduce((acc, d) => acc + d.amount, 0);
+
+        if (progressChart) progressChart.destroy();
+
+        const paidSlice = Math.max(totalPaid, 0.01);
+        const remainingSlice = Math.max(totalRemaining, 0.01);
+
+        progressChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Saldo a Favor / Pagado', 'Deuda Restante'],
+                datasets: [{
+                    data: [paidSlice, remainingSlice],
+                    backgroundColor: ['#10b981', 'rgba(244,63,94,0.35)'],
+                    borderWidth: 2,
+                    borderColor: '#111827'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } } },
+                cutout: '68%'
+            }
+        });
+    }
+
     function render() {
+        document.getElementById('creditBalanceDisplay').textContent = `$${creditBalance.toLocaleString()}`;
+
         const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
         totalInvestEl.textContent = `$${totalInvestVal.toLocaleString()}`;
 
@@ -541,6 +661,7 @@
         }
 
         updateChart();
+        updateProgressChart();
     }
 
     render();
