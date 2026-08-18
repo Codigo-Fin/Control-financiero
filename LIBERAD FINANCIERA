@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Libertad Financiera</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --primary: #10b981;
+            --danger: #f43f5e;
+            --warning: #fbbf24;
+            --purple: #a855f7;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            padding: 12px;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 12px 0;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: 800;
+            background: linear-gradient(to right, #38bdf8, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .card h2 {
+            font-size: 18px;
+            margin-top: 0;
+            margin-bottom: 14px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .hero-metric {
+            text-align: center;
+            padding: 6px 0;
+        }
+
+        .hero-metric .label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .hero-metric .val {
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 280px;
+            margin: 0 auto 12px auto;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px;
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 16px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-primary { background-color: var(--accent); color: #0f172a; }
+        .btn-success { background-color: var(--primary); color: #0f172a; }
+        .btn-warning { background-color: var(--warning); color: #0f172a; }
+        .btn-danger { background-color: var(--danger); color: #ffffff; }
+        .btn-purple { background-color: var(--purple); color: #ffffff; }
+        .btn-secondary { background-color: var(--border); color: var(--text-main); }
+
+        .debt-item {
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--danger);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .debt-item.active {
+            border-left-color: var(--primary);
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+
+        .debt-item.cleared {
+            border-left-color: #64748b;
+            background-color: rgba(100, 116, 139, 0.1);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .invest-item {
+            background-color: #0f172a;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--purple);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .debt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .debt-info p {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .debt-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .debt-actions button {
+            padding: 10px 12px;
+            font-size: 13px;
+            border-radius: 8px;
+            flex: 1;
+        }
+
+        .history-item {
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            background-color: #334155;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .badge-min {
+            background-color: #1e3a8a;
+            color: #93c5fd;
+        }
+
+        .badge-invest {
+            background-color: #581c87;
+            color: #e9d5ff;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .back-link:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-link">← Volver al Control Financiero</a>
+
+    <div class="header">
+        <h1>Centro de Mando Pro</h1>
+        <p>Sistema de Liberación Financiera & Patrimonio</p>
+    </div>
+
+    <div class="card">
+        <div class="grid-2">
+            <div class="hero-metric">
+                <div class="label">Deuda Total</div>
+                <div class="val" id="totalDebt" style="color: var(--danger);">$0</div>
+            </div>
+            <div class="hero-metric">
+                <div class="label">Inversiones</div>
+                <div class="val" id="totalInvest" style="color: var(--purple);">$0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Distribución de Deudas</h2>
+        <div class="chart-container">
+            <canvas id="debtPieChart"></canvas>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 style="color: var(--purple);">Cartera de Inversiones (S&P 500 / Activos)</h2>
+        <form id="investForm">
+            <div class="form-group">
+                <label>Nombre del Activo / Acción / ETF</label>
+                <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Cantidad (Unidades)</label>
+                    <input type="number" id="investQty" step="any" placeholder="Ej: 500" required>
+                </div>
+                <div class="form-group">
+                    <label>Precio Unitario ($)</label>
+                    <input type="number" id="investPrice" step="any" placeholder="Ej: 500" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-purple">Registrar en Cartera</button>
+        </form>
+
+        <div style="margin-top: 16px;">
+            <label>Tus Inversiones Actuales</label>
+            <div id="investList"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 id="formTitle">Registrar Deuda</h2>
+        <form id="debtForm">
+            <input type="hidden" id="editingId" value="">
+            <div class="form-group">
+                <label>Acreedor / Nombre de Deuda</label>
+                <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Prestamo Juan" required>
+            </div>
+            <div class="form-group">
+                <label>Monto Total ($)</label>
+                <input type="number" id="amount" step="any" placeholder="1300" required>
+            </div>
+            <div class="form-group">
+                <label>Pago Mínimo Mensual ($)</label>
+                <input type="number" id="minPayment" step="any" placeholder="200" required>
+            </div>
+            <button type="submit" id="btnSaveDebt" class="btn btn-primary">Agregar Deuda</button>
+            <button type="button" id="btnCancelEdit" class="btn btn-secondary" style="display:none; margin-top:8px;">Cancelar Edición</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Acelerador de Ingresos (Pagos Extra)</h2>
+        <form id="extraForm">
+            <div class="form-group">
+                <label>Categoría del Ingreso</label>
+                <select id="extraSourceCategory" required>
+                    <option value="E-commerce">E-commerce / Ventas Online</option>
+                    <option value="Venta de Activo">Venta de Activo / Vehículo</option>
+                    <option value="Cursos / Digital">Cursos / Libros / Digital</option>
+                    <option value="Servicios">Servicios / Trabajos</option>
+                    <option value="Otros">Otros Ingresos (Especificar)</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="otherCategoryGroup" style="display: none;">
+                <label>Especificar Origen (Otros)</label>
+                <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
+            </div>
+
+            <div class="form-group">
+                <label>Detalle del Ingreso</label>
+                <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
+            </div>
+            <div class="form-group">
+                <label>Monto a Inyectar ($)</label>
+                <input type="number" id="extraAmount" step="any" placeholder="500" required>
+            </div>
+            <button type="submit" class="btn btn-success">Inyectar a Deuda Prioritaria</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Estrategia Bola de Nieve (Pendientes)</h2>
+        <div id="debtList"></div>
+    </div>
+
+    <div class="card">
+        <h2>Deudas Liquidadas (Tachadas) 🏁</h2>
+        <div id="clearedList"></div>
+    </div>
+
+    <div class="card">
+        <h2>Historial General de Pagos</h2>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script>
+    let debts = JSON.parse(localStorage.getItem('debts_data')) || [];
+    let investments = JSON.parse(localStorage.getItem('invest_data')) || [];
+    let history = JSON.parse(localStorage.getItem('history_data')) || [];
+    let pieChart = null;
+
+    const debtForm = document.getElementById('debtForm');
+    const editingIdEl = document.getElementById('editingId');
+    const formTitleEl = document.getElementById('formTitle');
+    const btnSaveDebt = document.getElementById('btnSaveDebt');
+    const btnCancelEdit = document.getElementById('btnCancelEdit');
+
+    const investForm = document.getElementById('investForm');
+    const investList = document.getElementById('investList');
+    const totalInvestEl = document.getElementById('totalInvest');
+
+    const extraForm = document.getElementById('extraForm');
+    const categorySelect = document.getElementById('extraSourceCategory');
+    const otherCategoryGroup = document.getElementById('otherCategoryGroup');
+    const otherCategoryDetail = document.getElementById('otherCategoryDetail');
+
+    const debtList = document.getElementById('debtList');
+    const clearedList = document.getElementById('clearedList');
+    const historyList = document.getElementById('historyList');
+    const totalDebtEl = document.getElementById('totalDebt');
+
+    categorySelect.addEventListener('change', () => {
+        if (categorySelect.value === 'Otros') {
+            otherCategoryGroup.style.display = 'block';
+            otherCategoryDetail.required = true;
+        } else {
+            otherCategoryGroup.style.display = 'none';
+            otherCategoryDetail.required = false;
+        }
+    });
+
+    function saveStorage() {
+        localStorage.setItem('debts_data', JSON.stringify(debts));
+        localStorage.setItem('invest_data', JSON.stringify(investments));
+        localStorage.setItem('history_data', JSON.stringify(history));
+    }
+
+    investForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('investName').value;
+        const qty = parseFloat(document.getElementById('investQty').value);
+        const price = parseFloat(document.getElementById('investPrice').value);
+
+        investments.push({ id: Date.now(), name, qty, price });
+        investForm.reset();
+        saveStorage();
+        render();
+    });
+
+    function deleteInvest(id) {
+        if (confirm('¿Deseas quitar este activo de tu cartera?')) {
+            investments = investments.filter(i => i.id != id);
+            saveStorage();
+            render();
+        }
+    }
+
+    function injectInvestToDebt(id) {
+        const inv = investments.find(i => i.id == id);
+        if (!inv) return;
+
+        const totalValue = inv.qty * inv.price;
+        const pendingDebts = debts.filter(d => !d.cleared).sort((a, b) => a.amount - b.amount);
+
+        if (pendingDebts.length === 0) return alert('No tienes deudas pendientes para inyectar este capital.');
+
+        if (confirm(`¿Deseas liquidar $${totalValue.toLocaleString()} de "${inv.name}" e inyectarlo a tu deuda prioritaria?`)) {
+            const targetDebt = pendingDebts[0];
+            targetDebt.amount -= totalValue;
+
+            history.unshift({
+                date: new Date().toLocaleDateString(),
+                category: 'Liquidación Inversión',
+                detail: `Venta de ${inv.qty} x ${inv.name}`,
+                amount: totalValue,
+                targetName: targetDebt.name,
+                isMin: false
+            });
+
+            if (targetDebt.amount <= 0) {
+                targetDebt.amount = 0;
+                targetDebt.cleared = true;
+                alert(`¡Felicidades! Has cancelado la deuda: ${targetDebt.name}`);
+            }
+
+            investments = investments.filter(i => i.id != id);
+            saveStorage();
+            render();
+        }
+    }
+
+    debtForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const minPayment = parseFloat(document.getElementById('minPayment').value);
+        const editingId = editingIdEl.value;
+
+        if (editingId) {
+            const index = debts.findIndex(d => d.id == editingId);
+            if (index !== -1) {
+                debts[index].name = name;
+                debts[index].amount = amount;
+                debts[index].minPayment = minPayment;
+            }
+            resetForm();
+        } else {
+            debts.push({ id: Date.now(), name, amount, minPayment, cleared: false });
+            debtForm.reset();
+        }
+
+        saveStorage();
+        render();
+    });
+
+    function editDebt(id) {
+        const debt = debts.find(d => d.id == id);
+        if (!debt) return;
+
+        document.getElementById('name').value = debt.name;
+        document.getElementById('amount').value = debt.amount;
+        document.getElementById('minPayment').value = debt.minPayment;
+        editingIdEl.value = debt.id;
+
+        formTitleEl.textContent = 'Modificar Deuda';
+        btnSaveDebt.textContent = 'Guardar Cambios';
+        btnCancelEdit.style.display = 'block';
+    }
+
+    function deleteDebt(id) {
+        if (confirm('¿Deseas borrar esta deuda?')) {
+            debts = debts.filter(d => d.id != id);
+            saveStorage();
+            render();
+        }
+    }
+
+    function payMin(id) {
+        const debt = debts.find(d => d.id == id);
+        if (!debt) return;
+
+        const payAmount = Math.min(debt.amount, debt.minPayment);
+        debt.amount -= payAmount;
+
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            category: 'Pago Mínimo',
+            detail: `Cuota mensual habitual de ${debt.name}`,
+            amount: payAmount,
+            targetName: debt.name,
+            isMin: true
+        });
+
+        if (debt.amount <= 0) {
+            debt.amount = 0;
+            debt.cleared = true;
+            alert(`¡Felicidades! Has liquidado por completo: ${debt.name}`);
+        }
+
+        saveStorage();
+        render();
+    }
+
+    btnCancelEdit.addEventListener('click', resetForm);
+
+    function resetForm() {
+        debtForm.reset();
+        editingIdEl.value = '';
+        formTitleEl.textContent = 'Registrar Deuda';
+        btnSaveDebt.textContent = 'Agregar Deuda';
+        btnCancelEdit.style.display = 'none';
+    }
+
+    extraForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let category = categorySelect.value;
+        if (category === 'Otros') {
+            category = `Otros (${otherCategoryDetail.value.trim()})`;
+        }
+
+        const detail = document.getElementById('extraDetail').value;
+        const extra = parseFloat(document.getElementById('extraAmount').value);
+
+        const pendingDebts = debts.filter(d => !d.cleared).sort((a, b) => a.amount - b.amount);
+        if (pendingDebts.length === 0) return alert('No hay deudas pendientes para inyectar capital.');
+
+        const targetDebt = pendingDebts[0];
+        targetDebt.amount -= extra;
+
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            category,
+            detail,
+            amount: extra,
+            targetName: targetDebt.name,
+            isMin: false
+        });
+
+        if (targetDebt.amount <= 0) {
+            targetDebt.amount = 0;
+            targetDebt.cleared = true;
+            alert(`¡Felicidades! Has cancelado la deuda: ${targetDebt.name}`);
+        }
+
+        extraForm.reset();
+        otherCategoryGroup.style.display = 'none';
+        saveStorage();
+        render();
+    });
+
+    function updateChart() {
+        const ctx = document.getElementById('debtPieChart').getContext('2d');
+        const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const labels = activeDebts.map(d => d.name);
+        const data = activeDebts.map(d => d.amount);
+
+        if (pieChart) pieChart.destroy();
+        if (activeDebts.length === 0) return;
+
+        pieChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#10b981', '#a855f7', '#f472b6'],
+                    borderWidth: 2,
+                    borderColor: '#1e293b'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } }
+                }
+            }
+        });
+    }
+
+    function render() {
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        totalInvestEl.textContent = `$${totalInvestVal.toLocaleString()}`;
+
+        investList.innerHTML = '';
+        if (investments.length === 0) {
+            investList.innerHTML = '<p style="text-align:center; color: var(--text-muted); font-size:14px;">Sin inversiones en cartera.</p>';
+        } else {
+            investments.forEach(inv => {
+                const itemVal = inv.qty * inv.price;
+                const item = document.createElement('div');
+                item.className = 'invest-item';
+                item.innerHTML = `
+                    <div class="debt-info">
+                        <strong style="color:var(--text-main); font-size:15px;">${inv.name}</strong>
+                        <p>${inv.qty} u. x $${inv.price.toLocaleString()} = <strong style="color:var(--purple);">$${itemVal.toLocaleString()}</strong></p>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button onclick="injectInvestToDebt(${inv.id})" class="btn btn-success" style="padding:6px 10px; font-size:11px; width:auto;">Inyectar a Deuda</button>
+                        <button onclick="deleteInvest(${inv.id})" class="btn btn-danger" style="padding:6px 10px; font-size:11px; width:auto;">X</button>
+                    </div>
+                `;
+                investList.appendChild(item);
+            });
+        }
+
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0).sort((a, b) => a.amount - b.amount);
+        const clearedDebts = debts.filter(d => d.cleared || d.amount <= 0);
+
+        const total = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
+        totalDebtEl.textContent = `$${total.toLocaleString()}`;
+
+        debtList.innerHTML = '';
+        if (pendingDebts.length === 0) {
+            debtList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">¡No tienes deudas pendientes!</p>';
+        } else {
+            pendingDebts.forEach((debt, index) => {
+                const isTarget = index === 0;
+                const item = document.createElement('div');
+                item.className = `debt-item ${isTarget ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div class="debt-header">
+                        <strong>${debt.name} ${isTarget ? '🎯 (Prioritaria)' : ''}</strong>
+                    </div>
+                    <div class="debt-info">
+                        <p>Saldo Restante: <span style="color:var(--text-main); font-weight:bold;">$${debt.amount.toLocaleString()}</span></p>
+                        <p>Pago Mínimo Mensual: $${debt.minPayment.toLocaleString()}</p>
+                    </div>
+                    <div class="debt-actions">
+                        <button onclick="payMin(${debt.id})" class="btn btn-success">Pagar Mínimo ($${debt.minPayment})</button>
+                        <button onclick="editDebt(${debt.id})" class="btn btn-warning">Editar</button>
+                        <button onclick="deleteDebt(${debt.id})" class="btn btn-danger">Borrar</button>
+                    </div>
+                `;
+                debtList.appendChild(item);
+            });
+        }
+
+        clearedList.innerHTML = '';
+        if (clearedDebts.length === 0) {
+            clearedList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Aún no hay deudas tachadas.</p>';
+        } else {
+            clearedDebts.forEach(debt => {
+                const item = document.createElement('div');
+                item.className = 'debt-item cleared';
+                item.innerHTML = `
+                    <div class="debt-header">
+                        <strong>✔ ${debt.name} (PAGADA)</strong>
+                        <button onclick="deleteDebt(${debt.id})" class="btn btn-danger" style="width:auto; padding:4px 8px; font-size:11px;">Eliminar</button>
+                    </div>
+                `;
+                clearedList.appendChild(item);
+            });
+        }
+
+        historyList.innerHTML = '';
+        if (history.length === 0) {
+            historyList.innerHTML = '<p style="text-align:center; color: var(--text-muted);">Sin movimientos registrados.</p>';
+        } else {
+            history.forEach(item => {
+                const hItem = document.createElement('div');
+                hItem.className = 'history-item';
+                hItem.innerHTML = `
+                    <div>
+                        <span class="badge ${item.isMin ? 'badge-min' : (item.category.includes('Inversión') ? 'badge-invest' : '')}">${item.category}</span>
+                        <strong style="margin-left: 4px;">${item.detail}</strong>
+                        <div style="font-size: 12px; color: var(--text-muted);">Acreedor: ${item.targetName} (${item.date})</div>
+                    </div>
+                    <div style="font-weight: bold; color: ${item.isMin ? 'var(--accent)' : 'var(--primary)'};">
+                        -$${item.amount.toLocaleString()}
+                    </div>
+                `;
+                historyList.appendChild(hItem);
+            });
+        }
+
+        updateChart();
+    }
+
+    render();
+</script>
+
+</body>
+</html>
