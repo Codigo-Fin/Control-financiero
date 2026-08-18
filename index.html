@@ -333,7 +333,7 @@
             <div class="flex items-center gap-2">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                    <input type="text" id="market-search-input" placeholder="Buscar acción, ETF, CEDEAR o índice (ej. AAPL, SPY, GGAL)..."
+                    <input type="text" id="market-search-input" placeholder="Ej: SP500, AAPL, GGAL, BITCOIN, ORO..."
                         class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-sky-500 transition-colors text-white placeholder-slate-500">
                 </div>
                 <button id="market-search-btn" class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 font-semibold px-4 py-2 rounded-xl text-sm transition-all">
@@ -367,12 +367,18 @@
                 <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
                     <i class="fa-solid fa-star text-amber-400"></i> Suscripción Premium
                 </h3>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites.</p>
+                <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
             </div>
-            <a id="btn-subscribe" href="https://link.mercadopago.com.ar/tuenlacedepago" target="_blank"
-                class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                <i class="fa-solid fa-credit-card"></i> Suscribirme
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="libertad-financiera.html" target="_blank"
+                    class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-fire"></i> Libertad Financiera
+                </a>
+                <a id="btn-subscribe" href="https://link.mercadopago.com.ar/tuenlacedepago" target="_blank"
+                    class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-credit-card"></i> Suscribirme
+                </a>
+            </div>
         </section>
     </div>
 
@@ -426,7 +432,7 @@
 
     <script>
         const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
+        const SUPABASE_ANON_KEY = 'PEGAR_AQUI_TU_ANON_KEY_COMPLETA';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
 
@@ -1069,7 +1075,26 @@
         // ============================================
         // BUSCADOR DEL GRÁFICO DE MERCADO
         // ============================================
-        function reloadMarketChart(symbol) {
+        const MARKET_ALIASES = {
+            'SP500': 'AMEX:SPY', 'S&P500': 'AMEX:SPY', 'S&P 500': 'AMEX:SPY', 'SPY500': 'AMEX:SPY',
+            'SPY 500': 'AMEX:SPY', 'SP 500': 'AMEX:SPY', 'SPY': 'AMEX:SPY',
+            'NASDAQ': 'NASDAQ:NDX', 'NASDAQ100': 'NASDAQ:NDX', 'DOW JONES': 'DJ:DJI', 'DOWJONES': 'DJ:DJI',
+            'MERVAL': 'BCBA:IMV', 'BITCOIN': 'BITSTAMP:BTCUSD', 'BTC': 'BITSTAMP:BTCUSD',
+            'ORO': 'TVC:GOLD', 'GOLD': 'TVC:GOLD', 'DOLAR': 'FX_IDC:USDARS', 'DÓLAR': 'FX_IDC:USDARS'
+        };
+
+        function normalizeMarketSymbol(raw) {
+            const cleaned = raw.trim().toUpperCase().replace(/\s+/g, ' ');
+            if (MARKET_ALIASES[cleaned]) return MARKET_ALIASES[cleaned];
+            // Si ya viene con formato BOLSA:TICKER lo dejamos tal cual
+            if (cleaned.includes(':')) return cleaned.replace(/\s+/g, '');
+            // Si tiene espacios y no es un alias conocido, nos quedamos solo con la primera palabra (el ticker)
+            const firstWord = cleaned.split(' ')[0];
+            return firstWord;
+        }
+
+        function reloadMarketChart(rawSymbol) {
+            const symbol = normalizeMarketSymbol(rawSymbol);
             const container = document.getElementById('market-chart-widget');
             container.innerHTML = '';
             const script = document.createElement('script');
@@ -1088,13 +1113,14 @@
                 support_host: 'https://www.tradingview.com'
             });
             container.appendChild(script);
+            showToast(`Buscando: ${symbol}`);
         }
 
         const marketSearchInput = document.getElementById('market-search-input');
         const marketSearchBtn = document.getElementById('market-search-btn');
         marketSearchBtn.addEventListener('click', () => {
             const val = marketSearchInput.value.trim();
-            if (val) reloadMarketChart(val.toUpperCase());
+            if (val) reloadMarketChart(val);
         });
         marketSearchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); marketSearchBtn.click(); }
