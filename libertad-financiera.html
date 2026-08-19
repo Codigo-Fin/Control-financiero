@@ -8,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body {
             font-family: 'Outfit', sans-serif;
@@ -68,6 +69,14 @@
                 Centro de Mando Pro
             </h1>
             <p class="text-slate-400 text-sm">Sistema de Liberación Financiera & Patrimonio</p>
+            <div class="flex flex-wrap items-center justify-center gap-2 mt-3">
+                <button id="btnFinancialReport" class="bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice"></i> Estado Financiero (PDF a WhatsApp)
+                </button>
+                <button id="btnResetAll" class="bg-slate-800/80 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i> Empezar de Nuevo
+                </button>
+            </div>
         </header>
 
         <!-- Métricas principales -->
@@ -254,12 +263,22 @@
 
         <!-- Historial -->
         <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
-            <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
-                <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
-            </h2>
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
+                </h2>
+                <button id="btnClearHistory" title="Vaciar historial" class="text-slate-500 hover:text-rose-400 text-xs bg-slate-900/60 hover:bg-rose-500/10 border border-white/10 px-2.5 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-broom"></i>
+                </button>
+            </div>
             <div id="historyList" class="space-y-1"></div>
         </div>
 
+    </div>
+
+    <!-- Hidden PDF invoice template -->
+    <div id="pdf-report-template" style="display:none; background:#ffffff; color:#111111; padding:32px; width:820px; font-family: Arial, Helvetica, sans-serif;">
+        <div id="pdf-report-content"></div>
     </div>
 
 <script>
@@ -714,6 +733,174 @@
         updateChart();
         updateProgressChart();
     }
+
+    // ============================================
+    // VACIAR HISTORIAL
+    // ============================================
+    document.getElementById('btnClearHistory').addEventListener('click', () => {
+        if (history.length === 0) return;
+        if (confirm('¿Deseas vaciar el historial de pagos? Esto no afecta tus deudas ni tu saldo a favor, solo borra la lista de movimientos.')) {
+            history = [];
+            saveStorage();
+            render();
+        }
+    });
+
+    // ============================================
+    // ESTADO FINANCIERO EN PDF + COMPARTIR WHATSAPP
+    // ============================================
+    function buildFinancialReportHTML() {
+        const today = new Date().toLocaleDateString('es-AR');
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const clearedDebts = debts.filter(d => d.cleared || d.amount <= 0);
+        const totalDebtRemaining = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        const balanceStatus = creditBalance - totalDebtRemaining;
+
+        const debtPieImg = pieChart ? pieChart.toBase64Image() : null;
+        const progressPieImg = progressChart ? progressChart.toBase64Image() : null;
+
+        let historyRows = '';
+        if (history.length === 0) {
+            historyRows = `<tr><td colspan="4" style="padding:14px 6px; text-align:center; color:#999; font-size:12px;">Sin movimientos registrados</td></tr>`;
+        } else {
+            history.forEach(h => {
+                historyRows += `
+                    <tr>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.date}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.category}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.detail} <span style="color:#999;">(${h.targetName})</span></td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; font-weight:bold; border-bottom:1px solid #eee;">$${h.amount.toLocaleString()}</td>
+                    </tr>`;
+            });
+        }
+
+        let investRows = '';
+        if (investments.length === 0) {
+            investRows = `<tr><td colspan="3" style="padding:10px 6px; text-align:center; color:#999; font-size:12px;">Sin inversiones activas</td></tr>`;
+        } else {
+            investments.forEach(inv => {
+                investRows += `
+                    <tr>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${inv.name}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; border-bottom:1px solid #eee;">${inv.qty} u. x $${inv.price.toLocaleString()}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; font-weight:bold; border-bottom:1px solid #eee;">$${(inv.qty * inv.price).toLocaleString()}</td>
+                    </tr>`;
+            });
+        }
+
+        return `
+            <div style="border-bottom:3px solid #10b981; padding-bottom:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1 style="font-size:20px; font-weight:bold; margin:0; color:#111;">Estado Financiero — Centro de Mando Pro</h1>
+                    <p style="font-size:12px; color:#666; margin:4px 0 0 0;">Emitido el ${today}</p>
+                </div>
+                <div style="font-size:24px;">📑</div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                <tr>
+                    <td style="padding:8px; background:#fef2f2; border-radius:6px 0 0 6px;">
+                        <div style="font-size:10px; color:#e11d48; font-weight:bold;">DEUDA RESTANTE</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${totalDebtRemaining.toLocaleString()}</div>
+                    </td>
+                    <td style="padding:8px; background:${balanceStatus >= 0 ? '#ecfdf5' : '#fef2f2'};">
+                        <div style="font-size:10px; color:${balanceStatus >= 0 ? '#059669' : '#e11d48'}; font-weight:bold;">SALDO ${balanceStatus >= 0 ? 'A FAVOR' : 'EN CONTRA'}</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${Math.abs(balanceStatus).toLocaleString()}</div>
+                    </td>
+                    <td style="padding:8px; background:#faf5ff;">
+                        <div style="font-size:10px; color:#9333ea; font-weight:bold;">INVERSIONES</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${totalInvestVal.toLocaleString()}</div>
+                    </td>
+                    <td style="padding:8px; background:#f0fdfa; border-radius:0 6px 6px 0;">
+                        <div style="font-size:10px; color:#0d9488; font-weight:bold;">SALDO A FAVOR ACUM.</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${creditBalance.toLocaleString()}</div>
+                    </td>
+                </tr>
+            </table>
+
+            ${(debtPieImg || progressPieImg) ? `
+            <table style="width:100%; margin-bottom:20px;">
+                <tr>
+                    ${debtPieImg ? `<td style="text-align:center; padding:6px;"><p style="font-size:11px; font-weight:bold; color:#111; margin:0 0 6px 0;">Distribución de Deudas</p><img src="${debtPieImg}" style="max-width:220px;"></td>` : ''}
+                    ${progressPieImg ? `<td style="text-align:center; padding:6px;"><p style="font-size:11px; font-weight:bold; color:#111; margin:0 0 6px 0;">Progreso: Pagado vs Restante</p><img src="${progressPieImg}" style="max-width:220px;"></td>` : ''}
+                </tr>
+            </table>` : ''}
+
+            <h2 style="font-size:13px; font-weight:bold; color:#111; margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">Cartera de Inversiones</h2>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">${investRows}</table>
+
+            <h2 style="font-size:13px; font-weight:bold; color:#111; margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">Historial de Pagos (día y fecha)</h2>
+            <table style="width:100%; border-collapse:collapse;">${historyRows}</table>
+
+            <h2 style="font-size:13px; font-weight:bold; color:#111; margin:18px 0 8px 0; border-bottom:1px solid #ddd; padding-bottom:6px;">Deudas Liquidadas</h2>
+            <p style="font-size:11px; color:#333;">${clearedDebts.length === 0 ? 'Ninguna deuda liquidada todavía.' : clearedDebts.map(d => d.name).join(', ')}</p>
+
+            <p style="margin-top:24px; font-size:10px; color:#999; text-align:center;">Generado con Centro de Mando Pro — Libertad Financiera</p>
+        `;
+    }
+
+    async function downloadFinancialReport() {
+        const template = document.getElementById('pdf-report-template');
+        document.getElementById('pdf-report-content').innerHTML = buildFinancialReportHTML();
+        template.style.display = 'block';
+
+        const filename = `Estado_Financiero_${new Date().toISOString().slice(0,10)}.pdf`;
+        const opt = {
+            margin: 0.4,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        try {
+            const worker = html2pdf().set(opt).from(template);
+            const pdfBlob = await worker.outputPdf('blob');
+            template.style.display = 'none';
+
+            const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'Estado Financiero', text: 'Mi estado financiero actualizado' });
+            } else {
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url; a.download = filename; a.click();
+                URL.revokeObjectURL(url);
+                alert('PDF descargado. Adjuntalo en WhatsApp manualmente.');
+            }
+        } catch (err) {
+            template.style.display = 'none';
+            alert('Error al generar el PDF.');
+        }
+    }
+
+    document.getElementById('btnFinancialReport').addEventListener('click', downloadFinancialReport);
+
+    // ============================================
+    // EMPEZAR DE NUEVO (borra todo, con doble confirmación)
+    // ============================================
+    document.getElementById('btnResetAll').addEventListener('click', () => {
+        const step1 = confirm('Esto borra TODAS tus deudas, inversiones, saldo a favor e historial, para empezar de cero. ¿Continuar?');
+        if (!step1) return;
+        const step2 = confirm('Confirmá de nuevo: esta acción no se puede deshacer. ¿Reiniciar todo ahora?');
+        if (!step2) return;
+
+        debts = [];
+        investments = [];
+        history = [];
+        creditBalance = 0;
+        localStorage.removeItem('emergencyBasic_target');
+        localStorage.removeItem('emergencyBasic_current');
+        localStorage.removeItem('emergencyFull_target');
+        localStorage.removeItem('emergencyFull_current');
+
+        saveStorage();
+        renderEmergencyBox('emergencyBasic');
+        renderEmergencyBox('emergencyFull');
+        render();
+        alert('Listo, todo reiniciado. Podés empezar de cero.');
+    });
 
     render();
 </script>
