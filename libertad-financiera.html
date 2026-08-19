@@ -112,20 +112,42 @@
 
         <!-- Fondos de Emergencia -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-3">
+            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
                 <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
                     <i class="fa-solid fa-shield-halved"></i> Emergencias
                 </h2>
-                <p class="text-[11px] text-slate-500">Ej: USD 1000 o $1.500.000</p>
-                <input type="number" id="emergencyBasic" step="any" placeholder="Ej: 1500000">
+                <p class="text-[11px] text-slate-500">Meta ej: USD 1000 o $1.500.000</p>
+                <div>
+                    <label>Meta objetivo ($)</label>
+                    <input type="number" id="emergencyBasicTarget" step="any" placeholder="Ej: 1500000">
+                </div>
+                <div>
+                    <label>Ahorrado actualmente ($)</label>
+                    <input type="number" id="emergencyBasicCurrent" step="any" placeholder="Ej: 100000">
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="emergencyBasicBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                </div>
+                <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
                 <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
             </div>
-            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-3">
+            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
                 <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
                     <i class="fa-solid fa-life-ring"></i> Emergencia 3 a 6 Sueldos
                 </h2>
-                <p class="text-[11px] text-slate-500">Ej: $9.000.000</p>
-                <input type="number" id="emergencyFull" step="any" placeholder="Ej: 9000000">
+                <p class="text-[11px] text-slate-500">Meta ej: $9.000.000</p>
+                <div>
+                    <label>Meta objetivo ($)</label>
+                    <input type="number" id="emergencyFullTarget" step="any" placeholder="Ej: 9000000">
+                </div>
+                <div>
+                    <label>Ahorrado actualmente ($)</label>
+                    <input type="number" id="emergencyFullCurrent" step="any" placeholder="Ej: 300000">
+                </div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                    <div id="emergencyFullBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                </div>
+                <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
                 <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
             </div>
         </div>
@@ -285,16 +307,34 @@
         localStorage.setItem('credit_balance', creditBalance.toString());
     }
 
-    // Fondos de emergencia (simples, guardado local)
-    document.getElementById('emergencyBasic').value = localStorage.getItem('emergency_basic') || '';
-    document.getElementById('emergencyFull').value = localStorage.getItem('emergency_full') || '';
+    // Fondos de emergencia (con meta, ahorrado y porcentaje)
+    function renderEmergencyBox(prefix) {
+        const target = parseFloat(localStorage.getItem(prefix + '_target')) || 0;
+        const current = parseFloat(localStorage.getItem(prefix + '_current')) || 0;
+        document.getElementById(prefix + 'Target').value = target || '';
+        document.getElementById(prefix + 'Current').value = current || '';
+        const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+        document.getElementById(prefix + 'Bar').style.width = pct + '%';
+        const text = target > 0
+            ? (pct >= 100
+                ? '¡Meta alcanzada! 🎉'
+                : `${pct.toFixed(0)}% logrado — te faltan $${(target - current).toLocaleString()} para la meta`)
+            : 'Definí tu meta para ver el progreso';
+        document.getElementById(prefix + 'Text').textContent = text;
+    }
+
+    renderEmergencyBox('emergencyBasic');
+    renderEmergencyBox('emergencyFull');
+
     document.getElementById('btnSaveEmergencyBasic').addEventListener('click', () => {
-        localStorage.setItem('emergency_basic', document.getElementById('emergencyBasic').value);
-        alert('Meta de emergencia guardada.');
+        localStorage.setItem('emergencyBasic_target', document.getElementById('emergencyBasicTarget').value || 0);
+        localStorage.setItem('emergencyBasic_current', document.getElementById('emergencyBasicCurrent').value || 0);
+        renderEmergencyBox('emergencyBasic');
     });
     document.getElementById('btnSaveEmergencyFull').addEventListener('click', () => {
-        localStorage.setItem('emergency_full', document.getElementById('emergencyFull').value);
-        alert('Meta de emergencia guardada.');
+        localStorage.setItem('emergencyFull_target', document.getElementById('emergencyFullTarget').value || 0);
+        localStorage.setItem('emergencyFull_current', document.getElementById('emergencyFullCurrent').value || 0);
+        renderEmergencyBox('emergencyFull');
     });
 
     // Inyectar saldo a favor a una deuda (acción opcional, el usuario decide)
@@ -348,37 +388,69 @@
         }
     }
 
+    // Reparte un pago entre TODAS las deudas pendientes (de menor a mayor) y
+    // manda cualquier sobrante al Saldo a Favor una vez que ya no queda deuda.
+    function applyPaymentAcrossDebts(amount, category, detailText) {
+        let remaining = amount;
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0).sort((a, b) => a.amount - b.amount);
+        let clearedAny = [];
+
+        for (const debt of pendingDebts) {
+            if (remaining <= 0) break;
+            const used = Math.min(remaining, debt.amount);
+            debt.amount -= used;
+            remaining -= used;
+
+            history.unshift({
+                date: new Date().toLocaleDateString(),
+                category,
+                detail: detailText,
+                amount: used,
+                targetName: debt.name,
+                isMin: false
+            });
+
+            if (debt.amount <= 0) {
+                debt.amount = 0;
+                debt.cleared = true;
+                clearedAny.push(debt.name);
+            }
+        }
+
+        if (remaining > 0) {
+            creditBalance += remaining;
+        }
+
+        saveStorage();
+        render();
+
+        if (clearedAny.length > 0) {
+            alert(`¡Felicidades! Cancelaste: ${clearedAny.join(', ')}.` + (remaining > 0 ? ` Te quedó un saldo a favor de $${remaining.toLocaleString()}.` : ''));
+        } else if (remaining > 0) {
+            alert(`No te quedaba deuda pendiente. Se sumó $${remaining.toLocaleString()} a tu Saldo a Favor.`);
+        }
+    }
+
     function injectInvestToDebt(id) {
         const inv = investments.find(i => i.id == id);
         if (!inv) return;
 
         const totalValue = inv.qty * inv.price;
-        const pendingDebts = debts.filter(d => !d.cleared).sort((a, b) => a.amount - b.amount);
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
 
-        if (pendingDebts.length === 0) return alert('No tienes deudas pendientes para inyectar este capital.');
-
-        if (confirm(`¿Deseas liquidar $${totalValue.toLocaleString()} de "${inv.name}" e inyectarlo a tu deuda prioritaria?`)) {
-            const targetDebt = pendingDebts[0];
-            targetDebt.amount -= totalValue;
-
-            history.unshift({
-                date: new Date().toLocaleDateString(),
-                category: 'Liquidación Inversión',
-                detail: `Venta de ${inv.qty} x ${inv.name}`,
-                amount: totalValue,
-                targetName: targetDebt.name,
-                isMin: false
-            });
-
-            if (targetDebt.amount <= 0) {
-                targetDebt.amount = 0;
-                targetDebt.cleared = true;
-                alert(`¡Felicidades! Has cancelado la deuda: ${targetDebt.name}`);
-            }
-
+        if (pendingDebts.length === 0) {
+            if (!confirm(`No tenés deudas pendientes. ¿Deseas liquidar $${totalValue.toLocaleString()} de "${inv.name}" y sumarlo directo a tu Saldo a Favor?`)) return;
+            creditBalance += totalValue;
             investments = investments.filter(i => i.id != id);
             saveStorage();
             render();
+            return;
+        }
+
+        if (confirm(`¿Deseas liquidar $${totalValue.toLocaleString()} de "${inv.name}" y usarlo para pagar tu deuda total? Si sobra, se guarda como Saldo a Favor.`)) {
+            applyPaymentAcrossDebts(totalValue, 'Liquidación Inversión', `Venta de ${inv.qty} x ${inv.name}`);
+            investments = investments.filter(i => i.id != id);
+            saveStorage();
         }
     }
 
@@ -476,28 +548,7 @@
         const detail = document.getElementById('extraDetail').value;
         const extra = parseFloat(document.getElementById('extraAmount').value);
 
-        const pendingDebts = debts.filter(d => !d.cleared).sort((a, b) => a.amount - b.amount);
-        if (pendingDebts.length === 0) return alert('No hay deudas pendientes para inyectar capital.');
-
-        const targetDebt = pendingDebts[0];
-        const overflow = extra > targetDebt.amount ? extra - targetDebt.amount : 0;
-        targetDebt.amount -= extra;
-        if (overflow > 0) creditBalance += overflow;
-
-        history.unshift({
-            date: new Date().toLocaleDateString(),
-            category,
-            detail,
-            amount: extra,
-            targetName: targetDebt.name,
-            isMin: false
-        });
-
-        if (targetDebt.amount <= 0) {
-            targetDebt.amount = 0;
-            targetDebt.cleared = true;
-            alert(`¡Felicidades! Has cancelado la deuda: ${targetDebt.name}`);
-        }
+        applyPaymentAcrossDebts(extra, category, detail);
 
         extraForm.reset();
         otherCategoryGroup.style.display = 'none';
