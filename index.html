@@ -374,10 +374,10 @@
                     class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
                     <i class="fa-solid fa-fire"></i> Libertad Financiera
                 </a>
-                <a id="btn-subscribe" href="https://link.mercadopago.com.ar/tuenlacedepago" target="_blank"
+                <button id="btn-subscribe"
                     class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
                     <i class="fa-solid fa-credit-card"></i> Suscribirme
-                </a>
+                </button>
             </div>
         </section>
     </div>
@@ -432,7 +432,7 @@
 
     <script>
         const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
+        const SUPABASE_ANON_KEY = 'PEGAR_AQUI_TU_ANON_KEY_COMPLETA';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
 
@@ -637,7 +637,12 @@
         async function loadAllUserData() {
             const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
             if (settings) { salary = parseFloat(settings.salary) || 500000; }
-            else { salary = 500000; await sb.from('user_settings').insert({ user_id: currentUser.id, salary }); }
+            else {
+                salary = 500000;
+                const trialEnd = new Date();
+                trialEnd.setDate(trialEnd.getDate() + 7);
+                await sb.from('user_settings').insert({ user_id: currentUser.id, salary, trial_ends_at: trialEnd.toISOString(), is_premium: false });
+            }
 
             const { data: txs } = await sb.from('transactions').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
             products = (txs || []).map(t => ({
@@ -1135,6 +1140,30 @@
                 products = [];
                 renderApp();
                 showToast('Lista restablecida correctamente');
+            }
+        });
+
+        document.getElementById('btn-subscribe').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const btn = document.getElementById('btn-subscribe');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando pago...';
+            try {
+                const resp = await fetch('/api/create-preference', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email })
+                });
+                const data = await resp.json();
+                if (data.init_point) {
+                    window.location.href = data.init_point;
+                } else {
+                    showToast('No se pudo generar el pago. Probá de nuevo.', 'warning');
+                    btn.innerHTML = originalHTML;
+                }
+            } catch (err) {
+                showToast('Error al conectar con Mercado Pago', 'warning');
+                btn.innerHTML = originalHTML;
             }
         });
 
