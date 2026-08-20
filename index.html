@@ -326,13 +326,16 @@
                         class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
                         <i class="fa-solid fa-credit-card"></i> Suscribirme
                     </button>
+                    <span id="premium-badge" class="hidden bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Ya sos Premium
+                    </span>
                 </div>
             </div>
 
             <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
             <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
                 <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <button data-plan="mensual" data-price="3100" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
                         <div class="text-xs text-slate-400">Mensual</div>
                         <div class="text-lg font-bold text-white">$3.100</div>
@@ -340,10 +343,6 @@
                     <button data-plan="anual" data-price="25000" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
                         <div class="text-xs text-slate-400">Anual</div>
                         <div class="text-lg font-bold text-white">$25.000</div>
-                    </button>
-                    <button data-plan="vitalicio" data-price="100000" data-days="0" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
-                        <div class="text-xs text-slate-400">De por Vida</div>
-                        <div class="text-lg font-bold text-white">$100.000</div>
                     </button>
                 </div>
             </div>
@@ -606,13 +605,33 @@
         // ============================================
         // CARGA DE DATOS
         // ============================================
+        function applyPremiumUI(isPremium) {
+            const btnSubscribe = document.getElementById('btn-subscribe');
+            const badge = document.getElementById('premium-badge');
+            const btnUnsub = document.getElementById('btn-unsubscribe');
+            const planBox = document.getElementById('plan-options-box');
+
+            if (isPremium) {
+                btnSubscribe.classList.add('hidden');
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+                btnUnsub.classList.remove('hidden');
+                planBox.classList.add('hidden');
+            } else {
+                btnSubscribe.classList.remove('hidden');
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+                btnUnsub.classList.add('hidden');
+            }
+        }
+
         async function loadAllUserData() {
             const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
             if (settings) {
                 salary = parseFloat(settings.salary) || 500000;
-                if (settings.is_premium === true) {
-                    document.getElementById('btn-unsubscribe').classList.remove('hidden');
-                }
+                const subscriptionActive = settings.is_premium === true &&
+                    (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
+                applyPremiumUI(subscriptionActive);
             } else {
                 salary = 500000;
                 const trialEnd = new Date();
@@ -1087,11 +1106,13 @@
                     if (data.init_point) {
                         window.location.href = data.init_point;
                     } else {
-                        showToast('No se pudo generar el pago. Probá de nuevo.', 'warning');
+                        console.error('Error de Mercado Pago:', data);
+                        const detailMsg = data.detail?.message || (data.detail?.cause && data.detail.cause[0]?.description) || data.error || 'Error desconocido';
+                        showToast('Error: ' + detailMsg, 'warning');
                         btn.innerHTML = originalHTML;
                     }
                 } catch (err) {
-                    showToast('Error al conectar con Mercado Pago', 'warning');
+                    showToast('Error al conectar con Mercado Pago: ' + err.message, 'warning');
                     btn.innerHTML = originalHTML;
                 }
             });
@@ -1102,13 +1123,42 @@
             if (!confirm('¿Estás seguro que querés darte de baja de la suscripción?')) return;
             await sb.from('user_settings').update({ is_premium: false }).eq('user_id', currentUser.id);
             alert('Lamentamos que te vayas, esperamos volverte a ver pronto.');
-            document.getElementById('btn-unsubscribe').classList.add('hidden');
+            applyPremiumUI(false);
             showToast('Suscripción dada de baja');
         });
 
+        // Si volvemos desde Mercado Pago tras un pago aprobado, avisamos y
+        // re-consultamos el estado premium (el webhook puede tardar unos segundos).
+        async function checkReturnFromPayment() {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get('collection_status') || params.get('status');
+
+            if (status === 'approved') {
+                showToast('¡Pago recibido! Activando tu suscripción...');
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                let attempts = 0;
+                const interval = setInterval(async () => {
+                    attempts++;
+                    if (!currentUser) { clearInterval(interval); return; }
+                    const { data: settings } = await sb.from('user_settings').select('is_premium').eq('user_id', currentUser.id).maybeSingle();
+                    if (settings && settings.is_premium === true) {
+                        applyPremiumUI(true);
+                        showToast('¡Felicidades! Tu suscripción ya está activa 🎉');
+                        clearInterval(interval);
+                    } else if (attempts >= 6) {
+                        clearInterval(interval);
+                    }
+                }, 3000);
+            } else if (status === 'rejected') {
+                showToast('El pago no se pudo procesar. Probá de nuevo.', 'warning');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
         window.onload = function() {
             updateFormSubtypes();
-            checkSession();
+            checkSession().then(() => checkReturnFromPayment());
         };
     </script>
 </body>
