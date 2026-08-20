@@ -33,7 +33,7 @@ export default async function handler(req, res) {
           {
             title: 'Suscripción Premium - Control Financiero',
             quantity: 1,
-            unit_price: 5000, // <-- CAMBIÁ ESTE MONTO por el precio real de tu suscripción
+            unit_price: 3100, // <-- CAMBIÁ ESTE MONTO por el precio real de tu suscripción
             currency_id: 'ARS'
           }
         ],
