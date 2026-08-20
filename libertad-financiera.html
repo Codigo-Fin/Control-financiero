@@ -241,6 +241,62 @@
             </div>
         </div>
 
+        <!-- Mercado en Vivo -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> Mercado en Vivo
+            </h2>
+            <div class="rounded-2xl overflow-hidden border border-white/10">
+                <div class="tradingview-widget-container">
+                    <div class="tradingview-widget-container__widget"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+                    {
+                      "symbols": [
+                        { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
+                        { "proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100" },
+                        { "proName": "FOREXCOM:DJI", "title": "Dow Jones" },
+                        { "proName": "BCBA:IMV", "title": "Merval" },
+                        { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" }
+                      ],
+                      "showSymbolLogo": true,
+                      "colorTheme": "dark",
+                      "isTransparent": false,
+                      "displayMode": "adaptive",
+                      "locale": "es"
+                    }
+                    </script>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="market-search-input" placeholder="Ej: SP500, AAPL, GGAL, BITCOIN, ORO...">
+                </div>
+                <button id="market-search-btn" class="btn w-auto px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300">
+                    Buscar
+                </button>
+            </div>
+            <p class="text-[11px] text-slate-500">También podés tocar el nombre del símbolo dentro del gráfico para buscar.</p>
+            <div class="rounded-2xl overflow-hidden border border-white/10" style="height:420px">
+                <div class="tradingview-widget-container" id="market-chart-outer" style="height:100%">
+                    <div class="tradingview-widget-container__widget" style="height:100%"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async id="market-chart-script">
+                    {
+                      "autosize": true,
+                      "symbol": "AMEX:SPY",
+                      "interval": "D",
+                      "timezone": "America/Argentina/Buenos_Aires",
+                      "theme": "dark",
+                      "style": "1",
+                      "locale": "es",
+                      "allow_symbol_change": true,
+                      "support_host": "https://www.tradingview.com"
+                    }
+                    </script>
+                </div>
+            </div>
+        </div>
+
         <!-- Cartera de inversiones -->
         <div class="glass-panel neon-card neon-purple rounded-3xl p-5 sm:p-7 space-y-4">
             <div class="flex items-center justify-between flex-wrap gap-2">
@@ -1053,18 +1109,29 @@
             template.style.display = 'none';
 
             const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+            let shared = false;
+
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                await navigator.share({ files: [file], title: 'Estado Financiero', text: 'Mi estado financiero actualizado' });
-            } else {
+                try {
+                    await navigator.share({ files: [file], title: 'Estado Financiero', text: 'Mi estado financiero actualizado' });
+                    shared = true;
+                } catch (shareErr) {
+                    // El usuario canceló el share, o el navegador lo rechazó — no es un error grave, pasamos a descargar igual.
+                    shared = false;
+                }
+            }
+
+            if (!shared) {
                 const url = URL.createObjectURL(pdfBlob);
                 const a = document.createElement('a');
                 a.href = url; a.download = filename; a.click();
                 URL.revokeObjectURL(url);
-                alert('PDF descargado. Adjuntalo en WhatsApp manualmente.');
+                alert('PDF descargado. Adjuntalo en WhatsApp manualmente (en computadora, los navegadores no permiten compartir directo).');
             }
         } catch (err) {
             template.style.display = 'none';
-            alert('Error al generar el PDF.');
+            console.error('Error generando el PDF:', err);
+            alert('No se pudo generar el PDF. Si el problema sigue, avisá con una captura de este error: ' + err.message);
         }
     }
 
@@ -1093,6 +1160,56 @@
         renderEmergencyBox('emergencyFull');
         render();
         alert('Listo, todo reiniciado. Podés empezar de cero.');
+    });
+
+    // ============================================
+    // BUSCADOR DEL GRÁFICO DE MERCADO
+    // ============================================
+    const MARKET_ALIASES = {
+        'SP500': 'AMEX:SPY', 'S&P500': 'AMEX:SPY', 'S&P 500': 'AMEX:SPY', 'SPY500': 'AMEX:SPY',
+        'SPY 500': 'AMEX:SPY', 'SP 500': 'AMEX:SPY', 'SPY': 'AMEX:SPY',
+        'NASDAQ': 'NASDAQ:NDX', 'NASDAQ100': 'NASDAQ:NDX', 'DOW JONES': 'DJ:DJI', 'DOWJONES': 'DJ:DJI',
+        'MERVAL': 'BCBA:IMV', 'BITCOIN': 'BITSTAMP:BTCUSD', 'BTC': 'BITSTAMP:BTCUSD',
+        'ORO': 'TVC:GOLD', 'GOLD': 'TVC:GOLD', 'DOLAR': 'FX_IDC:USDARS', 'DÓLAR': 'FX_IDC:USDARS'
+    };
+
+    function normalizeMarketSymbol(raw) {
+        const cleaned = raw.trim().toUpperCase().replace(/\s+/g, ' ');
+        if (MARKET_ALIASES[cleaned]) return MARKET_ALIASES[cleaned];
+        if (cleaned.includes(':')) return cleaned.replace(/\s+/g, '');
+        return cleaned.split(' ')[0];
+    }
+
+    function reloadMarketChart(rawSymbol) {
+        const symbol = normalizeMarketSymbol(rawSymbol);
+        const outer = document.getElementById('market-chart-outer');
+        outer.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%"></div>';
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+        script.async = true;
+        script.innerHTML = JSON.stringify({
+            autosize: true,
+            symbol: symbol,
+            interval: 'D',
+            timezone: 'America/Argentina/Buenos_Aires',
+            theme: 'dark',
+            style: '1',
+            locale: 'es',
+            allow_symbol_change: true,
+            support_host: 'https://www.tradingview.com'
+        });
+        outer.appendChild(script);
+    }
+
+    const marketSearchInput = document.getElementById('market-search-input');
+    const marketSearchBtn = document.getElementById('market-search-btn');
+    marketSearchBtn.addEventListener('click', () => {
+        const val = marketSearchInput.value.trim();
+        if (val) reloadMarketChart(val);
+    });
+    marketSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); marketSearchBtn.click(); }
     });
 
     checkAccess();
