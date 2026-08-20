@@ -104,6 +104,30 @@
             </div>
         </header>
 
+        <!-- Registrar deuda (arriba de todo para que se vea bien) -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
+            </h2>
+            <form id="debtForm" class="space-y-3">
+                <input type="hidden" id="editingId" value="">
+                <div>
+                    <label>Acreedor / Nombre de Deuda</label>
+                    <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Préstamo Juan" required>
+                </div>
+                <div>
+                    <label>Monto Total ($)</label>
+                    <input type="number" id="amount" step="any" placeholder="1300" required>
+                </div>
+                <div>
+                    <label>Pago Mínimo Mensual ($)</label>
+                    <input type="number" id="minPayment" step="any" placeholder="200" required>
+                </div>
+                <button type="submit" id="btnSaveDebt" class="btn bg-rose-500 hover:bg-rose-400 text-white">Agregar Deuda</button>
+                <button type="button" id="btnCancelEdit" class="btn bg-slate-800 hover:bg-slate-700 text-slate-200" style="display:none;">Cancelar Edición</button>
+            </form>
+        </div>
+
         <!-- Métricas principales -->
         <div class="grid grid-cols-2 gap-3">
             <div class="glass-panel neon-card neon-rose rounded-2xl p-4 text-center">
@@ -165,7 +189,7 @@
                 <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
                 <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
             </div>
-            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
+            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5 relative">
                 <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
                     <i class="fa-solid fa-life-ring"></i> Emergencia 3 a 6 Sueldos
                 </h2>
@@ -183,6 +207,13 @@
                 </div>
                 <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
                 <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+
+                <!-- Bloqueo hasta cumplir requisitos -->
+                <div id="emergencyFullLock" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center text-center p-5 space-y-2">
+                    <i class="fa-solid fa-lock text-slate-500 text-xl"></i>
+                    <p class="text-xs text-slate-300 font-semibold">Todavía no podés cargar este fondo</p>
+                    <p id="emergencyFullLockReason" class="text-[11px] text-slate-500"></p>
+                </div>
             </div>
         </div>
 
@@ -212,9 +243,14 @@
 
         <!-- Cartera de inversiones -->
         <div class="glass-panel neon-card neon-purple rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 class="font-bold text-base sm:text-lg text-purple-300 flex items-center gap-2">
-                <i class="fa-solid fa-seedling"></i> Cartera de Inversiones (S&P 500 / Activos)
-            </h2>
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <h2 class="font-bold text-base sm:text-lg text-purple-300 flex items-center gap-2">
+                    <i class="fa-solid fa-seedling"></i> Cartera de Inversiones (S&P 500 / Activos)
+                </h2>
+                <a href="https://www.youtube.com/@TUCANAL" target="_blank" class="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
+                    <i class="fa-brands fa-youtube"></i> Antes de empezar ver el video tutorial
+                </a>
+            </div>
             <form id="investForm" class="space-y-3">
                 <div>
                     <label>Nombre del Activo / Acción / ETF</label>
@@ -236,30 +272,6 @@
                 <label>Tus Inversiones Actuales</label>
                 <div id="investList" class="space-y-2"></div>
             </div>
-        </div>
-
-        <!-- Registrar deuda -->
-        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
-            </h2>
-            <form id="debtForm" class="space-y-3">
-                <input type="hidden" id="editingId" value="">
-                <div>
-                    <label>Acreedor / Nombre de Deuda</label>
-                    <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Préstamo Juan" required>
-                </div>
-                <div>
-                    <label>Monto Total ($)</label>
-                    <input type="number" id="amount" step="any" placeholder="1300" required>
-                </div>
-                <div>
-                    <label>Pago Mínimo Mensual ($)</label>
-                    <input type="number" id="minPayment" step="any" placeholder="200" required>
-                </div>
-                <button type="submit" id="btnSaveDebt" class="btn bg-rose-500 hover:bg-rose-400 text-white">Agregar Deuda</button>
-                <button type="button" id="btnCancelEdit" class="btn bg-slate-800 hover:bg-slate-700 text-slate-200" style="display:none;">Cancelar Edición</button>
-            </form>
         </div>
 
         <!-- Acelerador de ingresos -->
@@ -375,10 +387,11 @@
         }
         currentUser = session.user;
 
-        const { data: settings } = await sb.from('user_settings').select('is_premium, trial_ends_at').eq('user_id', currentUser.id).maybeSingle();
-        const isPremium = settings && settings.is_premium === true;
+        const { data: settings } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at').eq('user_id', currentUser.id).maybeSingle();
+        const subscriptionActive = settings && settings.is_premium === true &&
+            (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
         const trialActive = settings && settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
-        const hasAccess = isPremium || trialActive;
+        const hasAccess = subscriptionActive || trialActive;
 
         if (!hasAccess) {
             document.getElementById('gate-loading').classList.add('hidden');
@@ -386,7 +399,7 @@
             return;
         }
 
-        if (trialActive && !isPremium) {
+        if (trialActive && !subscriptionActive) {
             const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
             document.getElementById('trial-banner').textContent = `Estás en tu prueba gratis — te quedan ${daysLeft} día(s).`;
             document.getElementById('trial-banner').classList.remove('hidden');
@@ -488,16 +501,46 @@
         document.getElementById(prefix + 'Text').textContent = text;
     }
 
+    // Bloquea "Emergencia 3 a 6 Sueldos" hasta que: el fondo básico esté completo Y no haya deudas pendientes
+    function updateEmergencyFullLock() {
+        const basicTarget = parseFloat(localStorage.getItem('emergencyBasic_target')) || 0;
+        const basicCurrent = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
+        const basicComplete = basicTarget > 0 && basicCurrent >= basicTarget;
+        const hasPendingDebts = debts.some(d => !d.cleared && d.amount > 0);
+
+        const lock = document.getElementById('emergencyFullLock');
+        const reason = document.getElementById('emergencyFullLockReason');
+
+        if (!basicComplete || hasPendingDebts) {
+            lock.classList.remove('hidden');
+            if (hasPendingDebts && !basicComplete) {
+                reason.textContent = 'Primero completá tu fondo de "Emergencias" y saldá todas tus deudas.';
+            } else if (hasPendingDebts) {
+                reason.textContent = 'Primero saldá todas tus deudas pendientes.';
+            } else {
+                reason.textContent = 'Primero completá tu fondo de "Emergencias".';
+            }
+        } else {
+            lock.classList.add('hidden');
+        }
+    }
+
     renderEmergencyBox('emergencyBasic');
     renderEmergencyBox('emergencyFull');
+    updateEmergencyFullLock();
 
     document.getElementById('btnSaveEmergencyBasic').addEventListener('click', () => {
         localStorage.setItem('emergencyBasic_target', document.getElementById('emergencyBasicTarget').value || 0);
         localStorage.setItem('emergencyBasic_current', document.getElementById('emergencyBasicCurrent').value || 0);
         renderEmergencyBox('emergencyBasic');
+        updateEmergencyFullLock();
         saveStorage();
     });
     document.getElementById('btnSaveEmergencyFull').addEventListener('click', () => {
+        if (!document.getElementById('emergencyFullLock').classList.contains('hidden')) {
+            alert('Todavía no cumplís los requisitos para cargar este fondo.');
+            return;
+        }
         localStorage.setItem('emergencyFull_target', document.getElementById('emergencyFullTarget').value || 0);
         localStorage.setItem('emergencyFull_current', document.getElementById('emergencyFullCurrent').value || 0);
         renderEmergencyBox('emergencyFull');
@@ -881,6 +924,7 @@
         updateChart();
         updateProgressChart();
         calculateFireNumber(false);
+        updateEmergencyFullLock();
     }
 
     // ============================================
