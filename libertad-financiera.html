@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             font-family: 'Outfit', sans-serif;
@@ -55,7 +56,31 @@
     <div class="fixed top-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
     <div class="fixed bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
 
-    <div class="max-w-3xl mx-auto w-full z-10 space-y-5">
+    <!-- Pantalla de carga / bloqueo -->
+    <div id="gate-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-[#090d16] via-[#111827] to-[#06201b]">
+        <div class="glass-panel rounded-3xl p-8 w-full max-w-sm space-y-4 text-center">
+            <div id="gate-loading">
+                <i class="fa-solid fa-spinner fa-spin text-emerald-400 text-2xl"></i>
+                <p class="text-slate-400 text-sm mt-3">Verificando tu acceso...</p>
+            </div>
+            <div id="gate-no-session" class="hidden space-y-3">
+                <i class="fa-solid fa-lock text-slate-500 text-2xl"></i>
+                <h2 class="text-white font-bold text-base">Necesitás iniciar sesión</h2>
+                <p class="text-slate-400 text-sm">Entrá primero al Control Financiero para acceder a tu cuenta.</p>
+                <a href="index.html" class="block bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">Ir al Control Financiero</a>
+            </div>
+            <div id="gate-not-premium" class="hidden space-y-3">
+                <i class="fa-solid fa-star text-amber-400 text-2xl"></i>
+                <h2 class="text-white font-bold text-base">Tu prueba gratis terminó</h2>
+                <p class="text-slate-400 text-sm">Libertad Financiera es parte de la suscripción premium. Suscribite para seguir usándola.</p>
+                <a href="index.html" class="block bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-sm">Ver Suscripción</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-content" class="hidden max-w-3xl mx-auto w-full z-10 space-y-5">
+
+        <div id="trial-banner" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm text-center py-2 px-3 rounded-xl"></div>
 
         <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-400 text-sm transition-colors">
             <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
@@ -158,6 +183,30 @@
                 </div>
                 <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
                 <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+            </div>
+        </div>
+
+        <!-- Calculadora de Libertad Financiera (regla del 4% / número x25) -->
+        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
+                <i class="fa-solid fa-crown"></i> Tu Número de Libertad Financiera
+            </h2>
+            <p class="text-[11px] text-slate-500">Cuánto necesitás invertido para vivir del 4% anual sin trabajar más. Se calcula: gasto mensual × 12 × 25.</p>
+            <div>
+                <label>Gasto Mensual para Vivir ($)</label>
+                <input type="number" id="fireMonthlyExpense" step="any" placeholder="Ej: 5000000">
+            </div>
+            <button id="btnCalcFire" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Calcular</button>
+
+            <div id="fireResultBox" class="hidden bg-slate-950/60 border border-amber-500/30 rounded-2xl p-4 space-y-2 text-center">
+                <div class="text-xs text-slate-400">Gasto Anual</div>
+                <div id="fireAnnualExpense" class="text-lg font-bold text-white">$0</div>
+                <div class="text-xs text-amber-300 uppercase tracking-wider mt-2">Necesitás tener invertido</div>
+                <div id="fireTargetAmount" class="text-2xl sm:text-3xl font-bold text-amber-400">$0</div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden mt-2">
+                    <div id="fireProgressBar" class="bg-amber-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                </div>
+                <p id="fireProgressText" class="text-[11px] text-slate-400"></p>
             </div>
         </div>
 
@@ -282,10 +331,15 @@
     </div>
 
 <script>
-    let debts = JSON.parse(localStorage.getItem('debts_data')) || [];
-    let investments = JSON.parse(localStorage.getItem('invest_data')) || [];
-    let history = JSON.parse(localStorage.getItem('history_data')) || [];
-    let creditBalance = parseFloat(localStorage.getItem('credit_balance')) || 0;
+    const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
+    const SUPABASE_ANON_KEY = 'PEGAR_AQUI_TU_ANON_KEY_COMPLETA';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentUser = null;
+
+    let debts = [];
+    let investments = [];
+    let history = [];
+    let creditBalance = 0;
     let pieChart = null;
     let progressChart = null;
 
@@ -309,6 +363,63 @@
     const historyList = document.getElementById('historyList');
     const totalDebtEl = document.getElementById('totalDebt');
 
+    // ============================================
+    // VERIFICACIÓN DE SESIÓN Y SUSCRIPCIÓN PREMIUM
+    // ============================================
+    async function checkAccess() {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) {
+            document.getElementById('gate-loading').classList.add('hidden');
+            document.getElementById('gate-no-session').classList.remove('hidden');
+            return;
+        }
+        currentUser = session.user;
+
+        const { data: settings } = await sb.from('user_settings').select('is_premium, trial_ends_at').eq('user_id', currentUser.id).maybeSingle();
+        const isPremium = settings && settings.is_premium === true;
+        const trialActive = settings && settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
+        const hasAccess = isPremium || trialActive;
+
+        if (!hasAccess) {
+            document.getElementById('gate-loading').classList.add('hidden');
+            document.getElementById('gate-not-premium').classList.remove('hidden');
+            return;
+        }
+
+        if (trialActive && !isPremium) {
+            const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
+            document.getElementById('trial-banner').textContent = `Estás en tu prueba gratis — te quedan ${daysLeft} día(s).`;
+            document.getElementById('trial-banner').classList.remove('hidden');
+        }
+
+        document.getElementById('gate-screen').classList.add('hidden');
+        document.getElementById('app-content').classList.remove('hidden');
+        await loadLibertadData();
+    }
+
+    async function loadLibertadData() {
+        const { data } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+        if (data) {
+            debts = data.debts || [];
+            investments = data.investments || [];
+            history = data.history || [];
+            creditBalance = parseFloat(data.credit_balance) || 0;
+            localStorage.setItem('emergencyBasic_target', data.emergency_basic_target || 0);
+            localStorage.setItem('emergencyBasic_current', data.emergency_basic_current || 0);
+            localStorage.setItem('emergencyFull_target', data.emergency_full_target || 0);
+            localStorage.setItem('emergencyFull_current', data.emergency_full_current || 0);
+            if (data.fire_monthly_expense) {
+                document.getElementById('fireMonthlyExpense').value = data.fire_monthly_expense;
+                calculateFireNumber(false);
+            }
+        } else {
+            await sb.from('libertad_financiera_data').insert({ user_id: currentUser.id });
+        }
+        renderEmergencyBox('emergencyBasic');
+        renderEmergencyBox('emergencyFull');
+        render();
+    }
+
     categorySelect.addEventListener('change', () => {
         if (categorySelect.value === 'Otros') {
             otherCategoryGroup.style.display = 'block';
@@ -319,12 +430,47 @@
         }
     });
 
-    function saveStorage() {
-        localStorage.setItem('debts_data', JSON.stringify(debts));
-        localStorage.setItem('invest_data', JSON.stringify(investments));
-        localStorage.setItem('history_data', JSON.stringify(history));
-        localStorage.setItem('credit_balance', creditBalance.toString());
+    async function saveStorage() {
+        if (!currentUser) return;
+        await sb.from('libertad_financiera_data').upsert({
+            user_id: currentUser.id,
+            debts: debts,
+            investments: investments,
+            history: history,
+            credit_balance: creditBalance,
+            emergency_basic_target: parseFloat(localStorage.getItem('emergencyBasic_target')) || 0,
+            emergency_basic_current: parseFloat(localStorage.getItem('emergencyBasic_current')) || 0,
+            emergency_full_target: parseFloat(localStorage.getItem('emergencyFull_target')) || 0,
+            emergency_full_current: parseFloat(localStorage.getItem('emergencyFull_current')) || 0,
+            fire_monthly_expense: parseFloat(document.getElementById('fireMonthlyExpense').value) || 0,
+            updated_at: new Date().toISOString()
+        });
     }
+
+    // ============================================
+    // NÚMERO DE LIBERTAD FINANCIERA (regla del 4% / x25)
+    // ============================================
+    function calculateFireNumber(persist = true) {
+        const monthlyExpense = parseFloat(document.getElementById('fireMonthlyExpense').value) || 0;
+        if (monthlyExpense <= 0) {
+            document.getElementById('fireResultBox').classList.add('hidden');
+            return;
+        }
+        const annualExpense = monthlyExpense * 12;
+        const fireTarget = annualExpense * 25;
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        const pct = fireTarget > 0 ? Math.min(100, (totalInvestVal / fireTarget) * 100) : 0;
+
+        document.getElementById('fireResultBox').classList.remove('hidden');
+        document.getElementById('fireAnnualExpense').textContent = `$${annualExpense.toLocaleString()}`;
+        document.getElementById('fireTargetAmount').textContent = `$${fireTarget.toLocaleString()}`;
+        document.getElementById('fireProgressBar').style.width = pct + '%';
+        document.getElementById('fireProgressText').textContent = `${pct.toFixed(1)}% del camino — con tu cartera actual de inversiones ($${totalInvestVal.toLocaleString()})`;
+
+        if (persist) saveStorage();
+    }
+
+    document.getElementById('btnCalcFire').addEventListener('click', () => calculateFireNumber(true));
 
     // Fondos de emergencia (con meta, ahorrado y porcentaje)
     function renderEmergencyBox(prefix) {
@@ -349,11 +495,13 @@
         localStorage.setItem('emergencyBasic_target', document.getElementById('emergencyBasicTarget').value || 0);
         localStorage.setItem('emergencyBasic_current', document.getElementById('emergencyBasicCurrent').value || 0);
         renderEmergencyBox('emergencyBasic');
+        saveStorage();
     });
     document.getElementById('btnSaveEmergencyFull').addEventListener('click', () => {
         localStorage.setItem('emergencyFull_target', document.getElementById('emergencyFullTarget').value || 0);
         localStorage.setItem('emergencyFull_current', document.getElementById('emergencyFullCurrent').value || 0);
         renderEmergencyBox('emergencyFull');
+        saveStorage();
     });
 
     // Inyectar saldo a favor a una deuda (acción opcional, el usuario decide)
@@ -732,6 +880,7 @@
 
         updateChart();
         updateProgressChart();
+        calculateFireNumber(false);
     }
 
     // ============================================
@@ -902,7 +1051,7 @@
         alert('Listo, todo reiniciado. Podés empezar de cero.');
     });
 
-    render();
+    checkAccess();
 </script>
 
 </body>
