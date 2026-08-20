@@ -1,16 +1,16 @@
 // /api/create-preference.js
-// Crea un "link de pago" (preferencia) de Mercado Pago para un usuario específico.
-// El front-end llama a esta función y lo redirige al link que devuelve.
+// Crea un "link de pago" (preferencia) de Mercado Pago para un usuario específico,
+// según el plan elegido (mensual, anual o de por vida).
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { userId, userEmail } = req.body;
+  const { userId, userEmail, plan, price, days } = req.body;
 
-  if (!userId) {
-    return res.status(400).json({ error: 'Falta userId' });
+  if (!userId || !price) {
+    return res.status(400).json({ error: 'Faltan datos (userId o price)' });
   }
 
   const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
@@ -18,8 +18,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Falta configurar MP_ACCESS_TOKEN en Vercel' });
   }
 
-  // URL pública de tu sitio (para el webhook y las URLs de retorno)
   const SITE_URL = process.env.SITE_URL || `https://${req.headers.host}`;
+
+  const planLabels = { mensual: 'Suscripción Mensual', anual: 'Suscripción Anual', vitalicio: 'Suscripción de por Vida' };
+  const title = planLabels[plan] || 'Suscripción Premium - Control Financiero';
 
   try {
     const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
@@ -31,14 +33,16 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         items: [
           {
-            title: 'Suscripción Premium - Control Financiero',
+            title: title,
             quantity: 1,
-            unit_price: 3100, // <-- CAMBIÁ ESTE MONTO por el precio real de tu suscripción
+            unit_price: Number(price),
             currency_id: 'ARS'
           }
         ],
         payer: { email: userEmail || undefined },
-        external_reference: userId, // esto es lo que nos permite saber QUIÉN pagó
+        // Guardamos el plan y la duración junto al userId, separados por "|",
+        // para que el webhook sepa cuántos días de acceso activar.
+        external_reference: `${userId}|${plan || 'mensual'}|${days || 30}`,
         back_urls: {
           success: `${SITE_URL}/index.html`,
           failure: `${SITE_URL}/index.html`,
