@@ -1,6 +1,7 @@
 // /api/webhook-mercadopago.js
 // Mercado Pago llama a esta URL automáticamente cuando cambia el estado de un pago.
-// Si el pago está aprobado, activamos is_premium = true para ese usuario en Supabase.
+// Si el pago está aprobado, activamos is_premium = true y calculamos hasta cuándo
+// dura el acceso, según el plan elegido (mensual, anual o de por vida).
 
 export default async function handler(req, res) {
   if (req.method !== 'POST' && req.method !== 'GET') {
@@ -17,26 +18,30 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Mercado Pago manda el id del pago en distintos formatos según el tipo de notificación
     const paymentId = req.body?.data?.id || req.query?.['data.id'] || req.query?.id;
 
     if (!paymentId) {
-      // Puede ser una notificación de prueba o de otro tipo; respondemos OK para que MP no reintente en loop
       return res.status(200).end();
     }
 
-    // 1. Consultamos el pago real a Mercado Pago (nunca confiamos ciegamente en el webhook)
     const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: { 'Authorization': `Bearer ${MP_ACCESS_TOKEN}` }
     });
     const payment = await mpResponse.json();
 
     if (payment.status === 'approved') {
-      const userId = payment.external_reference;
+      // external_reference viene como "userId|plan|dias"
+      const [userId, plan, daysStr] = (payment.external_reference || '').split('|');
+      const days = parseInt(daysStr, 10) || 30;
 
       if (userId) {
-        // 2. Activamos is_premium = true para ese usuario en Supabase, usando la Service Role Key
-        //    (esta clave tiene permisos totales, por eso solo se usa acá, del lado del servidor, nunca en el navegador)
+        let subscriptionEndsAt = null; // null = no vence nunca (plan vitalicio)
+        if (days > 0) {
+          const end = new Date();
+          end.setDate(end.getDate() + days);
+          subscriptionEndsAt = end.toISOString();
+        }
+
         await fetch(`${SUPABASE_URL}/rest/v1/user_settings?user_id=eq.${userId}`, {
           method: 'PATCH',
           headers: {
@@ -45,7 +50,7 @@ export default async function handler(req, res) {
             'Content-Type': 'application/json',
             'Prefer': 'return=minimal'
           },
-          body: JSON.stringify({ is_premium: true })
+          body: JSON.stringify({ is_premium: true, subscription_ends_at: subscriptionEndsAt })
         });
       }
     }
@@ -53,6 +58,6 @@ export default async function handler(req, res) {
     return res.status(200).end();
   } catch (err) {
     console.error('Error en webhook Mercado Pago:', err.message);
-    return res.status(200).end(); // respondemos 200 igual para que MP no reintente infinito
+    return res.status(200).end();
   }
 }
