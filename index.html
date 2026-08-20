@@ -137,6 +137,10 @@
                 <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
             </div>
 
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2 pt-1">
+                <i class="fa-solid fa-money-bill-trend-up text-emerald-400"></i> GASTOS DEL MES
+            </h2>
+
             <!-- Ingresos vs Egresos claramente separados -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div class="bg-emerald-950/40 p-4 rounded-2xl border-2 border-emerald-500/30 flex flex-col justify-between">
@@ -301,83 +305,107 @@
             </div>
         </main>
 
-        <!-- MERCADO EN VIVO -->
-        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-4">
-            <div class="section-title-divider">
-                <i class="fa-solid fa-chart-line text-sky-400"></i>
-                <h2 class="font-bold text-base sm:text-lg text-white whitespace-nowrap">Mercado en Vivo</h2>
-                <div class="line"></div>
-            </div>
-            <div class="rounded-2xl overflow-hidden border border-white/10">
-                <!-- TradingView Ticker Tape Widget -->
-                <div class="tradingview-widget-container">
-                    <div class="tradingview-widget-container__widget"></div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-                    {
-                      "symbols": [
-                        { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
-                        { "proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100" },
-                        { "proName": "FOREXCOM:DJI", "title": "Dow Jones" },
-                        { "proName": "BCBA:IMV", "title": "Merval" },
-                        { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" }
-                      ],
-                      "showSymbolLogo": true,
-                      "colorTheme": "dark",
-                      "isTransparent": false,
-                      "displayMode": "adaptive",
-                      "locale": "es"
-                    }
-                    </script>
+        <!-- SUSCRIPCIÓN (con Mercado en Vivo adentro) -->
+        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
+                        <i class="fa-solid fa-star text-amber-400"></i> Suscripción Premium
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="libertad-financiera.html" target="_blank"
+                        class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-fire"></i> Libertad Financiera
+                    </a>
+                    <button id="btn-subscribe"
+                        class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-credit-card"></i> Suscribirme
+                    </button>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="relative flex-1">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                    <input type="text" id="market-search-input" placeholder="Ej: SP500, AAPL, GGAL, BITCOIN, ORO..."
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-sky-500 transition-colors text-white placeholder-slate-500">
-                </div>
-                <button id="market-search-btn" class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 font-semibold px-4 py-2 rounded-xl text-sm transition-all">
-                    Buscar
-                </button>
-            </div>
-            <p class="text-[11px] text-slate-500">También podés tocar el nombre del símbolo dentro del gráfico para buscar.</p>
-            <div class="rounded-2xl overflow-hidden border border-white/10" style="height:420px">
-                <div class="tradingview-widget-container" id="market-chart-outer" style="height:100%">
-                    <div class="tradingview-widget-container__widget" style="height:100%"></div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async id="market-chart-script">
-                    {
-                      "autosize": true,
-                      "symbol": "AMEX:SPY",
-                      "interval": "D",
-                      "timezone": "America/Argentina/Buenos_Aires",
-                      "theme": "dark",
-                      "style": "1",
-                      "locale": "es",
-                      "allow_symbol_change": true,
-                      "support_host": "https://www.tradingview.com"
-                    }
-                    </script>
-                </div>
-            </div>
-        </section>
 
-        <!-- SUSCRIPCIÓN -->
-        <section class="glass-panel rounded-3xl p-5 sm:p-7 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div>
-                <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                    <i class="fa-solid fa-star text-amber-400"></i> Suscripción Premium
-                </h3>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
+            <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
+            <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
+                <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button data-plan="mensual" data-price="3100" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <div class="text-xs text-slate-400">Mensual</div>
+                        <div class="text-lg font-bold text-white">$3.100</div>
+                    </button>
+                    <button data-plan="anual" data-price="25000" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <div class="text-xs text-slate-400">Anual</div>
+                        <div class="text-lg font-bold text-white">$25.000</div>
+                    </button>
+                    <button data-plan="vitalicio" data-price="100000" data-days="0" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <div class="text-xs text-slate-400">De por Vida</div>
+                        <div class="text-lg font-bold text-white">$100.000</div>
+                    </button>
+                </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <a href="libertad-financiera.html" target="_blank"
-                    class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-fire"></i> Libertad Financiera
-                </a>
-                <button id="btn-subscribe"
-                    class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                    <i class="fa-solid fa-credit-card"></i> Suscribirme
-                </button>
+
+            <button id="btn-unsubscribe" class="hidden text-xs text-slate-500 hover:text-rose-400 underline underline-offset-2">
+                Dar de baja mi suscripción
+            </button>
+
+            <!-- Mercado en Vivo -->
+            <div class="border-t border-white/10 pt-5 space-y-4">
+                <div class="section-title-divider">
+                    <i class="fa-solid fa-chart-line text-sky-400"></i>
+                    <h2 class="font-bold text-base sm:text-lg text-white whitespace-nowrap">Mercado en Vivo</h2>
+                    <div class="line"></div>
+                </div>
+                <div class="rounded-2xl overflow-hidden border border-white/10">
+                    <div class="tradingview-widget-container">
+                        <div class="tradingview-widget-container__widget"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+                        {
+                          "symbols": [
+                            { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
+                            { "proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100" },
+                            { "proName": "FOREXCOM:DJI", "title": "Dow Jones" },
+                            { "proName": "BCBA:IMV", "title": "Merval" },
+                            { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" }
+                          ],
+                          "showSymbolLogo": true,
+                          "colorTheme": "dark",
+                          "isTransparent": false,
+                          "displayMode": "adaptive",
+                          "locale": "es"
+                        }
+                        </script>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="market-search-input" placeholder="Ej: SP500, AAPL, GGAL, BITCOIN, ORO..."
+                            class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-sky-500 transition-colors text-white placeholder-slate-500">
+                    </div>
+                    <button id="market-search-btn" class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 font-semibold px-4 py-2 rounded-xl text-sm transition-all">
+                        Buscar
+                    </button>
+                </div>
+                <p class="text-[11px] text-slate-500">También podés tocar el nombre del símbolo dentro del gráfico para buscar.</p>
+                <div class="rounded-2xl overflow-hidden border border-white/10" style="height:420px">
+                    <div class="tradingview-widget-container" id="market-chart-outer" style="height:100%">
+                        <div class="tradingview-widget-container__widget" style="height:100%"></div>
+                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async id="market-chart-script">
+                        {
+                          "autosize": true,
+                          "symbol": "AMEX:SPY",
+                          "interval": "D",
+                          "timezone": "America/Argentina/Buenos_Aires",
+                          "theme": "dark",
+                          "style": "1",
+                          "locale": "es",
+                          "allow_symbol_change": true,
+                          "support_host": "https://www.tradingview.com"
+                        }
+                        </script>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
@@ -636,8 +664,12 @@
         // ============================================
         async function loadAllUserData() {
             const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
-            if (settings) { salary = parseFloat(settings.salary) || 500000; }
-            else {
+            if (settings) {
+                salary = parseFloat(settings.salary) || 500000;
+                if (settings.is_premium === true) {
+                    document.getElementById('btn-unsubscribe').classList.remove('hidden');
+                }
+            } else {
                 salary = 500000;
                 const trialEnd = new Date();
                 trialEnd.setDate(trialEnd.getDate() + 7);
@@ -1143,28 +1175,45 @@
             }
         });
 
-        document.getElementById('btn-subscribe').addEventListener('click', async () => {
-            if (!currentUser) return;
-            const btn = document.getElementById('btn-subscribe');
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generando pago...';
-            try {
-                const resp = await fetch('/api/create-preference', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email })
-                });
-                const data = await resp.json();
-                if (data.init_point) {
-                    window.location.href = data.init_point;
-                } else {
-                    showToast('No se pudo generar el pago. Probá de nuevo.', 'warning');
+        document.getElementById('btn-subscribe').addEventListener('click', () => {
+            document.getElementById('plan-options-box').classList.toggle('hidden');
+        });
+
+        document.querySelectorAll('.plan-option-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!currentUser) return;
+                const plan = btn.dataset.plan;
+                const price = parseFloat(btn.dataset.price);
+                const days = parseInt(btn.dataset.days, 10);
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                try {
+                    const resp = await fetch('/api/create-preference', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, plan, price, days })
+                    });
+                    const data = await resp.json();
+                    if (data.init_point) {
+                        window.location.href = data.init_point;
+                    } else {
+                        showToast('No se pudo generar el pago. Probá de nuevo.', 'warning');
+                        btn.innerHTML = originalHTML;
+                    }
+                } catch (err) {
+                    showToast('Error al conectar con Mercado Pago', 'warning');
                     btn.innerHTML = originalHTML;
                 }
-            } catch (err) {
-                showToast('Error al conectar con Mercado Pago', 'warning');
-                btn.innerHTML = originalHTML;
-            }
+            });
+        });
+
+        document.getElementById('btn-unsubscribe').addEventListener('click', async () => {
+            if (!currentUser) return;
+            if (!confirm('¿Estás seguro que querés darte de baja de la suscripción?')) return;
+            await sb.from('user_settings').update({ is_premium: false }).eq('user_id', currentUser.id);
+            alert('Lamentamos que te vayas, esperamos volverte a ver pronto.');
+            document.getElementById('btn-unsubscribe').classList.add('hidden');
+            showToast('Suscripción dada de baja');
         });
 
         window.onload = function() {
