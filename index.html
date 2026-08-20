@@ -138,7 +138,7 @@
             </div>
 
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2 pt-1">
-                <i class="fa-solid fa-money-bill-trend-up text-emerald-400"></i> GASTOS DEL MES
+                <i class="fa-solid fa-money-bill-trend-up text-emerald-400"></i> RESUMEN DEL MES
             </h2>
 
             <!-- Ingresos vs Egresos claramente separados -->
@@ -202,6 +202,9 @@
         </header>
 
         <section class="space-y-3">
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-cart-shopping text-emerald-400"></i> GASTOS DEL MES
+            </h2>
             <form id="add-transaction-form" class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row flex-wrap gap-2.5 items-end shadow-lg">
                 <div class="flex-1 min-w-[140px]">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Concepto / Producto</label>
@@ -348,65 +351,6 @@
             <button id="btn-unsubscribe" class="hidden text-xs text-slate-500 hover:text-rose-400 underline underline-offset-2">
                 Dar de baja mi suscripción
             </button>
-
-            <!-- Mercado en Vivo -->
-            <div class="border-t border-white/10 pt-5 space-y-4">
-                <div class="section-title-divider">
-                    <i class="fa-solid fa-chart-line text-sky-400"></i>
-                    <h2 class="font-bold text-base sm:text-lg text-white whitespace-nowrap">Mercado en Vivo</h2>
-                    <div class="line"></div>
-                </div>
-                <div class="rounded-2xl overflow-hidden border border-white/10">
-                    <div class="tradingview-widget-container">
-                        <div class="tradingview-widget-container__widget"></div>
-                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-                        {
-                          "symbols": [
-                            { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
-                            { "proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100" },
-                            { "proName": "FOREXCOM:DJI", "title": "Dow Jones" },
-                            { "proName": "BCBA:IMV", "title": "Merval" },
-                            { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" }
-                          ],
-                          "showSymbolLogo": true,
-                          "colorTheme": "dark",
-                          "isTransparent": false,
-                          "displayMode": "adaptive",
-                          "locale": "es"
-                        }
-                        </script>
-                    </div>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="relative flex-1">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                        <input type="text" id="market-search-input" placeholder="Ej: SP500, AAPL, GGAL, BITCOIN, ORO..."
-                            class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-sky-500 transition-colors text-white placeholder-slate-500">
-                    </div>
-                    <button id="market-search-btn" class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/40 text-sky-300 font-semibold px-4 py-2 rounded-xl text-sm transition-all">
-                        Buscar
-                    </button>
-                </div>
-                <p class="text-[11px] text-slate-500">También podés tocar el nombre del símbolo dentro del gráfico para buscar.</p>
-                <div class="rounded-2xl overflow-hidden border border-white/10" style="height:420px">
-                    <div class="tradingview-widget-container" id="market-chart-outer" style="height:100%">
-                        <div class="tradingview-widget-container__widget" style="height:100%"></div>
-                        <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async id="market-chart-script">
-                        {
-                          "autosize": true,
-                          "symbol": "AMEX:SPY",
-                          "interval": "D",
-                          "timezone": "America/Argentina/Buenos_Aires",
-                          "theme": "dark",
-                          "style": "1",
-                          "locale": "es",
-                          "allow_symbol_change": true,
-                          "support_host": "https://www.tradingview.com"
-                        }
-                        </script>
-                    </div>
-                </div>
-            </div>
         </section>
     </div>
 
@@ -1108,60 +1052,6 @@
             if (idx < yearMonths.length - 1) { selectedMonthFilter = yearMonths[idx + 1]; renderApp(); }
         });
         searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; renderApp(); });
-
-        // ============================================
-        // BUSCADOR DEL GRÁFICO DE MERCADO
-        // ============================================
-        const MARKET_ALIASES = {
-            'SP500': 'AMEX:SPY', 'S&P500': 'AMEX:SPY', 'S&P 500': 'AMEX:SPY', 'SPY500': 'AMEX:SPY',
-            'SPY 500': 'AMEX:SPY', 'SP 500': 'AMEX:SPY', 'SPY': 'AMEX:SPY',
-            'NASDAQ': 'NASDAQ:NDX', 'NASDAQ100': 'NASDAQ:NDX', 'DOW JONES': 'DJ:DJI', 'DOWJONES': 'DJ:DJI',
-            'MERVAL': 'BCBA:IMV', 'BITCOIN': 'BITSTAMP:BTCUSD', 'BTC': 'BITSTAMP:BTCUSD',
-            'ORO': 'TVC:GOLD', 'GOLD': 'TVC:GOLD', 'DOLAR': 'FX_IDC:USDARS', 'DÓLAR': 'FX_IDC:USDARS'
-        };
-
-        function normalizeMarketSymbol(raw) {
-            const cleaned = raw.trim().toUpperCase().replace(/\s+/g, ' ');
-            if (MARKET_ALIASES[cleaned]) return MARKET_ALIASES[cleaned];
-            // Si ya viene con formato BOLSA:TICKER lo dejamos tal cual
-            if (cleaned.includes(':')) return cleaned.replace(/\s+/g, '');
-            // Si tiene espacios y no es un alias conocido, nos quedamos solo con la primera palabra (el ticker)
-            const firstWord = cleaned.split(' ')[0];
-            return firstWord;
-        }
-
-        function reloadMarketChart(rawSymbol) {
-            const symbol = normalizeMarketSymbol(rawSymbol);
-            const outer = document.getElementById('market-chart-outer');
-            outer.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%"></div>';
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-            script.async = true;
-            script.innerHTML = JSON.stringify({
-                autosize: true,
-                symbol: symbol,
-                interval: 'D',
-                timezone: 'America/Argentina/Buenos_Aires',
-                theme: 'dark',
-                style: '1',
-                locale: 'es',
-                allow_symbol_change: true,
-                support_host: 'https://www.tradingview.com'
-            });
-            outer.appendChild(script);
-            showToast(`Buscando: ${symbol}`);
-        }
-
-        const marketSearchInput = document.getElementById('market-search-input');
-        const marketSearchBtn = document.getElementById('market-search-btn');
-        marketSearchBtn.addEventListener('click', () => {
-            const val = marketSearchInput.value.trim();
-            if (val) reloadMarketChart(val);
-        });
-        marketSearchInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') { e.preventDefault(); marketSearchBtn.click(); }
-        });
 
         document.getElementById('reset-btn').addEventListener('click', async () => {
             if (!currentUser) return;
