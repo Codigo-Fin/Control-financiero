@@ -1093,14 +1093,13 @@
                 if (!currentUser) return;
                 const plan = btn.dataset.plan;
                 const price = parseFloat(btn.dataset.price);
-                const days = parseInt(btn.dataset.days, 10);
                 const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 try {
-                    const resp = await fetch('/api/create-preference', {
+                    const resp = await fetch('/api/create-subscription', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, plan, price, days })
+                        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, plan, price })
                     });
                     const data = await resp.json();
                     if (data.init_point) {
@@ -1120,21 +1119,32 @@
 
         document.getElementById('btn-unsubscribe').addEventListener('click', async () => {
             if (!currentUser) return;
-            if (!confirm('¿Estás seguro que querés darte de baja de la suscripción?')) return;
-            await sb.from('user_settings').update({ is_premium: false }).eq('user_id', currentUser.id);
-            alert('Lamentamos que te vayas, esperamos volverte a ver pronto.');
-            applyPremiumUI(false);
-            showToast('Suscripción dada de baja');
+            if (!confirm('¿Estás seguro que querés darte de baja de la suscripción? Se cancela el cobro automático.')) return;
+            const btnUnsub = document.getElementById('btn-unsubscribe');
+            btnUnsub.textContent = 'Procesando...';
+            try {
+                await fetch('/api/cancel-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id })
+                });
+                alert('Lamentamos que te vayas, esperamos volverte a ver pronto.');
+                applyPremiumUI(false);
+                showToast('Suscripción dada de baja');
+            } catch (err) {
+                showToast('Error al procesar la baja, intentá de nuevo', 'warning');
+                btnUnsub.textContent = 'Dar de baja mi suscripción';
+            }
         });
 
-        // Si volvemos desde Mercado Pago tras un pago aprobado, avisamos y
+        // Si volvemos desde Mercado Pago tras autorizar la suscripción, avisamos y
         // re-consultamos el estado premium (el webhook puede tardar unos segundos).
         async function checkReturnFromPayment() {
             const params = new URLSearchParams(window.location.search);
-            const status = params.get('collection_status') || params.get('status');
+            const preapprovalId = params.get('preapproval_id');
 
-            if (status === 'approved') {
-                showToast('¡Pago recibido! Activando tu suscripción...');
+            if (preapprovalId) {
+                showToast('¡Listo! Activando tu suscripción...');
                 window.history.replaceState({}, document.title, window.location.pathname);
 
                 let attempts = 0;
@@ -1146,13 +1156,11 @@
                         applyPremiumUI(true);
                         showToast('¡Felicidades! Tu suscripción ya está activa 🎉');
                         clearInterval(interval);
-                    } else if (attempts >= 6) {
+                    } else if (attempts >= 8) {
                         clearInterval(interval);
+                        showToast('Tu pago se está procesando, refrescá la página en un momento.', 'warning');
                     }
                 }, 3000);
-            } else if (status === 'rejected') {
-                showToast('El pago no se pudo procesar. Probá de nuevo.', 'warning');
-                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
