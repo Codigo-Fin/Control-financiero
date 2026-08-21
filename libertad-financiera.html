@@ -128,6 +128,38 @@
             </form>
         </div>
 
+        <!-- Acelerador de ingresos -->
+        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
+                <i class="fa-solid fa-bolt"></i> Acelerador de Ingresos (Pagos Extra)
+            </h2>
+            <form id="extraForm" class="space-y-3">
+                <div>
+                    <label>Categoría del Ingreso</label>
+                    <select id="extraSourceCategory" required>
+                        <option value="E-commerce">E-commerce / Ventas Online</option>
+                        <option value="Venta de Activo">Venta de Activo / Vehículo</option>
+                        <option value="Cursos / Digital">Cursos / Libros / Digital</option>
+                        <option value="Servicios">Servicios / Trabajos</option>
+                        <option value="Otros">Otros Ingresos (Especificar)</option>
+                    </select>
+                </div>
+                <div id="otherCategoryGroup" style="display:none;">
+                    <label>Especificar Origen (Otros)</label>
+                    <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
+                </div>
+                <div>
+                    <label>Detalle del Ingreso</label>
+                    <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
+                </div>
+                <div>
+                    <label>Monto a Inyectar ($)</label>
+                    <input type="number" id="extraAmount" step="any" placeholder="500" required>
+                </div>
+                <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Inyectar a Deuda Prioritaria</button>
+            </form>
+        </div>
+
         <!-- Métricas principales -->
         <div class="grid grid-cols-2 gap-3">
             <div class="glass-panel neon-card neon-rose rounded-2xl p-4 text-center">
@@ -328,38 +360,6 @@
                 <label>Tus Inversiones Actuales</label>
                 <div id="investList" class="space-y-2"></div>
             </div>
-        </div>
-
-        <!-- Acelerador de ingresos -->
-        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
-                <i class="fa-solid fa-bolt"></i> Acelerador de Ingresos (Pagos Extra)
-            </h2>
-            <form id="extraForm" class="space-y-3">
-                <div>
-                    <label>Categoría del Ingreso</label>
-                    <select id="extraSourceCategory" required>
-                        <option value="E-commerce">E-commerce / Ventas Online</option>
-                        <option value="Venta de Activo">Venta de Activo / Vehículo</option>
-                        <option value="Cursos / Digital">Cursos / Libros / Digital</option>
-                        <option value="Servicios">Servicios / Trabajos</option>
-                        <option value="Otros">Otros Ingresos (Especificar)</option>
-                    </select>
-                </div>
-                <div id="otherCategoryGroup" style="display:none;">
-                    <label>Especificar Origen (Otros)</label>
-                    <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
-                </div>
-                <div>
-                    <label>Detalle del Ingreso</label>
-                    <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
-                </div>
-                <div>
-                    <label>Monto a Inyectar ($)</label>
-                    <input type="number" id="extraAmount" step="any" placeholder="500" required>
-                </div>
-                <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Inyectar a Deuda Prioritaria</button>
-            </form>
         </div>
 
         <!-- Bola de nieve -->
