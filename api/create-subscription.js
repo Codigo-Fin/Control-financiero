@@ -41,6 +41,7 @@ export default async function handler(req, res) {
         external_reference: userId,
         payer_email: userEmail,
         back_url: `${SITE_URL}/index.html`,
+        notification_url: `${SITE_URL}/api/webhook-mercadopago`,
         auto_recurring: {
           frequency: frequency,
           frequency_type: 'months',
