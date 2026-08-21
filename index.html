@@ -83,20 +83,81 @@
 
     <div class="max-w-6xl mx-auto w-full z-10 space-y-5" id="printable-area">
 
-        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/10">
-                <div class="flex items-center gap-3">
-                    <div class="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl text-emerald-400">
-                        <i class="fa-solid fa-wallet text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
-                            Control Financiero & Mercado
-                        </h1>
-                        <p class="text-slate-400 text-xs sm:text-sm">Categorías, ahorro, deudas y mercado en un solo lugar</p>
-                    </div>
+        <!-- Barra superior fija: identidad + logout -->
+        <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl text-emerald-400">
+                    <i class="fa-solid fa-wallet text-xl"></i>
                 </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
+                        Control Financiero & Mercado
+                    </h1>
+                    <p class="text-slate-400 text-xs sm:text-sm">Categorías, ahorro, deudas y mercado en un solo lugar</p>
+                </div>
+            </div>
+            <button id="btn-logout" title="Cerrar sesión" class="bg-slate-800/80 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span id="user-email-display" class="hidden sm:inline max-w-[100px] truncate"></span>
+            </button>
+        </div>
 
+        <!-- Navegación por pestañas estilo Mercado Pago -->
+        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
+            <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">RESUMEN DEL MES</button>
+            <button data-tab="gastos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">GASTOS DEL MES</button>
+            <button data-tab="movimientos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS MOVIMIENTOS</button>
+        </div>
+
+        <!-- ==================== TAB: RESUMEN DEL MES ==================== -->
+        <div id="tab-panel-resumen" class="tab-panel space-y-5">
+
+        <!-- SUSCRIPCIÓN -->
+        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
+                        <i class="fa-solid fa-star text-amber-400"></i> Suscripción Premium
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="libertad-financiera.html" target="_blank"
+                        class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-fire"></i> Libertad Financiera
+                    </a>
+                    <button id="btn-subscribe"
+                        class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-credit-card"></i> Suscribirme
+                    </button>
+                    <span id="premium-badge" class="hidden bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Ya sos Premium
+                    </span>
+                </div>
+            </div>
+
+            <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
+            <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
+                <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button data-plan="mensual" data-price="3100" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <div class="text-xs text-slate-400">Mensual</div>
+                        <div class="text-lg font-bold text-white">$3.100</div>
+                    </button>
+                    <button data-plan="anual" data-price="25000" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <div class="text-xs text-slate-400">Anual</div>
+                        <div class="text-lg font-bold text-white">$25.000</div>
+                    </button>
+                </div>
+            </div>
+
+            <button id="btn-unsubscribe" class="hidden text-xs text-slate-500 hover:text-rose-400 underline underline-offset-2">
+                Dar de baja mi suscripción
+            </button>
+        </section>
+
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="flex items-center bg-slate-900/90 border border-emerald-500/30 rounded-2xl p-1 gap-1 shadow-inner">
                         <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-emerald-400 rounded-xl transition-colors">
@@ -120,11 +181,6 @@
                     <button onclick="openSalaryModal()" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
                         <i class="fa-solid fa-pen-to-square"></i>
                         <span>Ajustar Sueldo</span>
-                    </button>
-
-                    <button id="btn-logout" title="Cerrar sesión" class="bg-slate-800/80 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span id="user-email-display" class="hidden sm:inline max-w-[100px] truncate"></span>
                     </button>
                 </div>
             </div>
@@ -201,6 +257,11 @@
             </div>
         </header>
 
+        </div> <!-- fin tab-panel-resumen -->
+
+        <!-- ==================== TAB: GASTOS DEL MES ==================== -->
+        <div id="tab-panel-gastos" class="tab-panel hidden space-y-5">
+
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
                 <i class="fa-solid fa-cart-shopping text-emerald-400"></i> GASTOS DEL MES
@@ -228,7 +289,7 @@
                     <label class="block text-xs font-medium text-slate-400 mb-1">Categoría</label>
                     <select id="input-category" 
                         class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-emerald-500 text-white cursor-pointer">
-                        <option value="Combustible">⛽ Combustible (Nafta/GNC)</option>
+                        <option value="Combustible">⛽ Combustible (Nafta/GNC/Diesel)</option>
                         <option value="Almacén">🌾 Almacén</option>
                         <option value="Verdulería">🥬 Verdulería</option>
                         <option value="Carnicería">🍗 Carnicería</option>
@@ -244,6 +305,7 @@
                         class="w-full bg-slate-900 border border-amber-500/40 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-amber-400 text-amber-300 font-semibold cursor-pointer">
                         <option value="Nafta">⛽ Nafta</option>
                         <option value="GNC">🚗 GNC</option>
+                        <option value="Diesel">🛢️ Diesel</option>
                     </select>
                 </div>
 
@@ -288,7 +350,17 @@
                     </div>
                 </div>
             </div>
+        </section>
 
+        </div> <!-- fin tab-panel-gastos -->
+
+        <!-- ==================== TAB: MIS MOVIMIENTOS ==================== -->
+        <div id="tab-panel-movimientos" class="tab-panel hidden space-y-5">
+
+        <section class="space-y-3">
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-emerald-400"></i> MIS MOVIMIENTOS
+            </h2>
             <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
                 <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0" id="filter-container"></div>
                 <div class="relative w-full sm:w-56">
@@ -308,49 +380,7 @@
             </div>
         </main>
 
-        <!-- SUSCRIPCIÓN (con Mercado en Vivo adentro) -->
-        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                    <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                        <i class="fa-solid fa-star text-amber-400"></i> Suscripción Premium
-                    </h3>
-                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <a href="libertad-financiera.html" target="_blank"
-                        class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-fire"></i> Libertad Financiera
-                    </a>
-                    <button id="btn-subscribe"
-                        class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-credit-card"></i> Suscribirme
-                    </button>
-                    <span id="premium-badge" class="hidden bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
-                        <i class="fa-solid fa-circle-check"></i> Ya sos Premium
-                    </span>
-                </div>
-            </div>
-
-            <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
-            <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
-                <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button data-plan="mensual" data-price="3100" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
-                        <div class="text-xs text-slate-400">Mensual</div>
-                        <div class="text-lg font-bold text-white">$3.100</div>
-                    </button>
-                    <button data-plan="anual" data-price="25000" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
-                        <div class="text-xs text-slate-400">Anual</div>
-                        <div class="text-lg font-bold text-white">$25.000</div>
-                    </button>
-                </div>
-            </div>
-
-            <button id="btn-unsubscribe" class="hidden text-xs text-slate-500 hover:text-rose-400 underline underline-offset-2">
-                Dar de baja mi suscripción
-            </button>
-        </section>
+        </div> <!-- fin tab-panel-movimientos -->
     </div>
 
     <footer class="max-w-6xl mx-auto w-full mt-6 z-10">
@@ -1164,8 +1194,31 @@
             }
         }
 
+        // ============================================
+        // NAVEGACIÓN POR PESTAÑAS (estilo Mercado Pago)
+        // ============================================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById('tab-panel-' + tabName).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.dataset.tab === tabName) {
+                    btn.classList.add('bg-emerald-500', 'text-slate-950', 'shadow-md');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('bg-emerald-500', 'text-slate-950', 'shadow-md');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+        }
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
         window.onload = function() {
             updateFormSubtypes();
+            switchTab('resumen');
             checkSession().then(() => checkReturnFromPayment());
         };
     </script>
