@@ -104,61 +104,16 @@
             </div>
         </header>
 
-        <!-- Registrar deuda (arriba de todo para que se vea bien) -->
-        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
-                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
-            </h2>
-            <form id="debtForm" class="space-y-3">
-                <input type="hidden" id="editingId" value="">
-                <div>
-                    <label>Acreedor / Nombre de Deuda</label>
-                    <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Préstamo Juan" required>
-                </div>
-                <div>
-                    <label>Monto Total ($)</label>
-                    <input type="number" id="amount" step="any" placeholder="1300" required>
-                </div>
-                <div>
-                    <label>Pago Mínimo Mensual ($)</label>
-                    <input type="number" id="minPayment" step="any" placeholder="200" required>
-                </div>
-                <button type="submit" id="btnSaveDebt" class="btn bg-rose-500 hover:bg-rose-400 text-white">Agregar Deuda</button>
-                <button type="button" id="btnCancelEdit" class="btn bg-slate-800 hover:bg-slate-700 text-slate-200" style="display:none;">Cancelar Edición</button>
-            </form>
+        <!-- Navegación por pestañas -->
+        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
+            <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDO A FAVOR</button>
+            <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
+            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MI FONDO DE EMERGENCIA</button>
+            <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
         </div>
 
-        <!-- Acelerador de ingresos -->
-        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
-                <i class="fa-solid fa-bolt"></i> Acelerador de Ingresos (Pagos Extra)
-            </h2>
-            <form id="extraForm" class="space-y-3">
-                <div>
-                    <label>Categoría del Ingreso</label>
-                    <select id="extraSourceCategory" required>
-                        <option value="E-commerce">E-commerce / Ventas Online</option>
-                        <option value="Venta de Activo">Venta de Activo / Vehículo</option>
-                        <option value="Cursos / Digital">Cursos / Libros / Digital</option>
-                        <option value="Servicios">Servicios / Trabajos</option>
-                        <option value="Otros">Otros Ingresos (Especificar)</option>
-                    </select>
-                </div>
-                <div id="otherCategoryGroup" style="display:none;">
-                    <label>Especificar Origen (Otros)</label>
-                    <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
-                </div>
-                <div>
-                    <label>Detalle del Ingreso</label>
-                    <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
-                </div>
-                <div>
-                    <label>Monto a Inyectar ($)</label>
-                    <input type="number" id="extraAmount" step="any" placeholder="500" required>
-                </div>
-                <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Inyectar a Deuda Prioritaria</button>
-            </form>
-        </div>
+        <!-- ==================== TAB: SALDO A FAVOR ==================== -->
+        <div id="lf-tab-saldo" class="lf-tab-panel space-y-5">
 
         <!-- Métricas principales -->
         <div class="grid grid-cols-2 gap-3">
@@ -185,12 +140,41 @@
                 <canvas id="progressPieChart"></canvas>
             </div>
             <button id="btnInjectCredit" class="btn bg-emerald-500 hover:bg-emerald-400 text-slate-950">
-                <i class="fa-solid fa-hand-holding-dollar"></i> Inyectar Saldo a Favor a una Deuda (opcional)
+                <i class="fa-solid fa-hand-holding-dollar"></i> Pagar Saldo a Favor a una Deuda (opcional)
             </button>
             <p class="text-[11px] text-slate-500 text-center">Es tu decisión usarlo o guardarlo — no se aplica solo.</p>
         </div>
 
-        <!-- Gráfico de deudas -->
+        </div> <!-- fin lf-tab-saldo -->
+
+        <!-- ==================== TAB: REGISTRAR DEUDAS ==================== -->
+        <div id="lf-tab-deudas" class="lf-tab-panel hidden space-y-5">
+
+        <!-- Registrar deuda -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
+            </h2>
+            <form id="debtForm" class="space-y-3">
+                <input type="hidden" id="editingId" value="">
+                <div>
+                    <label>Acreedor / Nombre de Deuda</label>
+                    <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Préstamo Juan" required>
+                </div>
+                <div>
+                    <label>Monto Total ($)</label>
+                    <input type="number" id="amount" step="any" placeholder="1300" required>
+                </div>
+                <div>
+                    <label>Pago Mínimo Mensual ($)</label>
+                    <input type="number" id="minPayment" step="any" placeholder="200" required>
+                </div>
+                <button type="submit" id="btnSaveDebt" class="btn bg-rose-500 hover:bg-rose-400 text-white">Agregar Deuda</button>
+                <button type="button" id="btnCancelEdit" class="btn bg-slate-800 hover:bg-slate-700 text-slate-200" style="display:none;">Cancelar Edición</button>
+            </form>
+        </div>
+
+        <!-- Distribución de Deudas -->
         <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
             <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
                 <i class="fa-solid fa-chart-pie"></i> Distribución de Deudas
@@ -199,6 +183,40 @@
                 <canvas id="debtPieChart"></canvas>
             </div>
         </div>
+
+        <!-- Bola de nieve -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-snowflake"></i> Estrategia Bola de Nieve (Pendientes)
+            </h2>
+            <div id="debtList" class="space-y-3"></div>
+        </div>
+
+        <!-- Liquidadas -->
+        <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3 border border-slate-500/20">
+            <h2 class="font-bold text-base sm:text-lg text-slate-300 flex items-center gap-2">
+                🏁 Deudas Liquidadas (Tachadas)
+            </h2>
+            <div id="clearedList" class="space-y-2"></div>
+        </div>
+
+        <!-- Historial -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
+                </h2>
+                <button id="btnClearHistory" title="Vaciar historial" class="text-slate-500 hover:text-rose-400 text-xs bg-slate-900/60 hover:bg-rose-500/10 border border-white/10 px-2.5 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-broom"></i>
+                </button>
+            </div>
+            <div id="historyList" class="space-y-1"></div>
+        </div>
+
+        </div> <!-- fin lf-tab-deudas -->
+
+        <!-- ==================== TAB: MI FONDO DE EMERGENCIA ==================== -->
+        <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
 
         <!-- Fondos de Emergencia -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -249,6 +267,11 @@
             </div>
         </div>
 
+        </div> <!-- fin lf-tab-emergencia -->
+
+        <!-- ==================== TAB: INVERSIONES ==================== -->
+        <div id="lf-tab-inversiones" class="lf-tab-panel hidden space-y-5">
+
         <!-- Calculadora de Libertad Financiera (regla del 4% / número x25) -->
         <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
             <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
@@ -270,6 +293,72 @@
                     <div id="fireProgressBar" class="bg-amber-400 h-2 rounded-full transition-all" style="width:0%"></div>
                 </div>
                 <p id="fireProgressText" class="text-[11px] text-slate-400"></p>
+            </div>
+        </div>
+
+        <!-- Ingresos Extras -->
+        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
+                <i class="fa-solid fa-bolt"></i> INGRESOS EXTRAS
+            </h2>
+            <form id="extraForm" class="space-y-3">
+                <div>
+                    <label>Categoría del Ingreso</label>
+                    <select id="extraSourceCategory" required>
+                        <option value="E-commerce">E-commerce / Ventas Online</option>
+                        <option value="Venta de Activo">Venta de Activo / Vehículo</option>
+                        <option value="Cursos / Digital">Cursos / Libros / Digital</option>
+                        <option value="Servicios">Servicios / Trabajos</option>
+                        <option value="Otros">Otros Ingresos (Especificar)</option>
+                    </select>
+                </div>
+                <div id="otherCategoryGroup" style="display:none;">
+                    <label>Especificar Origen (Otros)</label>
+                    <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
+                </div>
+                <div>
+                    <label>Detalle del Ingreso</label>
+                    <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
+                </div>
+                <div>
+                    <label>Monto ($)</label>
+                    <input type="number" id="extraAmount" step="any" placeholder="500" required>
+                </div>
+                <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Pagar a mis deudas (opcional)</button>
+            </form>
+            <p class="text-[11px] text-slate-500 text-center">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
+        </div>
+
+        <!-- Cartera de inversiones -->
+        <div class="glass-panel neon-card neon-purple rounded-3xl p-5 sm:p-7 space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <h2 class="font-bold text-base sm:text-lg text-purple-300 flex items-center gap-2">
+                    <i class="fa-solid fa-seedling"></i> Cartera de Inversiones (S&P 500 / Activos)
+                </h2>
+                <a href="https://www.youtube.com/@TUCANAL" target="_blank" class="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
+                    <i class="fa-brands fa-youtube"></i> Antes de empezar ver el video tutorial
+                </a>
+            </div>
+            <form id="investForm" class="space-y-3">
+                <div>
+                    <label>Nombre del Activo / Acción / ETF</label>
+                    <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label>Cantidad (Unidades)</label>
+                        <input type="number" id="investQty" step="any" placeholder="Ej: 500" required>
+                    </div>
+                    <div>
+                        <label>Precio Unitario ($)</label>
+                        <input type="number" id="investPrice" step="any" placeholder="Ej: 500" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn bg-purple-500 hover:bg-purple-400 text-slate-950">Registrar en Cartera</button>
+            </form>
+            <div>
+                <label>Tus Inversiones Actuales</label>
+                <div id="investList" class="space-y-2"></div>
             </div>
         </div>
 
@@ -329,67 +418,7 @@
             </div>
         </div>
 
-        <!-- Cartera de inversiones -->
-        <div class="glass-panel neon-card neon-purple rounded-3xl p-5 sm:p-7 space-y-4">
-            <div class="flex items-center justify-between flex-wrap gap-2">
-                <h2 class="font-bold text-base sm:text-lg text-purple-300 flex items-center gap-2">
-                    <i class="fa-solid fa-seedling"></i> Cartera de Inversiones (S&P 500 / Activos)
-                </h2>
-                <a href="https://www.youtube.com/watch?v=1mYGMNgw2cU" target="_blank" class="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
-                    <i class="fa-brands fa-youtube"></i> Antes de empezar ver el video tutorial
-                </a>
-            </div>
-            <form id="investForm" class="space-y-3">
-                <div>
-                    <label>Nombre del Activo / Acción / ETF</label>
-                    <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label>Cantidad (Unidades)</label>
-                        <input type="number" id="investQty" step="any" placeholder="Ej: 500" required>
-                    </div>
-                    <div>
-                        <label>Precio Unitario ($)</label>
-                        <input type="number" id="investPrice" step="any" placeholder="Ej: 500" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn bg-purple-500 hover:bg-purple-400 text-slate-950">Registrar en Cartera</button>
-            </form>
-            <div>
-                <label>Tus Inversiones Actuales</label>
-                <div id="investList" class="space-y-2"></div>
-            </div>
-        </div>
-
-        <!-- Bola de nieve -->
-        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
-            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
-                <i class="fa-solid fa-snowflake"></i> Estrategia Bola de Nieve (Pendientes)
-            </h2>
-            <div id="debtList" class="space-y-3"></div>
-        </div>
-
-        <!-- Liquidadas -->
-        <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3 border border-slate-500/20">
-            <h2 class="font-bold text-base sm:text-lg text-slate-300 flex items-center gap-2">
-                🏁 Deudas Liquidadas (Tachadas)
-            </h2>
-            <div id="clearedList" class="space-y-2"></div>
-        </div>
-
-        <!-- Historial -->
-        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-                <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
-                </h2>
-                <button id="btnClearHistory" title="Vaciar historial" class="text-slate-500 hover:text-rose-400 text-xs bg-slate-900/60 hover:bg-rose-500/10 border border-white/10 px-2.5 py-1.5 rounded-lg transition-colors">
-                    <i class="fa-solid fa-broom"></i>
-                </button>
-            </div>
-            <div id="historyList" class="space-y-1"></div>
-        </div>
+        </div> <!-- fin lf-tab-inversiones -->
 
     </div>
 
@@ -813,13 +842,32 @@
 
         const detail = document.getElementById('extraDetail').value;
         const extra = parseFloat(document.getElementById('extraAmount').value);
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
 
-        applyPaymentAcrossDebts(extra, category, detail);
+        const useForDebt = pendingDebts.length > 0 &&
+            confirm(`¿Querés usar este ingreso de $${extra.toLocaleString()} para pagar tus deudas? Cancelar = se guarda como Saldo a Favor.`);
+
+        if (useForDebt) {
+            applyPaymentAcrossDebts(extra, category, detail);
+        } else {
+            // No hay deuda, o la persona decidió no usarlo ahora: se registra igual en el historial
+            // y se suma directo al Saldo a Favor.
+            creditBalance += extra;
+            history.unshift({
+                date: new Date().toLocaleDateString(),
+                category,
+                detail,
+                amount: extra,
+                targetName: 'Saldo a Favor',
+                isMin: false
+            });
+            saveStorage();
+            render();
+            alert(`Ingreso de $${extra.toLocaleString()} registrado en tu Saldo a Favor`);
+        }
 
         extraForm.reset();
         otherCategoryGroup.style.display = 'none';
-        saveStorage();
-        render();
     });
 
     function updateChart() {
@@ -901,7 +949,7 @@
                         <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
                     </div>
                     <div class="flex gap-1.5 flex-shrink-0">
-                        <button onclick="injectInvestToDebt(${inv.id})" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Inyectar</button>
+                        <button onclick="injectInvestToDebt(${inv.id})" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Pagar</button>
                         <button onclick="deleteInvest(${inv.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `;
@@ -1211,6 +1259,30 @@
     marketSearchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') { e.preventDefault(); marketSearchBtn.click(); }
     });
+
+    // ============================================
+    // NAVEGACIÓN POR PESTAÑAS
+    // ============================================
+    function switchLfTab(tabName) {
+        document.querySelectorAll('.lf-tab-panel').forEach(panel => panel.classList.add('hidden'));
+        document.getElementById('lf-tab-' + tabName).classList.remove('hidden');
+
+        document.querySelectorAll('.lf-tab-btn').forEach(btn => {
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('bg-emerald-500', 'text-slate-950', 'shadow-md');
+                btn.classList.remove('text-slate-400');
+            } else {
+                btn.classList.remove('bg-emerald-500', 'text-slate-950', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            }
+        });
+    }
+
+    document.querySelectorAll('.lf-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchLfTab(btn.dataset.tab));
+    });
+
+    switchLfTab('saldo');
 
     checkAccess();
 </script>
