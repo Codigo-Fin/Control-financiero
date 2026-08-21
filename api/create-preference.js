@@ -1,66 +1,80 @@
-// /api/create-preference.js
-// Crea un "link de pago" (preferencia) de Mercado Pago para un usuario específico,
-// según el plan elegido (mensual, anual o de por vida).
+// /api/create-subscription.js
+// Crea una SUSCRIPCIÓN RECURRENTE real de Mercado Pago (se llama "Preapproval").
+// A diferencia de un pago único, esto autoriza a Mercado Pago a cobrarle
+// automáticamente a la persona cada mes (o cada año), sin que tenga que volver
+// a pagar a mano.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { userId, userEmail, plan, price, days } = req.body;
+  const { userId, userEmail, plan, price } = req.body;
 
-  if (!userId || !price) {
-    return res.status(400).json({ error: 'Faltan datos (userId o price)' });
+  if (!userId || !userEmail || !price) {
+    return res.status(400).json({ error: 'Faltan datos (userId, userEmail o price)' });
   }
 
   const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
   if (!MP_ACCESS_TOKEN) {
     return res.status(500).json({ error: 'Falta configurar MP_ACCESS_TOKEN en Vercel' });
   }
 
   const SITE_URL = process.env.SITE_URL || `https://${req.headers.host}`;
 
-  const planLabels = { mensual: 'Suscripción Mensual', anual: 'Suscripción Anual', vitalicio: 'Suscripción de por Vida' };
-  const title = planLabels[plan] || 'Suscripción Premium - Control Financiero';
+  // Mensual: se cobra cada 1 mes. Anual: se cobra cada 12 meses.
+  const frequency = plan === 'anual' ? 12 : 1;
+  const reason = plan === 'anual' ? 'Suscripción Anual - Control Financiero' : 'Suscripción Mensual - Control Financiero';
 
   try {
-    const response = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${MP_ACCESS_TOKEN}`
       },
       body: JSON.stringify({
-        items: [
-          {
-            title: title,
-            quantity: 1,
-            unit_price: Number(price),
-            currency_id: 'ARS'
-          }
-        ],
-        payer: { email: userEmail || undefined },
-        // Guardamos el plan y la duración junto al userId, separados por "|",
-        // para que el webhook sepa cuántos días de acceso activar.
-        external_reference: `${userId}|${plan || 'mensual'}|${days || 30}`,
-        back_urls: {
-          success: `${SITE_URL}/index.html`,
-          failure: `${SITE_URL}/index.html`,
-          pending: `${SITE_URL}/index.html`
+        reason: reason,
+        external_reference: userId,
+        payer_email: userEmail,
+        back_url: `${SITE_URL}/index.html`,
+        auto_recurring: {
+          frequency: frequency,
+          frequency_type: 'months',
+          transaction_amount: Number(price),
+          currency_id: 'ARS'
         },
-        auto_return: 'approved',
-        notification_url: `${SITE_URL}/api/webhook-mercadopago`
+        status: 'pending'
       })
     });
 
-    const data = await response.json();
+    const data = await mpResponse.json();
 
-    if (!response.ok) {
+    if (!mpResponse.ok) {
+      console.error('Error de Mercado Pago al crear preapproval:', data);
       return res.status(500).json({ error: 'Error de Mercado Pago', detail: data });
+    }
+
+    // Guardamos el ID de la suscripción ya de una vez, para poder cancelarla después
+    if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      await fetch(`${SUPABASE_URL}/rest/v1/user_settings?user_id=eq.${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ mp_preapproval_id: data.id })
+      });
     }
 
     return res.status(200).json({ init_point: data.init_point });
   } catch (err) {
+    console.error('Error interno en create-subscription:', err.message);
     return res.status(500).json({ error: 'Error interno', detail: err.message });
   }
 }
