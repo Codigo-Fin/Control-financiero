@@ -69,7 +69,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json',
           'Prefer': 'return=minimal'
         },
-        body: JSON.stringify({ mp_preapproval_id: data.id })
+        body: JSON.stringify({ mp_preapproval_id: data.id, current_plan: plan })
       });
     }
 
