@@ -31,6 +31,7 @@
         .neon-purple { box-shadow: 0 0 0 1px rgba(168,85,247,0.35), 0 0 18px rgba(168,85,247,0.25), inset 0 0 20px rgba(168,85,247,0.04); }
         .neon-teal { box-shadow: 0 0 0 1px rgba(45,212,191,0.35), 0 0 18px rgba(45,212,191,0.25), inset 0 0 20px rgba(45,212,191,0.04); }
         .neon-amber { box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 0 18px rgba(251,191,36,0.25), inset 0 0 20px rgba(251,191,36,0.04); }
+        .neon-blue { box-shadow: 0 0 0 1px rgba(56,189,248,0.4), 0 0 18px rgba(56,189,248,0.3), inset 0 0 20px rgba(56,189,248,0.05); }
         .neon-card { transition: box-shadow 0.25s ease, transform 0.2s ease; }
         .neon-card:hover { transform: translateY(-2px); }
 
@@ -49,45 +50,6 @@
 
         .btn { width:100%; padding:13px; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; text-align:center; transition: all 0.2s ease; }
         .btn:active { transform: scale(0.97); }
-
-        /* ==================== MODO DÍA (claro) ==================== */
-        body.light-mode {
-            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 45%, #ecfdf5 100%);
-            color: #0f172a;
-        }
-        body.light-mode .glass-panel {
-            background: rgba(255, 255, 255, 0.85) !important;
-            border-color: rgba(0, 0, 0, 0.08) !important;
-        }
-        body.light-mode .neon-card {
-            background: rgba(255, 255, 255, 0.85) !important;
-        }
-        body.light-mode .text-white,
-        body.light-mode .text-slate-100,
-        body.light-mode .text-slate-200 { color: #0f172a !important; }
-        body.light-mode .text-slate-300,
-        body.light-mode .text-slate-400,
-        body.light-mode .text-slate-500 { color: #475569 !important; }
-        body.light-mode input,
-        body.light-mode select {
-            background-color: #ffffff !important;
-            color: #0f172a !important;
-            border-color: rgba(0, 0, 0, 0.15) !important;
-        }
-        body.light-mode input::placeholder { color: #94a3b8 !important; }
-        body.light-mode label { color: #64748b !important; }
-        body.light-mode .bg-slate-900,
-        body.light-mode .bg-slate-900\/60,
-        body.light-mode .bg-slate-950,
-        body.light-mode .bg-slate-950\/60,
-        body.light-mode .bg-slate-950\/40,
-        body.light-mode .bg-slate-800 {
-            background-color: #f1f5f9 !important;
-        }
-        body.light-mode .border-white\/10,
-        body.light-mode .border-white\/5 {
-            border-color: rgba(0, 0, 0, 0.08) !important;
-        }
     </style>
 </head>
 <body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen">
@@ -121,14 +83,9 @@
 
         <div id="trial-banner" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm text-center py-2 px-3 rounded-xl"></div>
 
-        <div class="flex items-center justify-between">
-            <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-400 text-sm transition-colors">
-                <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
-            </a>
-            <button id="btn-theme-toggle" title="Cambiar modo día/noche" class="bg-slate-800/80 hover:bg-amber-500/10 border border-white/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
-                <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
-            </button>
-        </div>
+        <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-400 text-sm transition-colors">
+            <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
+        </a>
 
         <header class="glass-panel rounded-3xl p-5 sm:p-7 text-center space-y-1">
             <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-purple-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-2">
@@ -150,7 +107,7 @@
 
         <!-- Navegación por pestañas -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
-            <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDO A FAVOR</button>
+            <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS</button>
             <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
             <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MI FONDO DE EMERGENCIA</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
@@ -317,8 +274,8 @@
         <div id="lf-tab-inversiones" class="lf-tab-panel hidden space-y-5">
 
         <!-- Calculadora de Libertad Financiera (regla del 4% / número x25) -->
-        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
+        <div class="glass-panel neon-card neon-blue rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-sky-300 flex items-center gap-2">
                 <i class="fa-solid fa-crown"></i> Tu Número de Libertad Financiera
             </h2>
             <p class="text-[11px] text-slate-500">Cuánto necesitás invertido para vivir del 4% anual sin trabajar más. Se calcula: gasto mensual × 12 × 25.</p>
@@ -326,15 +283,15 @@
                 <label>Gasto Mensual para Vivir ($)</label>
                 <input type="number" id="fireMonthlyExpense" step="any" placeholder="Ej: 5000000">
             </div>
-            <button id="btnCalcFire" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Calcular</button>
+            <button id="btnCalcFire" class="btn bg-sky-400 hover:bg-sky-300 text-slate-950">Calcular</button>
 
-            <div id="fireResultBox" class="hidden bg-slate-950/60 border border-amber-500/30 rounded-2xl p-4 space-y-2 text-center">
+            <div id="fireResultBox" class="hidden bg-slate-950/60 border border-sky-500/30 rounded-2xl p-4 space-y-2 text-center">
                 <div class="text-xs text-slate-400">Gasto Anual</div>
                 <div id="fireAnnualExpense" class="text-lg font-bold text-white">$0</div>
-                <div class="text-xs text-amber-300 uppercase tracking-wider mt-2">Necesitás tener invertido</div>
-                <div id="fireTargetAmount" class="text-2xl sm:text-3xl font-bold text-amber-400">$0</div>
+                <div class="text-xs text-sky-300 uppercase tracking-wider mt-2">Necesitás tener invertido</div>
+                <div id="fireTargetAmount" class="text-2xl sm:text-3xl font-bold text-sky-400">$0</div>
                 <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden mt-2">
-                    <div id="fireProgressBar" class="bg-amber-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    <div id="fireProgressBar" class="bg-sky-400 h-2 rounded-full transition-all" style="width:0%"></div>
                 </div>
                 <p id="fireProgressText" class="text-[11px] text-slate-400"></p>
             </div>
@@ -539,8 +496,24 @@
         await loadLibertadData();
     }
 
+    function getBackupKey() {
+        return 'lf_backup_' + currentUser.id;
+    }
+
     async function loadLibertadData() {
-        const { data } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+        const backupKey = getBackupKey();
+        let data = null;
+        let fetchFailed = false;
+
+        try {
+            const result = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+            if (result.error) { fetchFailed = true; console.error('Error al leer de Supabase:', result.error); }
+            data = result.data;
+        } catch (err) {
+            fetchFailed = true;
+            console.error('Error de conexión al leer Supabase:', err);
+        }
+
         if (data) {
             debts = data.debts || [];
             investments = data.investments || [];
@@ -554,8 +527,37 @@
                 document.getElementById('fireMonthlyExpense').value = data.fire_monthly_expense;
                 calculateFireNumber(false);
             }
+            // Actualizamos el respaldo local para que coincida con lo que vino de Supabase
+            localStorage.setItem(backupKey, JSON.stringify(data));
         } else {
-            await sb.from('libertad_financiera_data').insert({ user_id: currentUser.id });
+            // No hay datos en Supabase (o falló la conexión) — revisamos si hay un respaldo local guardado antes
+            const backupRaw = localStorage.getItem(backupKey);
+            if (backupRaw) {
+                try {
+                    const backup = JSON.parse(backupRaw);
+                    debts = backup.debts || [];
+                    investments = backup.investments || [];
+                    history = backup.history || [];
+                    creditBalance = parseFloat(backup.credit_balance) || 0;
+                    localStorage.setItem('emergencyBasic_target', backup.emergency_basic_target || 0);
+                    localStorage.setItem('emergencyBasic_current', backup.emergency_basic_current || 0);
+                    localStorage.setItem('emergencyFull_target', backup.emergency_full_target || 0);
+                    localStorage.setItem('emergencyFull_current', backup.emergency_full_current || 0);
+                    if (backup.fire_monthly_expense) {
+                        document.getElementById('fireMonthlyExpense').value = backup.fire_monthly_expense;
+                        calculateFireNumber(false);
+                    }
+                    if (fetchFailed) {
+                        alert('No se pudo conectar con el servidor. Se cargó tu último respaldo guardado en este dispositivo.');
+                    }
+                    // Reintentamos guardar ese respaldo en Supabase para que quede sincronizado
+                    await saveStorage();
+                } catch (err) {
+                    console.error('Error al leer el respaldo local:', err);
+                }
+            } else if (!fetchFailed) {
+                await sb.from('libertad_financiera_data').insert({ user_id: currentUser.id });
+            }
         }
         renderEmergencyBox('emergencyBasic');
         renderEmergencyBox('emergencyFull');
@@ -589,7 +591,7 @@
             clearTimeout(saveIndicatorTimeout);
             saveIndicatorTimeout = setTimeout(() => { el.style.opacity = '0'; }, 1200);
         } else if (state === 'error') {
-            el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error al guardar, no cierres la página';
+            el.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Error al guardar en el servidor';
             el.classList.remove('border-emerald-500/40', 'text-emerald-300');
             el.classList.add('border-rose-500/40', 'text-rose-300');
         }
@@ -598,7 +600,8 @@
     async function saveStorage() {
         if (!currentUser) return;
         showSavingIndicator('saving');
-        const { error } = await sb.from('libertad_financiera_data').upsert({
+
+        const payload = {
             user_id: currentUser.id,
             debts: debts,
             investments: investments,
@@ -610,12 +613,29 @@
             emergency_full_current: parseFloat(localStorage.getItem('emergencyFull_current')) || 0,
             fire_monthly_expense: parseFloat(document.getElementById('fireMonthlyExpense').value) || 0,
             updated_at: new Date().toISOString()
-        });
-        if (error) {
-            console.error('Error al guardar en Supabase:', error);
+        };
+
+        // Guardamos el respaldo local YA, antes de intentar la conexión — así, aunque falle
+        // internet en este instante, los datos quedan guardados en este dispositivo.
+        try {
+            localStorage.setItem(getBackupKey(), JSON.stringify(payload));
+        } catch (err) {
+            console.error('No se pudo guardar el respaldo local:', err);
+        }
+
+        try {
+            const { error } = await sb.from('libertad_financiera_data').upsert(payload);
+            if (error) {
+                console.error('Error al guardar en Supabase:', error);
+                showSavingIndicator('error');
+                alert('No se pudo guardar en el servidor (quedó guardado localmente en este dispositivo, pero avisame si esto se repite): ' + error.message);
+            } else {
+                showSavingIndicator('saved');
+            }
+        } catch (err) {
+            console.error('Error de conexión al guardar:', err);
             showSavingIndicator('error');
-        } else {
-            showSavingIndicator('saved');
+            alert('No hay conexión con el servidor. Tus datos quedaron guardados en este dispositivo y se van a sincronizar apenas vuelva la conexión.');
         }
     }
 
@@ -1356,28 +1376,6 @@
     });
 
     switchLfTab('saldo');
-
-    // ============================================
-    // MODO DÍA / NOCHE (misma preferencia que el Control Financiero)
-    // ============================================
-    function applyTheme(theme) {
-        const icon = document.getElementById('theme-toggle-icon');
-        if (theme === 'light') {
-            document.body.classList.add('light-mode');
-            icon.className = 'fa-solid fa-sun';
-        } else {
-            document.body.classList.remove('light-mode');
-            icon.className = 'fa-solid fa-moon';
-        }
-        localStorage.setItem('theme_preference', theme);
-    }
-
-    document.getElementById('btn-theme-toggle').addEventListener('click', () => {
-        const isLight = document.body.classList.contains('light-mode');
-        applyTheme(isLight ? 'dark' : 'light');
-    });
-
-    applyTheme(localStorage.getItem('theme_preference') || 'dark');
 
     // Aviso extra por si alguien intenta salir justo mientras se está guardando
     window.addEventListener('beforeunload', (e) => {
