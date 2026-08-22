@@ -32,6 +32,51 @@
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
         .section-title-divider { display:flex; align-items:center; gap:0.6rem; margin-bottom: 0.75rem; }
         .section-title-divider .line { flex:1; height:1px; background: linear-gradient(90deg, rgba(255,255,255,0.15), transparent); }
+
+        /* ==================== MODO DÍA (claro) ==================== */
+        body.light-mode {
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 45%, #ecfdf5 100%);
+            color: #0f172a;
+        }
+        body.light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.85) !important;
+            border-color: rgba(0, 0, 0, 0.08) !important;
+        }
+        body.light-mode .glass-card {
+            background: rgba(255, 255, 255, 0.7) !important;
+            border-color: rgba(0, 0, 0, 0.08) !important;
+        }
+        body.light-mode .text-white,
+        body.light-mode .text-slate-100,
+        body.light-mode .text-slate-200 { color: #0f172a !important; }
+        body.light-mode .text-slate-300,
+        body.light-mode .text-slate-400,
+        body.light-mode .text-slate-500 { color: #475569 !important; }
+        body.light-mode input,
+        body.light-mode select {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            border-color: rgba(0, 0, 0, 0.15) !important;
+        }
+        body.light-mode input::placeholder { color: #94a3b8 !important; }
+        body.light-mode .bg-slate-900,
+        body.light-mode .bg-slate-900\/80,
+        body.light-mode .bg-slate-900\/60,
+        body.light-mode .bg-slate-900\/50,
+        body.light-mode .bg-slate-950,
+        body.light-mode .bg-slate-950\/60,
+        body.light-mode .bg-slate-800,
+        body.light-mode .bg-slate-800\/80 {
+            background-color: #f1f5f9 !important;
+        }
+        body.light-mode .border-white\/10,
+        body.light-mode .border-white\/5 {
+            border-color: rgba(0, 0, 0, 0.08) !important;
+        }
+        body.light-mode #toast {
+            background-color: rgba(255,255,255,0.95) !important;
+            color: #0f172a !important;
+        }
     </style>
 </head>
 <body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen flex flex-col justify-between">
@@ -96,10 +141,15 @@
                     <p class="text-slate-400 text-xs sm:text-sm">Categorías, ahorro, deudas y mercado en un solo lugar</p>
                 </div>
             </div>
-            <button id="btn-logout" title="Cerrar sesión" class="bg-slate-800/80 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5 flex-shrink-0">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span id="user-email-display" class="hidden sm:inline max-w-[100px] truncate"></span>
-            </button>
+            <div class="flex items-center gap-2 flex-shrink-0">
+                <button id="btn-theme-toggle" title="Cambiar modo día/noche" class="bg-slate-800/80 hover:bg-amber-500/10 border border-white/10 hover:border-amber-500/30 text-slate-300 hover:text-amber-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
+                </button>
+                <button id="btn-logout" title="Cerrar sesión" class="bg-slate-800/80 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    <span id="user-email-display" class="hidden sm:inline max-w-[100px] truncate"></span>
+                </button>
+            </div>
         </div>
 
         <!-- Navegación por pestañas estilo Mercado Pago -->
@@ -136,13 +186,21 @@
                 </div>
             </div>
 
+            <!-- Mejorar de plan (solo visible si sos premium y estás en el plan Mensual) -->
+            <div id="upgrade-plan-box" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-sm text-purple-200">¿Querés pasarte al plan Anual y ahorrar?</p>
+                <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
+                    Cambiar a plan Anual ($25.000)
+                </button>
+            </div>
+
             <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
             <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
                 <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button data-plan="mensual" data-price="3100" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                    <button data-plan="mensual" data-price="3200" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
                         <div class="text-xs text-slate-400">Mensual</div>
-                        <div class="text-lg font-bold text-white">$3.100</div>
+                        <div class="text-lg font-bold text-white">$3.200</div>
                     </button>
                     <button data-plan="anual" data-price="25000" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
                         <div class="text-xs text-slate-400">Anual</div>
@@ -635,11 +693,12 @@
         // ============================================
         // CARGA DE DATOS
         // ============================================
-        function applyPremiumUI(isPremium) {
+        function applyPremiumUI(isPremium, currentPlan) {
             const btnSubscribe = document.getElementById('btn-subscribe');
             const badge = document.getElementById('premium-badge');
             const btnUnsub = document.getElementById('btn-unsubscribe');
             const planBox = document.getElementById('plan-options-box');
+            const upgradeBox = document.getElementById('upgrade-plan-box');
 
             if (isPremium) {
                 btnSubscribe.classList.add('hidden');
@@ -647,11 +706,17 @@
                 badge.classList.add('flex');
                 btnUnsub.classList.remove('hidden');
                 planBox.classList.add('hidden');
+                if (currentPlan === 'mensual') {
+                    upgradeBox.classList.remove('hidden');
+                } else {
+                    upgradeBox.classList.add('hidden');
+                }
             } else {
                 btnSubscribe.classList.remove('hidden');
                 badge.classList.add('hidden');
                 badge.classList.remove('flex');
                 btnUnsub.classList.add('hidden');
+                upgradeBox.classList.add('hidden');
             }
         }
 
@@ -661,7 +726,7 @@
                 salary = parseFloat(settings.salary) || 500000;
                 const subscriptionActive = settings.is_premium === true &&
                     (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
-                applyPremiumUI(subscriptionActive);
+                applyPremiumUI(subscriptionActive, settings.current_plan);
             } else {
                 salary = 500000;
                 const trialEnd = new Date();
@@ -1167,6 +1232,31 @@
             }
         });
 
+        document.getElementById('btn-upgrade-plan').addEventListener('click', async () => {
+            if (!currentUser) return;
+            if (!confirm('Vas a pasar al plan Anual ($25.000). Te vamos a pedir que autorices el nuevo cobro. ¿Continuar?')) return;
+            const btn = document.getElementById('btn-upgrade-plan');
+            const originalText = btn.textContent;
+            btn.textContent = 'Procesando...';
+            try {
+                const resp = await fetch('/api/change-plan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, newPlan: 'anual', newPrice: 25000 })
+                });
+                const data = await resp.json();
+                if (data.init_point) {
+                    window.location.href = data.init_point;
+                } else {
+                    showToast('No se pudo cambiar el plan. Probá de nuevo.', 'warning');
+                    btn.textContent = originalText;
+                }
+            } catch (err) {
+                showToast('Error al conectar con Mercado Pago', 'warning');
+                btn.textContent = originalText;
+            }
+        });
+
         // Si volvemos desde Mercado Pago tras autorizar la suscripción, avisamos y
         // re-consultamos el estado premium (el webhook puede tardar unos segundos).
         async function checkReturnFromPayment() {
@@ -1216,7 +1306,28 @@
             btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
 
+        // ============================================
+        // MODO DÍA / NOCHE
+        // ============================================
+        function applyTheme(theme) {
+            const icon = document.getElementById('theme-toggle-icon');
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+                icon.className = 'fa-solid fa-sun';
+            } else {
+                document.body.classList.remove('light-mode');
+                icon.className = 'fa-solid fa-moon';
+            }
+            localStorage.setItem('theme_preference', theme);
+        }
+
+        document.getElementById('btn-theme-toggle').addEventListener('click', () => {
+            const isLight = document.body.classList.contains('light-mode');
+            applyTheme(isLight ? 'dark' : 'light');
+        });
+
         window.onload = function() {
+            applyTheme(localStorage.getItem('theme_preference') || 'dark');
             updateFormSubtypes();
             switchTab('resumen');
             checkSession().then(() => checkReturnFromPayment());
