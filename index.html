@@ -64,30 +64,22 @@
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Contraseña</label>
-                    <input type="password" id="auth-password" placeholder="••••••••"
-                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                    <div class="relative">
+                        <input type="password" id="auth-password" placeholder="••••••••"
+                            class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                        <button type="button" id="btn-toggle-password" tabindex="-1" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-sm">
+                            <i id="toggle-password-icon" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="text-right -mt-1">
+                <div class="flex items-center justify-between -mt-1">
                     <button type="button" id="btn-forgot-password" class="text-[11px] text-orange-400 hover:text-orange-300 underline underline-offset-2">
                         ¿Olvidaste tu contraseña?
                     </button>
                 </div>
                 <p id="auth-message" class="text-xs min-h-[16px]"></p>
 
-                <div id="signup-plan-box" class="bg-slate-900/60 border border-orange-500/20 rounded-2xl p-3 space-y-2">
-                    <p class="text-xs font-semibold text-orange-300">Si creás cuenta, elegí tu plan (14 días gratis, sin cargo hasta entonces):</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button type="button" data-signup-plan="mensual" data-signup-price="3200" class="signup-plan-btn bg-slate-800 border-2 border-orange-500 text-white rounded-xl p-2.5 text-center transition-all">
-                            <div class="text-[10px] text-slate-400">Mensual</div>
-                            <div class="text-sm font-bold">$3.200</div>
-                        </button>
-                        <button type="button" data-signup-plan="anual" data-signup-price="25000" class="signup-plan-btn bg-slate-800 border-2 border-white/10 text-slate-300 rounded-xl p-2.5 text-center transition-all">
-                            <div class="text-[10px] text-slate-400">Anual</div>
-                            <div class="text-sm font-bold">$25.000</div>
-                        </button>
-                    </div>
-                    <p class="text-[10px] text-slate-500">Vas a autorizar el medio de pago ahora, pero no te cobramos nada hasta que termine tu prueba gratis. Podés cancelar antes sin costo.</p>
-                </div>
+                <p class="text-[10px] text-slate-500 text-center">Al crear cuenta, en el siguiente paso vas a poder elegir tu plan y autorizar tu medio de pago (14 días gratis, sin cargo hasta entonces).</p>
 
                 <div class="flex flex-col gap-2 pt-1">
                     <button id="btn-signin" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
@@ -453,6 +445,30 @@
         </div>
     </div>
 
+    <!-- Configurar medio de pago (aparece en el primer ingreso real, sin importar si hubo confirmación de mail en el medio) -->
+    <div id="payment-setup-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-orange-500/30">
+            <div class="text-center space-y-1">
+                <i class="fa-solid fa-credit-card text-orange-400 text-2xl"></i>
+                <h3 class="font-bold text-white text-base">Activá tu prueba gratis de 14 días</h3>
+                <p class="text-xs sm:text-sm text-slate-400">Elegí tu plan y autorizá tu medio de pago ahora. No te cobramos nada hasta que termine tu prueba, y podés cancelar antes sin costo.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button data-plan="mensual" data-price="3200" class="payment-setup-plan-btn bg-slate-800 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/40 rounded-xl p-3 text-center transition-all">
+                    <div class="text-[10px] text-slate-400">Mensual</div>
+                    <div class="text-sm font-bold text-white">$3.200</div>
+                </button>
+                <button data-plan="anual" data-price="25000" class="payment-setup-plan-btn bg-slate-800 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/40 rounded-xl p-3 text-center transition-all">
+                    <div class="text-[10px] text-slate-400">Anual</div>
+                    <div class="text-sm font-bold text-white">$25.000</div>
+                </button>
+            </div>
+            <button id="btn-skip-payment-setup" class="w-full text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 pt-1">
+                Prefiero hacerlo más tarde
+            </button>
+        </div>
+    </div>
+
     <!-- Hidden PDF invoice template -->
     <div id="pdf-report-template" style="display:none; background:#ffffff; color:#111111; padding:32px; width:820px; font-family: Arial, Helvetica, sans-serif;">
         <div id="pdf-report-content"></div>
@@ -624,23 +640,6 @@
             await loadAllUserData();
         }
 
-        let selectedSignupPlan = 'mensual';
-        let selectedSignupPrice = 3200;
-
-        document.querySelectorAll('.signup-plan-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.signup-plan-btn').forEach(b => {
-                    b.classList.remove('border-orange-500');
-                    b.classList.add('border-white/10', 'text-slate-300');
-                    b.classList.remove('text-white');
-                });
-                btn.classList.add('border-orange-500', 'text-white');
-                btn.classList.remove('border-white/10', 'text-slate-300');
-                selectedSignupPlan = btn.dataset.signupPlan;
-                selectedSignupPrice = parseFloat(btn.dataset.signupPrice);
-            });
-        });
-
         async function handleSignUp() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
@@ -653,34 +652,60 @@
                 currentUser = data.user;
                 showAppScreen();
                 await loadAllUserData();
-
-                // Le pedimos que autorice el medio de pago ahora mismo, pero el primer
-                // cobro real recién se hace a los 14 días (fin de la prueba gratis).
-                setAuthMessage('Redirigiendo a autorizar tu medio de pago (no se cobra nada todavía)...', true);
-                try {
-                    const resp = await fetch('/api/create-trial-subscription', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            userId: currentUser.id,
-                            userEmail: currentUser.email,
-                            plan: selectedSignupPlan,
-                            price: selectedSignupPrice
-                        })
-                    });
-                    const subData = await resp.json();
-                    if (subData.init_point) {
-                        window.location.href = subData.init_point;
-                    }
-                    // Si falla, no bloqueamos el registro — la persona igual tiene sus 14 días
-                    // de prueba gratis por trial_ends_at, y puede suscribirse después desde la app.
-                } catch (err) {
-                    console.error('No se pudo iniciar la autorización de pago:', err);
-                }
             } else {
                 setAuthMessage('Cuenta creada. Revisá tu email para confirmar, luego iniciá sesión.', true);
             }
         }
+
+        // ============================================
+        // AUTORIZACIÓN DE PAGO EN EL PRIMER INGRESO REAL
+        // (funciona igual si el registro tuvo sesión inmediata, o si la persona
+        // tuvo que confirmar el email antes y recién ahora inicia sesión)
+        // ============================================
+        async function offerPaymentSetupIfNeeded(settings) {
+            // Si ya tiene una suscripción configurada (mp_preapproval_id) o ya es premium,
+            // no le mostramos esto de nuevo.
+            if (!settings || settings.mp_preapproval_id || settings.is_premium) return;
+
+            // Si ya lo descartó en esta misma sesión de navegador, no insistimos de nuevo ahora.
+            if (sessionStorage.getItem('payment_setup_dismissed')) return;
+
+            document.getElementById('payment-setup-modal').classList.remove('hidden');
+            document.getElementById('payment-setup-modal').classList.add('flex');
+        }
+
+        document.querySelectorAll('.payment-setup-plan-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!currentUser) return;
+                const plan = btn.dataset.plan;
+                const price = parseFloat(btn.dataset.price);
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                try {
+                    const resp = await fetch('/api/create-trial-subscription', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, plan, price })
+                    });
+                    const subData = await resp.json();
+                    if (subData.init_point) {
+                        window.location.href = subData.init_point;
+                    } else {
+                        showToast('No se pudo iniciar la autorización. Probá de nuevo.', 'warning');
+                        btn.innerHTML = originalHTML;
+                    }
+                } catch (err) {
+                    showToast('Error al conectar con Mercado Pago', 'warning');
+                    btn.innerHTML = originalHTML;
+                }
+            });
+        });
+
+        document.getElementById('btn-skip-payment-setup').addEventListener('click', () => {
+            sessionStorage.setItem('payment_setup_dismissed', '1');
+            document.getElementById('payment-setup-modal').classList.add('hidden');
+            document.getElementById('payment-setup-modal').classList.remove('flex');
+        });
 
         async function handleForgotPassword() {
             const email = document.getElementById('auth-email').value.trim();
@@ -704,6 +729,18 @@
         document.getElementById('btn-signin').addEventListener('click', handleSignIn);
         document.getElementById('btn-signup').addEventListener('click', handleSignUp);
         document.getElementById('btn-forgot-password').addEventListener('click', handleForgotPassword);
+
+        document.getElementById('btn-toggle-password').addEventListener('click', () => {
+            const input = document.getElementById('auth-password');
+            const icon = document.getElementById('toggle-password-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        });
         document.getElementById('btn-logout').addEventListener('click', handleSignOut);
 
         // ============================================
@@ -743,11 +780,14 @@
                 const subscriptionActive = settings.is_premium === true &&
                     (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
                 applyPremiumUI(subscriptionActive, settings.current_plan);
+                await offerPaymentSetupIfNeeded(settings);
             } else {
                 salary = 500000;
                 const trialEnd = new Date();
                 trialEnd.setDate(trialEnd.getDate() + 14);
                 await sb.from('user_settings').insert({ user_id: currentUser.id, salary, trial_ends_at: trialEnd.toISOString(), is_premium: false });
+                // Usuario recién creado: le ofrecemos autorizar el medio de pago ahora mismo.
+                await offerPaymentSetupIfNeeded({ mp_preapproval_id: null, is_premium: false });
             }
 
             const { data: txs } = await sb.from('transactions').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
