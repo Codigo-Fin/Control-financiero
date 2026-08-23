@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Libertad Financiera</title>
+    <title>Finzia FIRE - Libertad Financiera</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -26,7 +26,7 @@
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
 
         /* Efecto neón en cuadros */
-        .neon-emerald { box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 0 18px rgba(16,185,129,0.25), inset 0 0 20px rgba(16,185,129,0.04); }
+        .neon-orange { box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 0 18px rgba(16,185,129,0.25), inset 0 0 20px rgba(16,185,129,0.04); }
         .neon-rose { box-shadow: 0 0 0 1px rgba(244,63,94,0.35), 0 0 18px rgba(244,63,94,0.25), inset 0 0 20px rgba(244,63,94,0.04); }
         .neon-purple { box-shadow: 0 0 0 1px rgba(168,85,247,0.35), 0 0 18px rgba(168,85,247,0.25), inset 0 0 20px rgba(168,85,247,0.04); }
         .neon-teal { box-shadow: 0 0 0 1px rgba(45,212,191,0.35), 0 0 18px rgba(45,212,191,0.25), inset 0 0 20px rgba(45,212,191,0.04); }
@@ -45,7 +45,7 @@
             font-size: 16px;
             outline: none;
         }
-        input:focus, select:focus { border-color: #10b981; }
+        input:focus, select:focus { border-color: #f97316; }
         label { display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.03em; }
 
         .btn { width:100%; padding:13px; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; text-align:center; transition: all 0.2s ease; }
@@ -54,21 +54,21 @@
 </head>
 <body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen">
 
-    <div class="fixed top-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
+    <div class="fixed top-10 left-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
     <div class="fixed bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
 
     <!-- Pantalla de carga / bloqueo -->
     <div id="gate-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-[#090d16] via-[#111827] to-[#06201b]">
         <div class="glass-panel rounded-3xl p-8 w-full max-w-sm space-y-4 text-center">
             <div id="gate-loading">
-                <i class="fa-solid fa-spinner fa-spin text-emerald-400 text-2xl"></i>
+                <i class="fa-solid fa-spinner fa-spin text-orange-400 text-2xl"></i>
                 <p class="text-slate-400 text-sm mt-3">Verificando tu acceso...</p>
             </div>
             <div id="gate-no-session" class="hidden space-y-3">
                 <i class="fa-solid fa-lock text-slate-500 text-2xl"></i>
                 <h2 class="text-white font-bold text-base">Necesitás iniciar sesión</h2>
                 <p class="text-slate-400 text-sm">Entrá primero al Control Financiero para acceder a tu cuenta.</p>
-                <a href="index.html" class="block bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">Ir al Control Financiero</a>
+                <a href="index.html" class="block bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">Ir al Control Financiero</a>
             </div>
             <div id="gate-not-premium" class="hidden space-y-3">
                 <i class="fa-solid fa-star text-amber-400 text-2xl"></i>
@@ -83,20 +83,20 @@
 
         <div id="trial-banner" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm text-center py-2 px-3 rounded-xl"></div>
 
-        <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-emerald-400 text-sm transition-colors">
+        <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-orange-400 text-sm transition-colors">
             <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
         </a>
 
         <header class="glass-panel rounded-3xl p-5 sm:p-7 text-center space-y-1">
-            <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-purple-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-2">
+            <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-purple-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 text-xl mb-2">
                 <i class="fa-solid fa-fire"></i>
             </div>
-            <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
-                Centro de Mando Pro
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-orange-400 bg-clip-text text-transparent">
+                Finzia FIRE
             </h1>
             <p class="text-slate-400 text-sm">Sistema de Liberación Financiera & Patrimonio</p>
             <div class="flex flex-wrap items-center justify-center gap-2 mt-3">
-                <button id="btnFinancialReport" class="bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                <button id="btnFinancialReport" class="bg-orange-600/30 hover:bg-orange-600/50 border border-orange-500/40 text-orange-300 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-file-invoice"></i> Estado Financiero (PDF a WhatsApp)
                 </button>
                 <button id="btnResetAll" class="bg-slate-800/80 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
@@ -129,18 +129,18 @@
         </div>
 
         <!-- Saldo a favor -->
-        <div class="glass-panel neon-card neon-emerald rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 class="font-bold text-base sm:text-lg text-emerald-300 flex items-center gap-2">
+        <div class="glass-panel neon-card neon-orange rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-orange-300 flex items-center gap-2">
                 <i class="fa-solid fa-circle-check"></i> Saldo a Favor
             </h2>
             <div class="text-center">
-                <div class="text-xs font-bold text-emerald-300 uppercase tracking-wider">Total pagado / a favor</div>
-                <div class="text-3xl sm:text-4xl font-bold text-emerald-400 mt-1" id="creditBalanceDisplay">$0</div>
+                <div class="text-xs font-bold text-orange-300 uppercase tracking-wider">Total pagado / a favor</div>
+                <div class="text-3xl sm:text-4xl font-bold text-orange-400 mt-1" id="creditBalanceDisplay">$0</div>
             </div>
             <div class="max-w-[240px] mx-auto">
                 <canvas id="progressPieChart"></canvas>
             </div>
-            <button id="btnInjectCredit" class="btn bg-emerald-500 hover:bg-emerald-400 text-slate-950">
+            <button id="btnInjectCredit" class="btn bg-orange-500 hover:bg-orange-400 text-slate-950">
                 <i class="fa-solid fa-hand-holding-dollar"></i> Pagar Saldo a Favor a una Deuda (opcional)
             </button>
             <p class="text-[11px] text-slate-500 text-center">Es tu decisión usarlo o guardarlo — no se aplica solo.</p>
@@ -956,7 +956,7 @@
                 labels: labels,
                 datasets: [{
                     data: data,
-                    backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#10b981', '#a855f7', '#f472b6'],
+                    backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#f97316', '#a855f7', '#f472b6'],
                     borderWidth: 2,
                     borderColor: '#111827'
                 }]
@@ -987,7 +987,7 @@
                 labels: ['Saldo a Favor / Pagado', 'Deuda Restante'],
                 datasets: [{
                     data: [paidSlice, remainingSlice],
-                    backgroundColor: ['#10b981', 'rgba(244,63,94,0.35)'],
+                    backgroundColor: ['#f97316', 'rgba(244,63,94,0.35)'],
                     borderWidth: 2,
                     borderColor: '#111827'
                 }]
@@ -1020,7 +1020,7 @@
                         <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
                     </div>
                     <div class="flex gap-1.5 flex-shrink-0">
-                        <button onclick="injectInvestToDebt(${inv.id})" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Pagar</button>
+                        <button onclick="injectInvestToDebt(${inv.id})" class="bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Pagar</button>
                         <button onclick="deleteInvest(${inv.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                 `;
@@ -1041,18 +1041,18 @@
             pendingDebts.forEach((debt, index) => {
                 const isTarget = index === 0;
                 const item = document.createElement('div');
-                item.className = `bg-slate-950/60 border rounded-xl p-4 space-y-2 ${isTarget ? 'border-emerald-500/40 border-l-4 border-l-emerald-500 bg-emerald-500/5' : 'border-rose-500/20 border-l-4 border-l-rose-500'}`;
+                item.className = `bg-slate-950/60 border rounded-xl p-4 space-y-2 ${isTarget ? 'border-orange-500/40 border-l-4 border-l-orange-500 bg-orange-500/5' : 'border-rose-500/20 border-l-4 border-l-rose-500'}`;
                 item.innerHTML = `
                     <div class="flex items-center justify-between flex-wrap gap-1">
                         <strong class="text-sm text-white">${debt.name}</strong>
-                        ${isTarget ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">🎯 PRIORITARIA</span>' : ''}
+                        ${isTarget ? '<span class="text-[10px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full font-bold">🎯 PRIORITARIA</span>' : ''}
                     </div>
                     <div class="text-xs text-slate-400 space-y-0.5">
                         <p>Saldo Restante: <span class="text-white font-bold">$${debt.amount.toLocaleString()}</span></p>
                         <p>Pago Mínimo Mensual: $${debt.minPayment.toLocaleString()}</p>
                     </div>
                     <div class="flex gap-2 flex-wrap pt-1">
-                        <button onclick="payMin(${debt.id})" class="flex-1 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold px-3 py-2 rounded-lg">Pagar Mínimo</button>
+                        <button onclick="payMin(${debt.id})" class="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-xs font-bold px-3 py-2 rounded-lg">Pagar Mínimo</button>
                         <button onclick="editDebt(${debt.id})" class="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold px-3 py-2 rounded-lg">Editar</button>
                         <button onclick="deleteDebt(${debt.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold px-3 py-2 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
@@ -1083,14 +1083,14 @@
             history.forEach(item => {
                 const hItem = document.createElement('div');
                 hItem.className = 'flex items-center justify-between border-b border-white/5 py-2.5 gap-2';
-                const badgeClass = item.isMin ? 'bg-sky-900/60 text-sky-300' : (item.category.includes('Inversión') ? 'bg-purple-900/60 text-purple-300' : 'bg-slate-800 text-emerald-300');
+                const badgeClass = item.isMin ? 'bg-sky-900/60 text-sky-300' : (item.category.includes('Inversión') ? 'bg-purple-900/60 text-purple-300' : 'bg-slate-800 text-orange-300');
                 hItem.innerHTML = `
                     <div class="min-w-0">
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeClass}">${item.category}</span>
                         <strong class="text-sm text-white ml-1">${item.detail}</strong>
                         <div class="text-xs text-slate-400 mt-0.5">Acreedor: ${item.targetName} (${item.date})</div>
                     </div>
-                    <div class="font-bold text-sm flex-shrink-0 ${item.isMin ? 'text-sky-400' : 'text-emerald-400'}">-$${item.amount.toLocaleString()}</div>
+                    <div class="font-bold text-sm flex-shrink-0 ${item.isMin ? 'text-sky-400' : 'text-orange-400'}">-$${item.amount.toLocaleString()}</div>
                 `;
                 historyList.appendChild(hItem);
             });
@@ -1158,9 +1158,9 @@
         }
 
         return `
-            <div style="border-bottom:3px solid #10b981; padding-bottom:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="border-bottom:3px solid #f97316; padding-bottom:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                    <h1 style="font-size:20px; font-weight:bold; margin:0; color:#111;">Estado Financiero — Centro de Mando Pro</h1>
+                    <h1 style="font-size:20px; font-weight:bold; margin:0; color:#111;">Estado Financiero — Finzia FIRE</h1>
                     <p style="font-size:12px; color:#666; margin:4px 0 0 0;">Emitido el ${today}</p>
                 </div>
                 <div style="font-size:24px;">📑</div>
@@ -1172,8 +1172,8 @@
                         <div style="font-size:10px; color:#e11d48; font-weight:bold;">DEUDA RESTANTE</div>
                         <div style="font-size:15px; font-weight:bold; color:#111;">$${totalDebtRemaining.toLocaleString()}</div>
                     </td>
-                    <td style="padding:8px; background:${balanceStatus >= 0 ? '#ecfdf5' : '#fef2f2'};">
-                        <div style="font-size:10px; color:${balanceStatus >= 0 ? '#059669' : '#e11d48'}; font-weight:bold;">SALDO ${balanceStatus >= 0 ? 'A FAVOR' : 'EN CONTRA'}</div>
+                    <td style="padding:8px; background:${balanceStatus >= 0 ? '#fff7ed' : '#fef2f2'};">
+                        <div style="font-size:10px; color:${balanceStatus >= 0 ? '#ea580c' : '#e11d48'}; font-weight:bold;">SALDO ${balanceStatus >= 0 ? 'A FAVOR' : 'EN CONTRA'}</div>
                         <div style="font-size:15px; font-weight:bold; color:#111;">$${Math.abs(balanceStatus).toLocaleString()}</div>
                     </td>
                     <td style="padding:8px; background:#faf5ff;">
@@ -1204,7 +1204,7 @@
             <h2 style="font-size:13px; font-weight:bold; color:#111; margin:18px 0 8px 0; border-bottom:1px solid #ddd; padding-bottom:6px;">Deudas Liquidadas</h2>
             <p style="font-size:11px; color:#333;">${clearedDebts.length === 0 ? 'Ninguna deuda liquidada todavía.' : clearedDebts.map(d => d.name).join(', ')}</p>
 
-            <p style="margin-top:24px; font-size:10px; color:#999; text-align:center;">Generado con Centro de Mando Pro — Libertad Financiera</p>
+            <p style="margin-top:24px; font-size:10px; color:#999; text-align:center;">Generado con Finzia FIRE</p>
         `;
     }
 
@@ -1340,10 +1340,10 @@
 
         document.querySelectorAll('.lf-tab-btn').forEach(btn => {
             if (btn.dataset.tab === tabName) {
-                btn.classList.add('bg-emerald-500', 'text-slate-950', 'shadow-md');
+                btn.classList.add('bg-orange-500', 'text-slate-950', 'shadow-md');
                 btn.classList.remove('text-slate-400');
             } else {
-                btn.classList.remove('bg-emerald-500', 'text-slate-950', 'shadow-md');
+                btn.classList.remove('bg-orange-500', 'text-slate-950', 'shadow-md');
                 btn.classList.add('text-slate-400');
             }
         });
