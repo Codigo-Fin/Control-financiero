@@ -1528,11 +1528,15 @@
         function parseVoiceTranscript(transcript) {
             const text = transcript.toLowerCase();
 
-            // Monto: buscamos la primera secuencia de números
+            // Monto: buscamos la primera secuencia de números.
+            // Ojo: acá tratamos CUALQUIER punto o coma como separador de miles (nunca como decimales),
+            // porque en pesos hablados casi nunca hay centavos, y así evitamos que "180,000" o "180.000"
+            // se interprete mal como "180 con algo".
             const numberMatch = text.match(/(\d[\d.,]*)/);
             let amount = null;
             if (numberMatch) {
-                amount = parseFloat(numberMatch[1].replace(/\./g, '').replace(',', '.'));
+                const digitsOnly = numberMatch[1].replace(/[.,]/g, '');
+                amount = parseFloat(digitsOnly);
             }
 
             // Tipo: ingreso o egreso
@@ -1590,9 +1594,25 @@
                 document.getElementById('voice-input-status').textContent = 'Escuchando... decí tu gasto o ingreso';
             };
 
-            voiceRecognition.onresult = (event) => {
+            voiceRecognition.onresult = async (event) => {
                 const transcript = event.results[0][0].transcript;
-                const parsed = parseVoiceTranscript(transcript);
+                document.getElementById('voice-input-status').textContent = `Escuché: "${transcript}" — interpretando con IA...`;
+
+                let parsed;
+                try {
+                    const resp = await fetch('/api/parse-voice-expense', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ transcript })
+                    });
+                    if (!resp.ok) throw new Error('Fallo la IA');
+                    parsed = await resp.json();
+                    if (parsed.error) throw new Error(parsed.error);
+                } catch (err) {
+                    console.warn('No se pudo usar la IA, usando el detector simple como respaldo:', err);
+                    parsed = parseVoiceTranscript(transcript);
+                }
+
                 fillFormFromVoice(parsed);
                 document.getElementById('voice-input-status').textContent = `Escuché: "${transcript}" — revisá los campos y tocá Agregar`;
                 showToast('Formulario completado por voz, revisalo antes de agregar');
