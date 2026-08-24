@@ -320,16 +320,24 @@
                         class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500 font-semibold">
                 </div>
 
-                <div class="w-full sm:w-36">
+                <div class="w-full sm:w-44">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Categoría</label>
                     <select id="input-category" 
                         class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-orange-500 text-white cursor-pointer">
-                        <option value="Combustible">⛽ Combustible (Nafta/GNC/Diesel)</option>
-                        <option value="Almacén">🌾 Almacén</option>
-                        <option value="Verdulería">🥬 Verdulería</option>
-                        <option value="Carnicería">🍗 Carnicería</option>
-                        <option value="Cena">🍽️ Cena</option>
+                        <option value="Belleza y Cuidado Personal">💄 Belleza y Cuidado Personal</option>
+                        <option value="Limpieza del Hogar">🧼 Limpieza del Hogar</option>
+                        <option value="Mecánica y Mantenimiento">🔧 Mecánica y Mantenimiento</option>
+                        <option value="Transporte">⛽ Transporte</option>
                         <option value="Servicios">💡 Servicios</option>
+                        <option value="Almacén, Súper y Mayoristas">🌾 Almacén, Súper y Mayoristas</option>
+                        <option value="Panadería">🥐 Panadería</option>
+                        <option value="Salidas y Diversión">🍽️ Salidas y Diversión</option>
+                        <option value="Farmacia">💊 Farmacia</option>
+                        <option value="Librería y Capacitación">📚 Librería y Capacitación</option>
+                        <option value="Juguetería y Bazar">🧸 Juguetería y Bazar</option>
+                        <option value="Vestimenta">👕 Vestimenta</option>
+                        <option value="Compras del Hogar y Electrónica">📺 Compras del Hogar y Electrónica</option>
+                        <option value="Mascotas">🐾 Mascotas</option>
                         <option value="Otros">✍️ Otros (Escribir...)</option>
                     </select>
                 </div>
@@ -341,12 +349,14 @@
                         <option value="Nafta">⛽ Nafta</option>
                         <option value="GNC">🚗 GNC</option>
                         <option value="Diesel">🛢️ Diesel</option>
+                        <option value="SUBE">🚌 SUBE</option>
+                        <option value="Otro">🚕 Otro</option>
                     </select>
                 </div>
 
                 <div id="custom-cat-wrapper" class="w-full sm:w-36 hidden">
                     <label class="block text-xs font-medium text-orange-400 mb-1">Escribir Categoría</label>
-                    <input type="text" id="input-custom-category" placeholder="Ej. Mecánica"
+                    <input type="text" id="input-custom-category" placeholder="Ej. Otro rubro"
                         class="w-full bg-slate-900 border border-orange-500/50 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-orange-400 text-white placeholder-slate-500">
                 </div>
 
@@ -582,36 +592,52 @@
         }
 
         const CATEGORY_ICONS = {
-            'Combustible': '⛽','Almacén': '🌾','Verdulería': '🥬','Carnicería': '🍗','Cena': '🍽️',
-            'Panadería': '🥐','Merienda': '🥞','Servicios': '💡','Mecánica': '🚗','Alquiler': '🏠','Salud': '💊','Otros': '🛒'
+            'Belleza y Cuidado Personal': '💄',
+            'Limpieza del Hogar': '🧼',
+            'Mecánica y Mantenimiento': '🔧',
+            'Transporte': '⛽',
+            'Servicios': '💡',
+            'Almacén, Súper y Mayoristas': '🌾',
+            'Panadería': '🥐',
+            'Salidas y Diversión': '🍽️',
+            'Farmacia': '💊',
+            'Librería y Capacitación': '📚',
+            'Juguetería y Bazar': '🧸',
+            'Vestimenta': '👕',
+            'Compras del Hogar y Electrónica': '📺',
+            'Mascotas': '🐾',
+            'Otros': '🛒'
         };
 
-        const CHART_COLORS = ['#f97316', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#f97316', '#84cc16', '#6366f1', '#d946ef'];
+        const CHART_COLORS = ['#f97316', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#14b8a6', '#84cc16', '#6366f1', '#d946ef', '#22d3ee', '#a3e635', '#fb7185', '#c084fc'];
 
         function getCategoryEmoji(catName) {
             if (!catName) return '🛒';
             const c = catName.toLowerCase().trim();
-            if (c.includes('combustible') || c.includes('nafta') || c.includes('gnc')) return '⛽';
-            if (c.includes('almacen') || c.includes('almacén')) return '🌾';
-            if (c.includes('verduler')) return '🥬';
-            if (c.includes('carnicer')) return '🍗';
-            if (c.includes('cena')) return '🍽️';
-            if (c.includes('panader')) return '🥐';
-            if (c.includes('merienda')) return '🥞';
+            if (c.includes('belleza') || c.includes('cuidado personal')) return '💄';
+            if (c.includes('limpieza')) return '🧼';
+            if (c.includes('mecanic') || c.includes('mecánica') || c.includes('mantenimiento')) return '🔧';
+            if (c.includes('transporte') || c.includes('nafta') || c.includes('combustible') || c.includes('gnc') || c.includes('sube')) return '⛽';
             if (c.includes('servicio')) return '💡';
-            if (c.includes('mecanic') || c.includes('mecánica')) return '🚗';
-            if (c.includes('alquiler')) return '🏠';
-            if (c.includes('salud') || c.includes('farmacia')) return '💊';
+            if (c.includes('almacen') || c.includes('almacén') || c.includes('super') || c.includes('súper') || c.includes('mayorista')) return '🌾';
+            if (c.includes('panader')) return '🥐';
+            if (c.includes('salida') || c.includes('diversion') || c.includes('diversión') || c.includes('cena')) return '🍽️';
+            if (c.includes('farmacia') || c.includes('salud')) return '💊';
+            if (c.includes('libreria') || c.includes('librería') || c.includes('capacitacion') || c.includes('capacitación')) return '📚';
+            if (c.includes('jugueteria') || c.includes('juguetería') || c.includes('bazar')) return '🧸';
+            if (c.includes('vestimenta') || c.includes('ropa')) return '👕';
+            if (c.includes('electronica') || c.includes('electrónica') || c.includes('hogar')) return '📺';
+            if (c.includes('mascota')) return '🐾';
             return CATEGORY_ICONS[catName] || '🛒';
         }
 
         function getEmoji(name, category, fuelType) {
-            if (category === 'Combustible' || fuelType) return fuelType === 'GNC' ? '🚗' : '⛽';
-            const n = (name || '').toLowerCase();
-            const c = (category || '').toLowerCase();
-            if (c.includes('panaderia') || c.includes('panadería')) return '🥐';
-            if (c.includes('merienda')) return '🥞';
-            if (c.includes('cena') || n.includes('pizza')) return '🍕';
+            if (category === 'Transporte' && fuelType) {
+                if (fuelType === 'GNC') return '🚗';
+                if (fuelType === 'SUBE') return '🚌';
+                if (fuelType === 'Diesel') return '🛢️';
+                return '⛽';
+            }
             return getCategoryEmoji(category);
         }
 
@@ -914,7 +940,7 @@
 
         function updateFormSubtypes() {
             const cat = inputCategory.value;
-            if (cat === 'Combustible') { fuelSubtypeWrapper.classList.remove('hidden'); customCatWrapper.classList.add('hidden'); }
+            if (cat === 'Transporte') { fuelSubtypeWrapper.classList.remove('hidden'); customCatWrapper.classList.add('hidden'); }
             else if (cat === 'Otros') { customCatWrapper.classList.remove('hidden'); fuelSubtypeWrapper.classList.add('hidden'); }
             else { fuelSubtypeWrapper.classList.add('hidden'); customCatWrapper.classList.add('hidden'); }
         }
@@ -1519,19 +1545,22 @@
         // CARGA POR VOZ (para quien esté apurado, o no pueda escribir)
         // ============================================
         const VOICE_CATEGORY_KEYWORDS = {
-            'Combustible': ['nafta', 'combustible', 'gnc', 'diesel', 'gasoil', 'ypf', 'shell', 'axion'],
-            'Almacén': ['almacen', 'almacén', 'supermercado', 'super', 'kiosco', 'quiosco'],
-            'Verdulería': ['verduleria', 'verdulería', 'verdura', 'fruta', 'frutas'],
-            'Carnicería': ['carniceria', 'carnicería', 'carne', 'pollo', 'asado'],
-            'Cena': ['cena', 'restaurante', 'comida afuera', 'delivery', 'pedidos ya'],
-            'Servicios': ['luz', 'gas', 'agua', 'internet', 'servicio', 'telefono', 'teléfono', 'alquiler']
+            'Belleza y Cuidado Personal': ['peluqueria', 'peluquería', 'uñas', 'pestañas', 'corte de pelo', 'tintura', 'skincare', 'shampoo', 'champu', 'crema de enjuague', 'pasta dental', 'cepillo dental', 'perfume', 'maquillaje', 'rasuradora', 'afeitadora', 'desodorante'],
+            'Limpieza del Hogar': ['detergente', 'trapo de piso', 'escoba', 'lavandina', 'desengrasante', 'bote de basura', 'papel higienico', 'papel higiénico', 'limpieza', 'lavandina', 'esponja'],
+            'Mecánica y Mantenimiento': ['parche de rueda', 'ruleman', 'rulemán', 'mecanico', 'mecánico', 'lavadero', 'cambio de aceite', 'filtro', 'correa', 'gnc instalacion', 'camara de rueda', 'rueda de auxilio', 'rueda de bicicleta', 'rueda de moto', 'luces de auto', 'luces de moto', 'taller'],
+            'Transporte': ['sube', 'nafta', 'combustible', 'gnc', 'diesel', 'gasoil', 'ypf', 'shell', 'axion'],
+            'Servicios': ['recarga', 'celular', 'netflix', 'spotify', 'youtube premium', 'disney', 'meli', 'streaming', 'luz', 'gas', 'internet', 'wifi', 'suscripcion', 'suscripción', 'abogado', 'freelancer', 'editor de videos', 'contador', 'asesor de imagen', 'psicologo', 'psicólogo', 'telefono', 'teléfono'],
+            'Almacén, Súper y Mayoristas': ['almacen', 'almacén', 'supermercado', 'mayorista', 'carne', 'arroz', 'fideos', 'gaseosa', 'agua', 'jugo en polvo', 'servilleta', 'papel de cocina', 'leche', 'yogur', 'verdura', 'dulce', 'chocolate', 'kiosco', 'quiosco'],
+            'Panadería': ['medialuna', 'medialunas', 'pan', 'facturas', 'factura', 'panaderia', 'panadería', 'torta', 'pastel', 'biscocho', 'sandwich', 'sanguche'],
+            'Salidas y Diversión': ['desayuno', 'merienda', 'cena', 'hamburguesa', 'burguer', 'macdonalds', 'mcdonalds', 'moztaza', 'cafe martinez', 'café', 'restaurante', 'restorante', 'casino', 'parque de diversiones', 'juego de mesa', 'salida', 'boliche'],
+            'Farmacia': ['farmacia', 'medicamento', 'remedio', 'pastilla', 'metformina', 'ibuprofeno', 'paracetamol'],
+            'Librería y Capacitación': ['libro', 'cuaderno', 'lapicera', 'lapiz', 'lápiz', 'borrador', 'libreria', 'librería', 'curso'],
+            'Juguetería y Bazar': ['juguete', 'autito', 'cubo rubik', 'muñeca', 'jarro', 'plato', 'vaso', 'bazar', 'jugueteria', 'juguetería'],
+            'Vestimenta': ['campera', 'buzo', 'pulover', 'pulóver', 'jean', 'remera', 'zapatilla', 'anteojo', 'cinturon', 'cinturón', 'bufanda', 'paraguas', 'reloj', 'chaleco', 'sueter', 'camisa', 'gorra', 'tapado', 'traje', 'ropa'],
+            'Compras del Hogar y Electrónica': ['television', 'televisión', 'tv', 'parlante', 'celular nuevo', 'pantalla led', 'heladera', 'freidora', 'electrodomestico', 'electrodoméstico', 'mueble', 'microondas', 'lavarropas'],
+            'Mascotas': ['veterinaria', 'petshop', 'pet shop', 'comida para perro', 'comida para gato', 'piedritas', 'mascota', 'perro', 'gato', 'pez', 'peces']
         };
-        // Palabras que van a categoría "Otros" pero con un nombre lindo autocompletado
-        const VOICE_CUSTOM_CATEGORY_KEYWORDS = {
-            'Panadería': ['medialuna', 'medialunas', 'pan', 'facturas', 'factura', 'panaderia', 'panadería', 'torta', 'pastel'],
-            'Mecánica': ['mecanico', 'mecánico', 'taller', 'auto']
-        };
-        const VOICE_INGRESO_KEYWORDS = ['cobré', 'cobre', 'gané', 'gane', 'ingresé', 'ingrese', 'recibí', 'recibi', 'vendí', 'vendi', 'me pagaron', 'me pagó', 'me pago'];
+        const VOICE_INGRESO_KEYWORDS = ['cobré', 'cobre', 'gané', 'gane', 'ingresé', 'ingrese', 'ingreso', 'recibí', 'recibi', 'vendí', 'vendi', 'me pagaron', 'me pagó', 'me pago'];
 
         function parseVoiceTranscript(transcript) {
             const text = transcript.toLowerCase();
@@ -1561,19 +1590,13 @@
                 if (text.includes(kw)) { type = 'ingreso'; break; }
             }
 
-            // Categoría predefinida
+            // Categoría: buscamos entre las 14 categorías conocidas, si no matchea ninguna, "Otros"
             let category = null;
             for (const [cat, keywords] of Object.entries(VOICE_CATEGORY_KEYWORDS)) {
                 if (keywords.some(kw => text.includes(kw))) { category = cat; break; }
             }
-
-            // Si no matcheó una categoría predefinida, buscamos una "custom" conocida (ej. medialunas -> Panadería)
-            let customCategory = null;
-            if (!category) {
-                for (const [cat, keywords] of Object.entries(VOICE_CUSTOM_CATEGORY_KEYWORDS)) {
-                    if (keywords.some(kw => text.includes(kw))) { customCategory = cat; break; }
-                }
-            }
+            if (!category) category = 'Otros';
+            const customCategory = category === 'Otros' ? null : null;
 
             // Concepto: sacamos números, verbos de acción y palabras de relleno, para que quede prolijo
             const VOICE_FILLER_WORDS = ['gasté', 'gaste', 'ahorré', 'ahorre', 'gané', 'gane', 'cobré', 'cobre', 'ingresé', 'ingrese', 'ingreso', 'pagué', 'pague', 'compré', 'compre', 'pesos', 'peso', 'mil', 'millón', 'millones', 'de', 'en', 'un', 'una'];
@@ -1593,7 +1616,7 @@
 
             let categoryVal = parsed.category || 'Otros';
             let fuelTypeVal = null;
-            if (categoryVal === 'Combustible') {
+            if (categoryVal === 'Transporte') {
                 fuelTypeVal = parsed.fuelType || 'Nafta';
             } else if (categoryVal === 'Otros' && parsed.customCategory) {
                 categoryVal = parsed.customCategory;
