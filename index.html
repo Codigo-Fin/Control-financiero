@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finzia - Control Financiero</title>
+    <title>Finzia - Control Financiero & Mercado</title>
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#f97316">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
@@ -108,7 +108,7 @@
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-orange-400 bg-clip-text text-transparent">
                         Finzia
                     </h1>
-                    <p class="text-slate-400 text-xs sm:text-sm">Control Financiero & Mercado — Categorías, ahorro, deudas e inversiones</p>
+                    <p class="text-slate-400 text-xs sm:text-sm">Control Financiero — Gastos, Deudas, Ahorro, Inversiones</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
@@ -122,8 +122,8 @@
         <!-- Navegación por pestañas estilo Mercado Pago -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">RESUMEN DEL MES</button>
-            <button data-tab="gastos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">GASTOS DEL MES</button>
-            <button data-tab="movimientos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS MOVIMIENTOS</button>
+            <button data-tab="gastos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INGRESOS & EGRESOS DEL MES</button>
+            <button data-tab="movimientos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">RESULTADOS DEL MES</button>
         </div>
 
         <!-- ==================== TAB: RESUMEN DEL MES ==================== -->
@@ -205,7 +205,7 @@
 
                     <button onclick="openSalaryModal()" class="bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
                         <i class="fa-solid fa-pen-to-square"></i>
-                        <span>Ajustar Sueldo</span>
+                        <span>Ingresar Sueldo</span>
                     </button>
                 </div>
             </div>
@@ -289,8 +289,18 @@
 
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-cart-shopping text-orange-400"></i> GASTOS DEL MES
+                <i class="fa-solid fa-cart-shopping text-orange-400"></i> MOVIMIENTOS
             </h2>
+            <div class="glass-panel p-3 rounded-2xl flex items-center gap-3">
+                <button type="button" id="btn-voice-input" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
+                    <i id="voice-input-icon" class="fa-solid fa-microphone text-lg"></i>
+                </button>
+                <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-semibold text-white">Cargar por voz</p>
+                    <p id="voice-input-status" class="text-[11px] text-slate-400 truncate">Tocá el micrófono y decí, por ejemplo: "gasté 12000 pesos en medialunas"</p>
+                </div>
+            </div>
+
             <form id="add-transaction-form" class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row flex-wrap gap-2.5 items-end shadow-lg">
                 <div class="flex-1 min-w-[140px]">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Concepto / Producto</label>
@@ -358,11 +368,27 @@
                 </div>
             </form>
 
+            <!-- Dos columnas: Ingresos y Egresos del mes (solo aparecen cuando hay registros de ese tipo) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-sm font-bold text-orange-300 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-down-left"></i> Ingresos
+                    </h3>
+                    <div id="movimientos-ingresos-list" class="space-y-2"></div>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-rose-300 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-arrow-up-right"></i> Egresos
+                    </h3>
+                    <div id="movimientos-egresos-list" class="space-y-2"></div>
+                </div>
+            </div>
+
             <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
                 <div class="flex items-center justify-between border-b border-white/10 pb-2">
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-chart-pie text-orange-400 text-sm"></i>
-                        <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Gastos por Categoría del Mes</h3>
+                        <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Ingresos y Egresos del Mes</h3>
                     </div>
                     <span id="chart-month-badge" class="text-[10px] bg-orange-500/10 border border-orange-500/20 text-orange-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
                 </div>
@@ -370,8 +396,15 @@
                     <div class="h-48 md:h-56 relative flex items-center justify-center">
                         <canvas id="categoryPieChart"></canvas>
                     </div>
-                    <div class="md:col-span-2">
-                        <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                    <div class="md:col-span-2 space-y-3">
+                        <div>
+                            <p class="text-[11px] font-bold text-rose-300 uppercase tracking-wide mb-1.5">Egresos por Categoría</p>
+                            <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                        </div>
+                        <div class="border-t border-white/10 pt-3">
+                            <p class="text-[11px] font-bold text-orange-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
+                            <div id="chart-legend-grid-ingresos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -384,8 +417,28 @@
 
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-orange-400"></i> MIS MOVIMIENTOS
+                <i class="fa-solid fa-list-check text-orange-400"></i> RESULTADOS DEL MES
             </h2>
+
+            <div class="glass-panel p-5 rounded-3xl space-y-3">
+                <p class="text-sm font-bold text-white">Tu mayor gasto y mayor ingreso del mes</p>
+                <div class="h-40">
+                    <canvas id="topMovementsChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div>
+                        <p class="text-[10px] text-rose-300 uppercase tracking-wide">Mayor Gasto</p>
+                        <p id="top-expense-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-orange-300 uppercase tracking-wide">Mayor Ingreso</p>
+                        <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-income-amount" class="text-base font-bold text-orange-400">$0</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
                 <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0" id="filter-container"></div>
                 <div class="relative w-full sm:w-56">
@@ -429,7 +482,7 @@
     <div id="salary-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-orange-500/30">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-white text-base">Ajustar Sueldo Mensual</h3>
+                <h3 class="font-bold text-white text-base">Ingresar Sueldo Mensual</h3>
                 <button onclick="closeSalaryModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <p class="text-xs sm:text-sm text-slate-400">Configura tu ingreso base habitual.</p>
@@ -904,6 +957,7 @@
             const ctx = document.getElementById('categoryPieChart').getContext('2d');
             document.getElementById('chart-month-badge').textContent = formatMonthName(selectedMonthFilter);
             const legendGrid = document.getElementById('chart-legend-grid');
+            const legendGridIngresos = document.getElementById('chart-legend-grid-ingresos');
 
             const categoryTotals = {};
             monthProducts.filter(p => p.type === 'egreso').forEach(p => {
@@ -919,25 +973,114 @@
             if (labels.length === 0) {
                 legendGrid.innerHTML = '<div class="col-span-2 text-slate-500 text-xs py-4 text-center">Sin gastos registrados este mes</div>';
                 if (myChart) myChart.destroy();
-                return;
+            } else {
+                labels.forEach((cat, idx) => {
+                    const color = CHART_COLORS[idx % CHART_COLORS.length];
+                    const val = categoryTotals[cat];
+                    const pct = totalExpenseSum > 0 ? ((val / totalExpenseSum) * 100).toFixed(1) : 0;
+                    const emoji = getCategoryEmoji(cat);
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-white/5';
+                    item.innerHTML = `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background-color: ${color}"></span><span class="font-semibold text-slate-200 text-xs sm:text-sm">${emoji} ${cat}</span></div><div class="text-right"><span class="font-bold text-slate-100 text-xs sm:text-sm">${formatMoney(val)}</span><span class="text-[10px] text-slate-400 block">${pct}%</span></div>`;
+                    legendGrid.appendChild(item);
+                });
+
+                if (myChart) myChart.destroy();
+                myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels: labels, datasets: [{ data: data, backgroundColor: CHART_COLORS.slice(0, labels.length), borderWidth: 2, borderColor: '#111827' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${c.label}: ${formatMoney(c.parsed)}` } } }, cutout: '65%' }
+                });
             }
 
-            labels.forEach((cat, idx) => {
-                const color = CHART_COLORS[idx % CHART_COLORS.length];
-                const val = categoryTotals[cat];
-                const pct = totalExpenseSum > 0 ? ((val / totalExpenseSum) * 100).toFixed(1) : 0;
-                const emoji = getCategoryEmoji(cat);
-                const item = document.createElement('div');
-                item.className = 'flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-white/5';
-                item.innerHTML = `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background-color: ${color}"></span><span class="font-semibold text-slate-200 text-xs sm:text-sm">${emoji} ${cat}</span></div><div class="text-right"><span class="font-bold text-slate-100 text-xs sm:text-sm">${formatMoney(val)}</span><span class="text-[10px] text-slate-400 block">${pct}%</span></div>`;
-                legendGrid.appendChild(item);
+            // Ingresos por categoría (lista simple, sin gráfico aparte)
+            const incomeCategoryTotals = {};
+            monthProducts.filter(p => p.type === 'ingreso').forEach(p => {
+                const cat = p.category || 'Otros';
+                incomeCategoryTotals[cat] = (incomeCategoryTotals[cat] || 0) + (parseFloat(p.price) || 0);
             });
+            const incomeLabels = Object.keys(incomeCategoryTotals);
+            const totalIncomeSum = Object.values(incomeCategoryTotals).reduce((a, b) => a + b, 0);
+            legendGridIngresos.innerHTML = '';
 
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: labels, datasets: [{ data: data, backgroundColor: CHART_COLORS.slice(0, labels.length), borderWidth: 2, borderColor: '#111827' }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${c.label}: ${formatMoney(c.parsed)}` } } }, cutout: '65%' }
+            if (incomeLabels.length === 0) {
+                legendGridIngresos.innerHTML = '<div class="col-span-2 text-slate-500 text-xs py-2 text-center">Sin ingresos extra registrados este mes</div>';
+            } else {
+                incomeLabels.forEach((cat) => {
+                    const val = incomeCategoryTotals[cat];
+                    const pct = totalIncomeSum > 0 ? ((val / totalIncomeSum) * 100).toFixed(1) : 0;
+                    const emoji = getCategoryEmoji(cat);
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-white/5';
+                    item.innerHTML = `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-400"></span><span class="font-semibold text-slate-200 text-xs sm:text-sm">${emoji} ${cat}</span></div><div class="text-right"><span class="font-bold text-slate-100 text-xs sm:text-sm">${formatMoney(val)}</span><span class="text-[10px] text-slate-400 block">${pct}%</span></div>`;
+                    legendGridIngresos.appendChild(item);
+                });
+            }
+        }
+
+        // Columnas de Ingresos / Egresos del mes (se llenan solas al registrar movimientos)
+        function renderMovimientosColumns(monthProducts) {
+            const ingresosList = document.getElementById('movimientos-ingresos-list');
+            const egresosList = document.getElementById('movimientos-egresos-list');
+
+            const ingresos = monthProducts.filter(p => p.type === 'ingreso').sort((a, b) => new Date(b.date) - new Date(a.date));
+            const egresos = monthProducts.filter(p => p.type === 'egreso').sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            function buildItemHTML(item, colorClass) {
+                return `
+                    <div class="glass-card rounded-2xl p-3 flex items-center justify-between border-l-4 ${colorClass}">
+                        <div class="min-w-0">
+                            <p class="text-xs sm:text-sm font-semibold text-white truncate">${item.icon || ''} ${item.name}</p>
+                            <p class="text-[10px] text-slate-400">${formatDateDisplay(item.date)} · ${item.category}</p>
+                        </div>
+                        <p class="text-xs sm:text-sm font-bold text-white flex-shrink-0 ml-2">${formatMoney(item.price)}</p>
+                    </div>`;
+            }
+
+            if (ingresos.length === 0) {
+                ingresosList.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Todavía no registraste ingresos este mes</p>';
+            } else {
+                ingresosList.innerHTML = ingresos.map(i => buildItemHTML(i, 'border-l-orange-500')).join('');
+            }
+
+            if (egresos.length === 0) {
+                egresosList.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Todavía no registraste egresos este mes</p>';
+            } else {
+                egresosList.innerHTML = egresos.map(i => buildItemHTML(i, 'border-l-rose-500')).join('');
+            }
+        }
+
+        // Mayor gasto / mayor ingreso del mes, con gráfico de barras
+        let topMovementsChart = null;
+        function renderTopMovements(monthProducts) {
+            const egresos = monthProducts.filter(p => p.type === 'egreso');
+            const ingresos = monthProducts.filter(p => p.type === 'ingreso');
+
+            const topExpense = egresos.length ? egresos.reduce((a, b) => (b.price > a.price ? b : a)) : null;
+            const topIncome = ingresos.length ? ingresos.reduce((a, b) => (b.price > a.price ? b : a)) : null;
+
+            document.getElementById('top-expense-label').textContent = topExpense ? topExpense.name : 'Sin egresos este mes';
+            document.getElementById('top-expense-amount').textContent = formatMoney(topExpense ? topExpense.price : 0);
+            document.getElementById('top-income-label').textContent = topIncome ? topIncome.name : 'Sin ingresos este mes';
+            document.getElementById('top-income-amount').textContent = formatMoney(topIncome ? topIncome.price : 0);
+
+            const ctx = document.getElementById('topMovementsChart').getContext('2d');
+            if (topMovementsChart) topMovementsChart.destroy();
+            topMovementsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mayor Gasto', 'Mayor Ingreso'],
+                    datasets: [{
+                        data: [topExpense ? topExpense.price : 0, topIncome ? topIncome.price : 0],
+                        backgroundColor: ['#fb7185', '#fb923c'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${formatMoney(c.parsed.y)}` } } },
+                    scales: { y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { ticks: { color: '#cbd5e1' }, grid: { display: false } } }
+                }
             });
         }
 
@@ -1136,6 +1279,8 @@
             }
 
             renderCategoryChart(monthProducts);
+            renderMovimientosColumns(monthProducts);
+            renderTopMovements(monthProducts);
 
             const uniqueCategories = ['all', ...new Set(monthProducts.map(p => p.category))];
             filterContainer.innerHTML = '';
@@ -1361,6 +1506,114 @@
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => switchTab(btn.dataset.tab));
         });
+
+        // ============================================
+        // CARGA POR VOZ (para quien esté apurado, o no pueda escribir)
+        // ============================================
+        const VOICE_CATEGORY_KEYWORDS = {
+            'Combustible': ['nafta', 'combustible', 'gnc', 'diesel', 'gasoil', 'ypf', 'shell', 'axion'],
+            'Almacén': ['almacen', 'almacén', 'supermercado', 'super', 'kiosco', 'quiosco'],
+            'Verdulería': ['verduleria', 'verdulería', 'verdura', 'fruta', 'frutas'],
+            'Carnicería': ['carniceria', 'carnicería', 'carne', 'pollo', 'asado'],
+            'Cena': ['cena', 'restaurante', 'comida afuera', 'delivery', 'pedidos ya'],
+            'Servicios': ['luz', 'gas', 'agua', 'internet', 'servicio', 'telefono', 'teléfono', 'alquiler']
+        };
+        // Palabras que van a categoría "Otros" pero con un nombre lindo autocompletado
+        const VOICE_CUSTOM_CATEGORY_KEYWORDS = {
+            'Panadería': ['medialuna', 'medialunas', 'pan', 'facturas', 'factura', 'panaderia', 'panadería', 'torta', 'pastel'],
+            'Mecánica': ['mecanico', 'mecánico', 'taller', 'auto']
+        };
+        const VOICE_INGRESO_KEYWORDS = ['cobré', 'cobre', 'gané', 'gane', 'ingresé', 'ingrese', 'recibí', 'recibi', 'vendí', 'vendi', 'me pagaron', 'me pagó', 'me pago'];
+
+        function parseVoiceTranscript(transcript) {
+            const text = transcript.toLowerCase();
+
+            // Monto: buscamos la primera secuencia de números
+            const numberMatch = text.match(/(\d[\d.,]*)/);
+            let amount = null;
+            if (numberMatch) {
+                amount = parseFloat(numberMatch[1].replace(/\./g, '').replace(',', '.'));
+            }
+
+            // Tipo: ingreso o egreso
+            let type = 'egreso';
+            for (const kw of VOICE_INGRESO_KEYWORDS) {
+                if (text.includes(kw)) { type = 'ingreso'; break; }
+            }
+
+            // Categoría predefinida
+            let category = null;
+            for (const [cat, keywords] of Object.entries(VOICE_CATEGORY_KEYWORDS)) {
+                if (keywords.some(kw => text.includes(kw))) { category = cat; break; }
+            }
+
+            // Si no matcheó una categoría predefinida, buscamos una "custom" conocida (ej. medialunas -> Panadería)
+            let customCategory = null;
+            if (!category) {
+                for (const [cat, keywords] of Object.entries(VOICE_CUSTOM_CATEGORY_KEYWORDS)) {
+                    if (keywords.some(kw => text.includes(kw))) { customCategory = cat; break; }
+                }
+            }
+
+            // Concepto: usamos el texto tal cual como referencia (la persona lo puede ajustar después)
+            const concept = transcript.charAt(0).toUpperCase() + transcript.slice(1);
+
+            return { amount, type, category, customCategory, concept };
+        }
+
+        function fillFormFromVoice(parsed) {
+            inputName.value = parsed.concept;
+            if (parsed.amount) inputPrice.value = parsed.amount;
+            inputType.value = parsed.type;
+
+            if (parsed.category) {
+                inputCategory.value = parsed.category;
+                updateFormSubtypes();
+            } else {
+                inputCategory.value = 'Otros';
+                updateFormSubtypes();
+                inputCustomCategory.value = parsed.customCategory || '';
+            }
+        }
+
+        let voiceRecognition = null;
+        const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognitionAPI) {
+            voiceRecognition = new SpeechRecognitionAPI();
+            voiceRecognition.lang = 'es-AR';
+            voiceRecognition.continuous = false;
+            voiceRecognition.interimResults = false;
+
+            voiceRecognition.onstart = () => {
+                document.getElementById('voice-input-icon').className = 'fa-solid fa-microphone-lines text-lg animate-pulse';
+                document.getElementById('voice-input-status').textContent = 'Escuchando... decí tu gasto o ingreso';
+            };
+
+            voiceRecognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const parsed = parseVoiceTranscript(transcript);
+                fillFormFromVoice(parsed);
+                document.getElementById('voice-input-status').textContent = `Escuché: "${transcript}" — revisá los campos y tocá Agregar`;
+                showToast('Formulario completado por voz, revisalo antes de agregar');
+            };
+
+            voiceRecognition.onerror = (event) => {
+                document.getElementById('voice-input-status').textContent = 'No te escuché bien, tocá el micrófono para intentar de nuevo.';
+            };
+
+            voiceRecognition.onend = () => {
+                document.getElementById('voice-input-icon').className = 'fa-solid fa-microphone text-lg';
+            };
+
+            document.getElementById('btn-voice-input').addEventListener('click', () => {
+                voiceRecognition.start();
+            });
+        } else {
+            document.getElementById('btn-voice-input').addEventListener('click', () => {
+                showToast('Tu navegador no permite cargar por voz. Probá con Chrome.', 'warning');
+            });
+        }
 
         window.onload = function() {
             updateFormSubtypes();
