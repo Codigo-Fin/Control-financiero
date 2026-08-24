@@ -27,14 +27,25 @@ exports.handler = async function (event) {
   "category": una de estas exactas: ${CATEGORIES.join(', ')},
   "customCategory": <string corto sugerido SOLO si category es "Otros", si no null>,
   "fuelType": "Nafta", "GNC" o "Diesel" SOLO si category es "Combustible", si no null,
-  "concept": <nombre CORTO y prolijo del concepto/producto, 2-4 palabras máximo, sin repetir el monto ni la categoría>
+  "concept": <nombre CORTO y prolijo del concepto/producto, 2-4 palabras máximo>
 }
 
-Reglas importantes:
-- "concept" tiene que ser bien breve (ej. "Curso de CapCut", "Nafta YPF", "Medialunas"), nunca la frase completa que dijo la persona.
-- Si la persona dice un número sin "mil" pero por el contexto (comida, nafta, etc.) es evidente que se refiere a miles de pesos (por ejemplo "carne 130" en Argentina normalmente significa $130.000, no $130), interpretalo así, usando tu criterio sobre precios reales y razonables en Argentina hoy.
-- Palabras como "cobré", "gané", "ingresé", "recibí", "vendí", "me pagaron", o directamente decir "ingreso" al principio, indican ingreso. Todo lo demás, por defecto, es egreso.
+Reglas importantes sobre el MONTO:
+- El monto puede venir como dígitos ("12000", "1.500.000") o escrito en palabras ("un millón quinientos mil", "noventa millones", "doce mil"). Tenés que convertir SIEMPRE las palabras a número, sin excepción. Nunca dejes amount en null solo porque el número vino en palabras.
+- Si la persona dice un número chico sin "mil" pero por el contexto (comida, nafta, etc.) es evidente que se refiere a miles de pesos (ej. "carne 130" en Argentina normalmente significa $130.000, no $130), interpretalo así.
+
+Reglas importantes sobre el TIPO (ingreso/egreso):
+- Palabras como "cobré", "gané", "ingresé", "ingreso", "recibí", "vendí", "me pagaron" indican ingreso. Todo lo demás, por defecto, es egreso.
+
+Reglas importantes sobre CONCEPT:
+- NUNCA incluyas verbos de acción en el concepto: "gasté", "gaste", "ahorré", "ahorre", "gané", "gane", "cobré", "cobre", "ingresé", "ingrese", "pagué", "pague", "compré", "compre". Sacalos siempre, quedate solo con el producto o motivo.
 - category tiene que ser EXACTAMENTE una de la lista, sin inventar otras. Si no encaja bien en ninguna, usá "Otros" y completá customCategory con una palabra corta (ej. "Panadería", "Farmacia", "Ropa", "Cursos").
+
+Ejemplos (frase hablada → JSON esperado):
+- "10000 pesos en nafta gasté" → {"amount": 10000, "type": "egreso", "category": "Combustible", "customCategory": null, "fuelType": "Nafta", "concept": "Nafta"}
+- "me ingreso un millón quinientos mil pesos argentinos" → {"amount": 1500000, "type": "ingreso", "category": "Otros", "customCategory": "Ingreso Extra", "fuelType": null, "concept": "Ingreso Extra"}
+- "ingreso 50000 pesos de un curso de capcut" → {"amount": 50000, "type": "ingreso", "category": "Otros", "customCategory": "Cursos", "fuelType": null, "concept": "Curso de CapCut"}
+- "gasté noventa millones en un auto" → {"amount": 90000000, "type": "egreso", "category": "Otros", "customCategory": "Vehículos", "fuelType": null, "concept": "Auto"}
 - Devolvé SOLO el JSON, nada de explicaciones ni texto extra.`;
 
   try {
