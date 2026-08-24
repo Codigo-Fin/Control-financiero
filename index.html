@@ -920,21 +920,9 @@
         }
         inputCategory.addEventListener('change', updateFormSubtypes);
 
-        addForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const name = inputName.value.trim();
-            const dateVal = inputDate.value || todayDate;
+        // Función compartida: agrega una transacción directo a la base, sin pasar por el formulario visual
+        async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
             const monthVal = dateVal.substring(0, 7);
-            const amount = parseFloat(inputPrice.value) || 0;
-            const typeVal = inputType.value;
-
-            let categoryVal = inputCategory.value;
-            let fuelTypeVal = null;
-            if (categoryVal === 'Combustible') { fuelTypeVal = inputFuelType.value; }
-            else if (categoryVal === 'Otros') { categoryVal = inputCustomCategory.value.trim() || 'Otros'; }
-
             const iconVal = getEmoji(name, categoryVal, fuelTypeVal);
 
             const { data, error } = await sb.from('transactions').insert({
@@ -943,14 +931,34 @@
                 category: categoryVal, fuel_type: fuelTypeVal, type: typeVal, icon: iconVal, completed: false
             }).select().single();
 
-            if (error) { showToast('Error al guardar: ' + error.message, 'warning'); return; }
+            if (error) { showToast('Error al guardar: ' + error.message, 'warning'); return null; }
 
-            products.unshift({ id: data.id, name, date: dateVal, month: monthVal, unitPrice: amount, price: amount, category: categoryVal, fuelType: fuelTypeVal, type: typeVal, icon: iconVal, completed: false });
-
-            inputName.value = ''; inputPrice.value = ''; inputCustomCategory.value = '';
+            const newItem = { id: data.id, name, date: dateVal, month: monthVal, unitPrice: amount, price: amount, category: categoryVal, fuelType: fuelTypeVal, type: typeVal, icon: iconVal, completed: false };
+            products.unshift(newItem);
             selectedMonthFilter = monthVal;
             renderApp();
-            showToast(`"${name}" agregado correctamente`);
+            return newItem;
+        }
+
+        addForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const name = inputName.value.trim();
+            const dateVal = inputDate.value || todayDate;
+            const amount = parseFloat(inputPrice.value) || 0;
+            const typeVal = inputType.value;
+
+            let categoryVal = inputCategory.value;
+            let fuelTypeVal = null;
+            if (categoryVal === 'Combustible') { fuelTypeVal = inputFuelType.value; }
+            else if (categoryVal === 'Otros') { categoryVal = inputCustomCategory.value.trim() || 'Otros'; }
+
+            const result = await addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal });
+            if (result) {
+                inputName.value = ''; inputPrice.value = ''; inputCustomCategory.value = '';
+                showToast(`"${name}" agregado correctamente`);
+            }
         });
 
         function renderCategoryChart(monthProducts) {
@@ -1565,18 +1573,28 @@
             return { amount, type, category, customCategory, concept };
         }
 
-        function fillFormFromVoice(parsed) {
-            inputName.value = parsed.concept;
-            if (parsed.amount) inputPrice.value = parsed.amount;
-            inputType.value = parsed.type;
+        // Agrega el movimiento directo, sin pasar por el formulario (usado por la carga por voz)
+        async function addTransactionFromVoice(parsed) {
+            const name = (parsed.concept || 'Movimiento por voz').trim();
+            const amount = parseFloat(parsed.amount) || 0;
+            const typeVal = parsed.type === 'ingreso' ? 'ingreso' : 'egreso';
 
-            if (parsed.category) {
-                inputCategory.value = parsed.category;
-                updateFormSubtypes();
-            } else {
-                inputCategory.value = 'Otros';
-                updateFormSubtypes();
-                inputCustomCategory.value = parsed.customCategory || '';
+            let categoryVal = parsed.category || 'Otros';
+            let fuelTypeVal = null;
+            if (categoryVal === 'Combustible') {
+                fuelTypeVal = parsed.fuelType || 'Nafta';
+            } else if (categoryVal === 'Otros' && parsed.customCategory) {
+                categoryVal = parsed.customCategory;
+            }
+
+            if (amount <= 0) {
+                showToast('No entendí bien el monto, decilo de nuevo por favor', 'warning');
+                return;
+            }
+
+            const result = await addTransactionRecord({ name, dateVal: todayDate, amount, categoryVal, fuelTypeVal, typeVal });
+            if (result) {
+                showToast(`✅ "${name}" — ${typeVal === 'ingreso' ? '+' : ''}${formatMoney(amount)} en ${categoryVal}, agregado`);
             }
         }
 
@@ -1599,23 +1617,28 @@
                 document.getElementById('voice-input-status').textContent = `Escuché: "${transcript}" — interpretando con IA...`;
 
                 let parsed;
+                let usedAI = true;
                 try {
                     const resp = await fetch('/api/parse-voice-expense', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ transcript })
                     });
-                    if (!resp.ok) throw new Error('Fallo la IA');
-                    parsed = await resp.json();
-                    if (parsed.error) throw new Error(parsed.error);
+                    const respData = await resp.json();
+                    if (!resp.ok || respData.error) throw new Error(respData.error || 'Fallo la IA');
+                    parsed = respData;
                 } catch (err) {
                     console.warn('No se pudo usar la IA, usando el detector simple como respaldo:', err);
+                    usedAI = false;
                     parsed = parseVoiceTranscript(transcript);
                 }
 
-                fillFormFromVoice(parsed);
-                document.getElementById('voice-input-status').textContent = `Escuché: "${transcript}" — revisá los campos y tocá Agregar`;
-                showToast('Formulario completado por voz, revisalo antes de agregar');
+                if (!usedAI) {
+                    showToast('⚠️ No se pudo conectar con la IA, se usó el detector simple (menos preciso)', 'warning');
+                }
+
+                await addTransactionFromVoice(parsed);
+                document.getElementById('voice-input-status').textContent = `Último: "${transcript}"`;
             };
 
             voiceRecognition.onerror = (event) => {
