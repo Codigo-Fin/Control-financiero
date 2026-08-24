@@ -109,7 +109,7 @@
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS</button>
             <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
-            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MI FONDO DE EMERGENCIA</button>
+            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALIR DE DEUDAS</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
         </div>
 
@@ -185,14 +185,6 @@
             </div>
         </div>
 
-        <!-- Bola de nieve -->
-        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
-            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
-                <i class="fa-solid fa-snowflake"></i> Estrategia Bola de Nieve (Pendientes)
-            </h2>
-            <div id="debtList" class="space-y-3"></div>
-        </div>
-
         <!-- Liquidadas -->
         <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3 border border-slate-500/20">
             <h2 class="font-bold text-base sm:text-lg text-slate-300 flex items-center gap-2">
@@ -216,16 +208,25 @@
 
         </div> <!-- fin lf-tab-deudas -->
 
-        <!-- ==================== TAB: MI FONDO DE EMERGENCIA ==================== -->
+        <!-- ==================== TAB: SALIR DE DEUDAS ==================== -->
         <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
+
+        <!-- Paso 1: Prioridad de Pago Sugerido (ex Bola de Nieve) -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-snowflake"></i> 1- Prioridad de Pago Sugerido
+            </h2>
+            <p class="text-[11px] text-slate-500">Priorizamos tus deudas de menor a mayor, para que vayas cancelando rápido y ganando impulso.</p>
+            <div id="debtList" class="space-y-3"></div>
+        </div>
 
         <!-- Fondos de Emergencia -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
                 <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> Emergencias
+                    <i class="fa-solid fa-shield-halved"></i> 2- Crear Fondo Emergencias
                 </h2>
-                <p class="text-[11px] text-slate-500">Meta ej: USD 1000 o $1.500.000</p>
+                <p class="text-[11px] text-slate-500">El primer paso para salir de deudas es protegerte con un capital de 1000 dólares o su equivalente en pesos ante imprevistos.</p>
                 <div>
                     <label>Meta objetivo ($)</label>
                     <input type="number" id="emergencyBasicTarget" step="any" placeholder="Ej: 1500000">
@@ -240,9 +241,45 @@
                 <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
                 <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
             </div>
-            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5 relative">
+
+            <!-- Paso 3: Ingresos Extras (movido desde Inversiones) -->
+            <div class="glass-panel neon-card neon-amber rounded-3xl p-5 space-y-3">
+                <h2 class="font-bold text-sm sm:text-base text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> 3- Ingresos Extras
+                </h2>
+                <p class="text-[11px] text-slate-500">Este paso es importante porque agregar dinero extra en tu bolsillo acelera tu libertad financiera.</p>
+                <form id="extraForm" class="space-y-3">
+                    <div>
+                        <label>Categoría del Ingreso</label>
+                        <select id="extraSourceCategory" required>
+                            <option value="E-commerce">E-commerce / Ventas Online</option>
+                            <option value="Venta de Activo">Venta de Activo / Vehículo</option>
+                            <option value="Cursos / Digital">Cursos / Libros / Digital</option>
+                            <option value="Servicios">Servicios / Trabajos</option>
+                            <option value="Otros">Otros Ingresos (Especificar)</option>
+                        </select>
+                    </div>
+                    <div id="otherCategoryGroup" style="display:none;">
+                        <label>Especificar Origen (Otros)</label>
+                        <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
+                    </div>
+                    <div>
+                        <label>Detalle del Ingreso</label>
+                        <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
+                    </div>
+                    <div>
+                        <label>Monto ($)</label>
+                        <input type="number" id="extraAmount" step="any" placeholder="500" required>
+                    </div>
+                    <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Pagar a mis deudas (opcional)</button>
+                </form>
+                <p class="text-[11px] text-slate-500 text-center pt-2">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
+            </div>
+
+            <!-- Paso 4: Emergencia 3 a 6 Sueldos (bloqueado) -->
+            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5 relative sm:col-span-2">
                 <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-life-ring"></i> Emergencia 3 a 6 Sueldos
+                    <i class="fa-solid fa-life-ring"></i> 4- Emergencia 3 a 6 Sueldos
                 </h2>
                 <p class="text-[11px] text-slate-500">Meta ej: $9.000.000</p>
                 <div>
@@ -276,7 +313,7 @@
         <!-- Calculadora de Libertad Financiera (regla del 4% / número x25) -->
         <div class="glass-panel neon-card neon-blue rounded-3xl p-5 sm:p-7 space-y-4">
             <h2 class="font-bold text-base sm:text-lg text-sky-300 flex items-center gap-2">
-                <i class="fa-solid fa-crown"></i> Tu Número de Libertad Financiera
+                <i class="fa-solid fa-crown"></i> 5- Tu Número de Libertad Financiera
             </h2>
             <p class="text-[11px] text-slate-500">Cuánto necesitás invertido para vivir del 4% anual sin trabajar más. Se calcula: gasto mensual × 12 × 25.</p>
             <div>
@@ -295,39 +332,6 @@
                 </div>
                 <p id="fireProgressText" class="text-[11px] text-slate-400"></p>
             </div>
-        </div>
-
-        <!-- Ingresos Extras -->
-        <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
-                <i class="fa-solid fa-bolt"></i> INGRESOS EXTRAS
-            </h2>
-            <form id="extraForm" class="space-y-3">
-                <div>
-                    <label>Categoría del Ingreso</label>
-                    <select id="extraSourceCategory" required>
-                        <option value="E-commerce">E-commerce / Ventas Online</option>
-                        <option value="Venta de Activo">Venta de Activo / Vehículo</option>
-                        <option value="Cursos / Digital">Cursos / Libros / Digital</option>
-                        <option value="Servicios">Servicios / Trabajos</option>
-                        <option value="Otros">Otros Ingresos (Especificar)</option>
-                    </select>
-                </div>
-                <div id="otherCategoryGroup" style="display:none;">
-                    <label>Especificar Origen (Otros)</label>
-                    <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
-                </div>
-                <div>
-                    <label>Detalle del Ingreso</label>
-                    <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
-                </div>
-                <div>
-                    <label>Monto ($)</label>
-                    <input type="number" id="extraAmount" step="any" placeholder="500" required>
-                </div>
-                <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Pagar a mis deudas (opcional)</button>
-            </form>
-            <p class="text-[11px] text-slate-500 text-center">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
         </div>
 
         <!-- Cartera de inversiones -->
