@@ -1545,6 +1545,14 @@
             if (numberMatch) {
                 const digitsOnly = numberMatch[1].replace(/[.,]/g, '');
                 amount = parseFloat(digitsOnly);
+                // Si además dice "mil" o "millón/millones" cerca del número, y el número es chico,
+                // multiplicamos (ej. "12 mil" -> 12000, aunque esto es un respaldo simple, no tan preciso como la IA)
+                if (/mill[oó]n/.test(text) && amount < 1000) amount *= 1000000;
+                else if (/\bmil\b/.test(text) && amount < 1000) amount *= 1000;
+            } else if (/mill[oó]n/.test(text) || /\bmil\b/.test(text)) {
+                // No hay dígitos pero se mencionó "mil"/"millón" en palabras — el detector simple
+                // no puede convertir números en palabras completas, se necesita la IA para esto.
+                amount = null;
             }
 
             // Tipo: ingreso o egreso
@@ -1567,8 +1575,12 @@
                 }
             }
 
-            // Concepto: usamos el texto tal cual como referencia (la persona lo puede ajustar después)
-            const concept = transcript.charAt(0).toUpperCase() + transcript.slice(1);
+            // Concepto: sacamos números, verbos de acción y palabras de relleno, para que quede prolijo
+            const VOICE_FILLER_WORDS = ['gasté', 'gaste', 'ahorré', 'ahorre', 'gané', 'gane', 'cobré', 'cobre', 'ingresé', 'ingrese', 'ingreso', 'pagué', 'pague', 'compré', 'compre', 'pesos', 'peso', 'mil', 'millón', 'millones', 'de', 'en', 'un', 'una'];
+            let conceptWords = text.replace(/[\d.,]+/g, '').split(/\s+/).filter(w => w && !VOICE_FILLER_WORDS.includes(w));
+            let concept = conceptWords.join(' ').trim();
+            if (!concept) concept = transcript.trim();
+            concept = concept.charAt(0).toUpperCase() + concept.slice(1);
 
             return { amount, type, category, customCategory, concept };
         }
