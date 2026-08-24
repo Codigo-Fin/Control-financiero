@@ -26,13 +26,15 @@ exports.handler = async function (event) {
   "type": "egreso" o "ingreso",
   "category": una de estas exactas: ${CATEGORIES.join(', ')},
   "customCategory": <string corto sugerido SOLO si category es "Otros", si no null>,
-  "concept": <nombre corto y prolijo del concepto/producto>
+  "fuelType": "Nafta", "GNC" o "Diesel" SOLO si category es "Combustible", si no null,
+  "concept": <nombre CORTO y prolijo del concepto/producto, 2-4 palabras máximo, sin repetir el monto ni la categoría>
 }
 
 Reglas importantes:
+- "concept" tiene que ser bien breve (ej. "Curso de CapCut", "Nafta YPF", "Medialunas"), nunca la frase completa que dijo la persona.
 - Si la persona dice un número sin "mil" pero por el contexto (comida, nafta, etc.) es evidente que se refiere a miles de pesos (por ejemplo "carne 130" en Argentina normalmente significa $130.000, no $130), interpretalo así, usando tu criterio sobre precios reales y razonables en Argentina hoy.
-- Palabras como "cobré", "gané", "ingresé", "recibí", "vendí", "me pagaron" indican ingreso. Todo lo demás, por defecto, es egreso.
-- category tiene que ser EXACTAMENTE una de la lista, sin inventar otras. Si no encaja bien en ninguna, usá "Otros" y completá customCategory con una palabra corta (ej. "Panadería", "Farmacia", "Ropa").
+- Palabras como "cobré", "gané", "ingresé", "recibí", "vendí", "me pagaron", o directamente decir "ingreso" al principio, indican ingreso. Todo lo demás, por defecto, es egreso.
+- category tiene que ser EXACTAMENTE una de la lista, sin inventar otras. Si no encaja bien en ninguna, usá "Otros" y completá customCategory con una palabra corta (ej. "Panadería", "Farmacia", "Ropa", "Cursos").
 - Devolvé SOLO el JSON, nada de explicaciones ni texto extra.`;
 
   try {
