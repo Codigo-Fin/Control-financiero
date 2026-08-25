@@ -302,13 +302,12 @@
             </div>
 
             <div class="grid grid-cols-3 gap-2">
-                <label for="input-photo-camera" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all text-center">
+                <button type="button" id="btn-open-camera" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all text-center">
                     <div class="bg-orange-500/20 text-orange-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
                         <i class="fa-solid fa-camera"></i>
                     </div>
                     <p class="text-xs font-semibold text-white">Sacar Foto</p>
-                </label>
-                <input type="file" id="input-photo-camera" accept="image/*" capture="environment" class="hidden">
+                </button>
 
                 <label for="input-photo-gallery" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all text-center">
                     <div class="bg-orange-500/20 text-orange-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -547,6 +546,21 @@
                 <button onclick="saveSalaryModal()" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Guardar</button>
             </div>
         </div>
+    </div>
+
+    <!-- Cámara propia para fotos de tickets (más liviana que la cámara nativa del celu) -->
+    <div id="camera-modal" class="fixed inset-0 bg-slate-950/95 hidden items-center justify-center p-4 z-50 flex-col gap-3">
+        <video id="camera-video" autoplay playsinline class="w-full max-w-md rounded-2xl border border-orange-500/30 bg-black"></video>
+        <canvas id="camera-canvas" class="hidden"></canvas>
+        <div class="flex items-center gap-3">
+            <button type="button" id="btn-camera-cancel" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold px-5 py-2.5 rounded-xl text-sm">
+                Cancelar
+            </button>
+            <button type="button" id="btn-camera-capture" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2">
+                <i class="fa-solid fa-camera"></i> Capturar
+            </button>
+        </div>
+        <p class="text-[11px] text-slate-500 text-center max-w-xs">Encuadrá el ticket bien iluminado y tocá Capturar</p>
     </div>
 
     <!-- Configurar medio de pago (aparece en el primer ingreso real, sin importar si hubo confirmación de mail en el medio) -->
@@ -1847,11 +1861,75 @@
             }
         }
 
-        document.getElementById('input-photo-camera').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            await processReceiptFile(file, 'image', document.getElementById('photo-input-status'));
-            e.target.value = '';
+        // ============================================
+        // CÁMARA PROPIA (más liviana, evita el error de memoria de la cámara nativa)
+        // ============================================
+        let cameraStream = null;
+
+        async function openCameraModal() {
+            const modal = document.getElementById('camera-modal');
+            const video = document.getElementById('camera-video');
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 960 }
+                    },
+                    audio: false
+                });
+                video.srcObject = cameraStream;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } catch (err) {
+                console.error('No se pudo acceder a la cámara:', err);
+                showToast('No se pudo abrir la cámara. Revisá los permisos del navegador, o usá "De Galería".', 'warning');
+            }
+        }
+
+        function closeCameraModal() {
+            const modal = document.getElementById('camera-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+
+        document.getElementById('btn-open-camera').addEventListener('click', openCameraModal);
+        document.getElementById('btn-camera-cancel').addEventListener('click', closeCameraModal);
+
+        document.getElementById('btn-camera-capture').addEventListener('click', async () => {
+            const video = document.getElementById('camera-video');
+            const canvas = document.getElementById('camera-canvas');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            const base64Data = dataUrl.split(',')[1];
+
+            closeCameraModal();
+
+            const statusEl = document.getElementById('photo-input-status');
+            statusEl.textContent = 'Leyendo y analizando con IA...';
+            try {
+                const resp = await fetch('/api/parse-receipt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base64Data, mediaType: 'image/jpeg', kind: 'image' })
+                });
+                const parsed = await resp.json();
+                if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
+                await addTransactionFromParsed(parsed, 'Comprobante');
+            } catch (err) {
+                console.error('Error al procesar la foto:', err);
+                showToast('⚠️ No se pudo leer el comprobante. Probá de nuevo con mejor luz.', 'warning');
+            }
+            statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
         });
 
         document.getElementById('input-photo-gallery').addEventListener('change', async (e) => {
