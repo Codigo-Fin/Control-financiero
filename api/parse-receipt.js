@@ -52,9 +52,9 @@ Guía de categorías (con ejemplos, usá tu criterio para casos parecidos):
 - Mecánica y Mantenimiento: talleres, repuestos, service.
 - Transporte: nafta, GNC, diesel, SUBE.
 - Servicios: luz, gas, agua, internet, streaming, suscripciones, honorarios profesionales.
-- Almacén, Súper y Mayoristas: supermercados, almacenes, mayoristas.
+- Almacén, Súper y Mayoristas: SOLO cuando el ticket muestra compra de mercadería en volumen para el hogar (varios productos de almacén, verdulería, carnicería, limpieza, etc. en una misma compra).
 - Panadería: panaderías, confiterías.
-- Salidas y Diversión: restaurantes, bares, cines, entretenimiento.
+- Salidas y Diversión: cualquier ticket de un lugar donde se consume comida o bebida en el momento (cafeterías, locales de comida rápida, restaurantes, bares, heladerías, cines, entretenimiento) — aunque el ticket no diga el nombre del local, si los ítems son cosas como "café", "tostado", "medialunas", "hamburguesa", "combo", "menú", "gaseosa individual", etc., es Salidas y Diversión, NUNCA "Almacén, Súper y Mayoristas".
 - Farmacia: medicamentos.
 - Librería y Capacitación: librerías, cursos.
 - Juguetería y Bazar: jugueterías, bazares.
@@ -64,9 +64,10 @@ Guía de categorías (con ejemplos, usá tu criterio para casos parecidos):
 - Otros: SOLO si de verdad no encaja en ninguna.
 
 Reglas:
-- El monto tiene que ser el TOTAL final a pagar del ticket/factura (no un subtotal ni un ítem individual).
+- El monto tiene que ser el TOTAL final a pagar del ticket/factura — buscá específicamente la línea que dice "TOTAL" (no "Efectivo", no "Vuelto", no "Cambio", esos son otra cosa).
+- Los tickets argentinos usan el punto como separador de miles y la coma como separador decimal: "$5.890,00" significa cinco mil ochocientos noventa pesos (5890), NO 5,89 ni 589000. Prestá mucha atención a esto para no leer mal el monto.
 - Casi siempre es un "egreso" (es un comprobante de algo que se pagó). Solo poné "ingreso" si es evidente que es un recibo de cobro a favor de la persona.
-- "concept" tiene que ser el nombre del comercio o del servicio (ej. "Supermercado Coto", "Factura de Edesur", "YPF"), no una lista de productos.
+- "concept" tiene que ser el nombre del comercio si se lee, o si no es legible, un resumen corto de lo comprado (ej. "Café y Tostado"), nunca una lista larga de todos los ítems.
 - category tiene que ser EXACTAMENTE una de la lista.
 - Si la imagen o el PDF no se puede leer bien, devolvé amount: null.
 - Devolvé SOLO el JSON, nada de explicaciones ni texto extra.`;
