@@ -156,6 +156,15 @@
             <h2 id="formTitle" class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
                 <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
             </h2>
+            <div class="glass-panel p-3 rounded-2xl flex items-center gap-3 mb-3">
+                <button type="button" id="btn-voice-debt" class="bg-rose-500 hover:bg-rose-400 text-white font-bold w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
+                    <i id="voice-debt-icon" class="fa-solid fa-microphone text-lg"></i>
+                </button>
+                <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-semibold text-white">Cargar deuda por voz</p>
+                    <p id="voice-debt-status" class="text-[11px] text-slate-400 truncate">Ej: "Debo 400000 pesos a Yola, pago mínimo 50000"</p>
+                </div>
+            </div>
             <form id="debtForm" class="space-y-3">
                 <input type="hidden" id="editingId" value="">
                 <div>
@@ -262,6 +271,12 @@
                     <i class="fa-solid fa-bolt"></i> 2- Ingresos Extras
                 </h2>
                 <p class="text-[11px] text-slate-500">Este paso es importante porque agregar dinero extra en tu bolsillo acelera tu libertad financiera.</p>
+                <div class="glass-panel p-2.5 rounded-2xl flex items-center gap-2.5">
+                    <button type="button" id="btn-voice-extra" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
+                        <i id="voice-extra-icon" class="fa-solid fa-microphone text-sm"></i>
+                    </button>
+                    <p id="voice-extra-status" class="text-[10px] text-slate-400">Ej: "Vendí un curso por 50000 pesos"</p>
+                </div>
                 <form id="extraForm" class="space-y-3">
                     <div>
                         <label>Categoría del Ingreso</label>
@@ -389,6 +404,12 @@
                 <a href="https://www.youtube.com/@TUCANAL" target="_blank" class="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
                     <i class="fa-brands fa-youtube"></i> Antes de empezar ver el video tutorial
                 </a>
+            </div>
+            <div class="glass-panel p-2.5 rounded-2xl flex items-center gap-2.5">
+                <button type="button" id="btn-voice-invest" class="bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
+                    <i id="voice-invest-icon" class="fa-solid fa-microphone text-sm"></i>
+                </button>
+                <p id="voice-invest-status" class="text-[10px] text-slate-400">Ej: "Compré 10 acciones de Apple a 500 pesos cada una"</p>
             </div>
             <form id="investForm" class="space-y-3">
                 <div>
@@ -807,6 +828,17 @@
         }
     }
 
+    // Guarda el precio actual que la persona mira manualmente (ej. en Google Finance)
+    // y con eso se calcula la ganancia o pérdida de esa inversión.
+    async function updateInvestCurrentPrice(id, newPrice) {
+        const inv = investments.find(i => i.id == id);
+        if (!inv) return;
+        inv.currentPrice = parseFloat(newPrice) || inv.price;
+        await saveStorage();
+        render();
+    }
+    window.updateInvestCurrentPrice = updateInvestCurrentPrice;
+
     // Reparte un pago entre TODAS las deudas pendientes (de menor a mayor) y
     // manda cualquier sobrante al Saldo a Favor una vez que ya no queda deuda.
     async function applyPaymentAcrossDebts(amount, category, detailText) {
@@ -1157,16 +1189,34 @@
         } else {
             investments.forEach(inv => {
                 const itemVal = inv.qty * inv.price;
+                const currentPrice = inv.currentPrice || inv.price;
+                const currentVal = inv.qty * currentPrice;
+                const gainLoss = currentVal - itemVal;
+                const gainLossPct = itemVal > 0 ? ((gainLoss / itemVal) * 100).toFixed(1) : 0;
+                const gainClass = gainLoss >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const gainSign = gainLoss >= 0 ? '+' : '';
+                const googleFinanceUrl = `https://www.google.com/search?q=${encodeURIComponent(inv.name)}+precio+acci%C3%B3n`;
+
                 const item = document.createElement('div');
-                item.className = 'bg-slate-950/60 border border-purple-500/20 border-l-4 border-l-purple-500 rounded-xl p-3 flex justify-between items-center gap-2';
+                item.className = 'bg-slate-950/60 border border-purple-500/20 border-l-4 border-l-purple-500 rounded-xl p-3 space-y-2';
                 item.innerHTML = `
-                    <div class="min-w-0">
-                        <strong class="text-sm text-white block truncate">${inv.name}</strong>
-                        <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
+                    <div class="flex justify-between items-center gap-2">
+                        <div class="min-w-0">
+                            <strong class="text-sm text-white block truncate">${inv.name}</strong>
+                            <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} (compra) = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
+                        </div>
+                        <div class="flex gap-1.5 flex-shrink-0">
+                            <button onclick="injectInvestToDebt(${inv.id})" class="bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Pagar</button>
+                            <button onclick="deleteInvest(${inv.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
                     </div>
-                    <div class="flex gap-1.5 flex-shrink-0">
-                        <button onclick="injectInvestToDebt(${inv.id})" class="bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Pagar</button>
-                        <button onclick="deleteInvest(${inv.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
+                    <div class="flex items-center gap-2 bg-slate-900/60 rounded-xl p-2">
+                        <a href="${googleFinanceUrl}" target="_blank" class="text-[10px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold px-2 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver precio
+                        </a>
+                        <input type="number" step="any" value="${currentPrice}" onchange="updateInvestCurrentPrice(${inv.id}, this.value)"
+                            class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white" placeholder="Precio Actual">
+                        <span class="text-[11px] font-bold ${gainClass} whitespace-nowrap">${gainSign}$${Math.abs(gainLoss).toLocaleString()} (${gainSign}${gainLossPct}%)</span>
                     </div>
                 `;
                 investList.appendChild(item);
@@ -1501,6 +1551,119 @@
     switchLfTab('saldo');
 
     checkAccess();
+
+    // ============================================
+    // CARGA POR VOZ (Registrar Deuda, Ingresos Extra, Cartera de Inversiones)
+    // ============================================
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function createVoiceRecognizer(iconId, statusId, onResult, exampleText) {
+        if (!SpeechRecognitionAPI) return null;
+        const recognizer = new SpeechRecognitionAPI();
+        recognizer.lang = 'es-AR';
+        recognizer.continuous = false;
+        recognizer.interimResults = false;
+
+        recognizer.onstart = () => {
+            document.getElementById(iconId).className = 'fa-solid fa-microphone-lines text-lg animate-pulse';
+            document.getElementById(statusId).textContent = 'Escuchando...';
+        };
+        recognizer.onerror = () => {
+            document.getElementById(statusId).textContent = 'No te escuché bien, tocá de nuevo el micrófono.';
+        };
+        recognizer.onend = () => {
+            document.getElementById(iconId).className = 'fa-solid fa-microphone text-lg';
+        };
+        recognizer.onresult = async (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById(statusId).textContent = 'Interpretando con IA...';
+            try {
+                await onResult(transcript);
+                document.getElementById(statusId).textContent = exampleText;
+            } catch (err) {
+                console.error('Error al procesar voz:', err);
+                document.getElementById(statusId).textContent = 'No se pudo procesar, probá de nuevo o cargalo a mano.';
+            }
+        };
+        return recognizer;
+    }
+
+    async function callVoiceParser(transcript, context) {
+        const resp = await fetch('/api/parse-libertad-voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript, context })
+        });
+        const parsed = await resp.json();
+        if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
+        return parsed;
+    }
+
+    // --- Voz para Registrar Deuda ---
+    const voiceDebtRecognizer = createVoiceRecognizer('voice-debt-icon', 'voice-debt-status', async (transcript) => {
+        const parsed = await callVoiceParser(transcript, 'deuda');
+        document.getElementById('name').value = parsed.name || '';
+        document.getElementById('amount').value = parsed.amount || '';
+        document.getElementById('minPayment').value = parsed.minPayment || '';
+        showLibertadToast(`Deuda completada: "${parsed.name}" — revisá y tocá "Agregar Deuda"`);
+    }, 'Ej: "Debo 400000 pesos a Yola, pago mínimo 50000"');
+
+    if (voiceDebtRecognizer) {
+        document.getElementById('btn-voice-debt').addEventListener('click', () => voiceDebtRecognizer.start());
+    } else {
+        document.getElementById('btn-voice-debt').addEventListener('click', () => alert('Tu navegador no permite cargar por voz. Probá con Chrome.'));
+    }
+
+    // --- Voz para Ingresos Extra ---
+    const voiceExtraRecognizer = createVoiceRecognizer('voice-extra-icon', 'voice-extra-status', async (transcript) => {
+        const parsed = await callVoiceParser(transcript, 'ingreso_extra');
+        if (parsed.category) categorySelect.value = parsed.category;
+        if (categorySelect.value === 'Otros' && parsed.customCategory) {
+            otherCategoryGroup.style.display = 'block';
+            otherCategoryDetail.value = parsed.customCategory;
+        }
+        document.getElementById('extraDetail').value = parsed.detail || '';
+        document.getElementById('extraQty').value = parsed.qty || 1;
+        document.getElementById('extraAmount').value = parsed.unitPrice || parsed.amount || '';
+        updateExtraTotalPreview();
+        showLibertadToast('Ingreso completado, revisá y tocá el botón para confirmar');
+    }, 'Ej: "Vendí un curso por 50000 pesos"');
+
+    if (voiceExtraRecognizer) {
+        document.getElementById('btn-voice-extra').addEventListener('click', () => voiceExtraRecognizer.start());
+    } else {
+        document.getElementById('btn-voice-extra').addEventListener('click', () => alert('Tu navegador no permite cargar por voz. Probá con Chrome.'));
+    }
+
+    // --- Voz para Cartera de Inversiones ---
+    const voiceInvestRecognizer = createVoiceRecognizer('voice-invest-icon', 'voice-invest-status', async (transcript) => {
+        const parsed = await callVoiceParser(transcript, 'inversion');
+        document.getElementById('investName').value = parsed.name || '';
+        document.getElementById('investQty').value = parsed.qty || '';
+        document.getElementById('investPrice').value = parsed.unitPrice || '';
+        showLibertadToast(`Inversión completada: "${parsed.name}" — revisá y tocá "Registrar en Cartera"`);
+    }, 'Ej: "Compré 10 acciones de Apple a 500 pesos cada una"');
+
+    if (voiceInvestRecognizer) {
+        document.getElementById('btn-voice-invest').addEventListener('click', () => voiceInvestRecognizer.start());
+    } else {
+        document.getElementById('btn-voice-invest').addEventListener('click', () => alert('Tu navegador no permite cargar por voz. Probá con Chrome.'));
+    }
+
+    // Cartelito simple de aviso (esta página no tenía un sistema de "toast" propio)
+    function showLibertadToast(message) {
+        let el = document.getElementById('libertad-toast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'libertad-toast';
+            el.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-orange-500/40 text-orange-200 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xl z-50 transition-opacity duration-300 max-w-[90%] text-center';
+            document.body.appendChild(el);
+        }
+        el.textContent = message;
+        el.style.opacity = '1';
+        clearTimeout(window._libertadToastTimeout);
+        window._libertadToastTimeout = setTimeout(() => { el.style.opacity = '0'; }, 3500);
+    }
 </script>
 
 </body>
