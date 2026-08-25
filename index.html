@@ -301,29 +301,32 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
-                <label for="input-photo-receipt" class="glass-panel p-3 rounded-2xl flex items-center gap-2 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all">
+            <div class="grid grid-cols-3 gap-2">
+                <label for="input-photo-camera" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all text-center">
                     <div class="bg-orange-500/20 text-orange-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
                         <i class="fa-solid fa-camera"></i>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-xs sm:text-sm font-semibold text-white">Foto de Ticket</p>
-                        <p id="photo-input-status" class="text-[10px] text-slate-400 truncate">Sacá o subí una foto</p>
-                    </div>
+                    <p class="text-xs font-semibold text-white">Sacar Foto</p>
                 </label>
-                <input type="file" id="input-photo-receipt" accept="image/*" class="hidden">
+                <input type="file" id="input-photo-camera" accept="image/*" capture="environment" class="hidden">
 
-                <label for="input-pdf-invoice" class="glass-panel p-3 rounded-2xl flex items-center gap-2 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all">
+                <label for="input-photo-gallery" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all text-center">
+                    <div class="bg-orange-500/20 text-orange-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-image"></i>
+                    </div>
+                    <p class="text-xs font-semibold text-white">De Galería</p>
+                </label>
+                <input type="file" id="input-photo-gallery" accept="image/*" class="hidden">
+
+                <label for="input-pdf-invoice" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all text-center">
                     <div class="bg-orange-500/20 text-orange-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
                         <i class="fa-solid fa-file-pdf"></i>
                     </div>
-                    <div class="min-w-0">
-                        <p class="text-xs sm:text-sm font-semibold text-white">Subir Factura (PDF)</p>
-                        <p id="pdf-input-status" class="text-[10px] text-slate-400 truncate">Luz, gas, internet, etc.</p>
-                    </div>
+                    <p class="text-xs font-semibold text-white">Factura (PDF)</p>
                 </label>
                 <input type="file" id="input-pdf-invoice" accept="application/pdf" class="hidden">
             </div>
+            <p id="photo-input-status" class="text-[10px] text-slate-500 -mt-2">Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura</p>
 
             <form id="add-transaction-form" class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row flex-wrap gap-2.5 items-end shadow-lg">
                 <div class="flex-1 min-w-[140px]">
@@ -1836,15 +1839,22 @@
                 if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
 
                 await addTransactionFromParsed(parsed, kind === 'pdf' ? 'Factura' : 'Comprobante');
-                statusEl.textContent = kind === 'pdf' ? 'Luz, gas, internet, etc.' : 'Sacá o subí una foto';
+                statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
             } catch (err) {
                 console.error('Error al procesar el comprobante:', err);
                 showToast('⚠️ No se pudo leer el comprobante. Probá con otra foto o cargalo a mano.', 'warning');
-                statusEl.textContent = kind === 'pdf' ? 'Luz, gas, internet, etc.' : 'Sacá o subí una foto';
+                statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
             }
         }
 
-        document.getElementById('input-photo-receipt').addEventListener('change', async (e) => {
+        document.getElementById('input-photo-camera').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            await processReceiptFile(file, 'image', document.getElementById('photo-input-status'));
+            e.target.value = '';
+        });
+
+        document.getElementById('input-photo-gallery').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
             await processReceiptFile(file, 'image', document.getElementById('photo-input-status'));
@@ -1854,7 +1864,7 @@
         document.getElementById('input-pdf-invoice').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
-            await processReceiptFile(file, 'pdf', document.getElementById('pdf-input-status'));
+            await processReceiptFile(file, 'pdf', document.getElementById('photo-input-status'));
             e.target.value = '';
         });
 
