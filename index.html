@@ -123,9 +123,8 @@
         <!-- Navegación por pestañas estilo Mercado Pago -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="cuadrante" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">CUADRANTE DE FLUJO</button>
-            <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS DEL MES</button>
             <button data-tab="gastos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INGRESOS Y EGRESOS</button>
-            <button data-tab="movimientos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">RESULTADOS DEL MES</button>
+            <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS Y MOVIMIENTOS</button>
         </div>
 
         <!-- ==================== TAB: CUADRANTE DE FLUJO ==================== -->
@@ -318,7 +317,50 @@
             </div>
         </header>
 
-        </div> <!-- fin tab-panel-resumen -->
+        <section class="space-y-3">
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-orange-400"></i> RESULTADOS DEL MES
+            </h2>
+
+            <div class="glass-panel p-5 rounded-3xl space-y-3">
+                <p class="text-sm font-bold text-white">Tu mayor gasto y mayor ingreso del mes</p>
+                <div class="h-40">
+                    <canvas id="topMovementsChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div>
+                        <p class="text-[10px] text-rose-300 uppercase tracking-wide">Mayor Gasto</p>
+                        <p id="top-expense-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-orange-300 uppercase tracking-wide">Mayor Ingreso</p>
+                        <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-income-amount" class="text-base font-bold text-orange-400">$0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
+                <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0" id="filter-container"></div>
+                <div class="relative w-full sm:w-56">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="search-input" placeholder="Buscar concepto o día..." 
+                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500 transition-colors text-white placeholder-slate-500">
+                </div>
+            </div>
+        </section>
+
+        <main>
+            <div id="category-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"></div>
+            <div id="empty-state" class="hidden glass-panel rounded-3xl p-8 text-center my-4">
+                <i class="fa-solid fa-receipt text-3xl text-slate-600 mb-2 block"></i>
+                <h3 class="text-sm sm:text-base font-medium text-slate-300">No hay registros para el mes o filtro seleccionado</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Agrega gastos o selecciona un mes diferente en el navegador superior.</p>
+            </div>
+        </main>
+
+        </div> <!-- fin tab-panel-resumen (Saldos y Movimientos, unificado) -->
 
         <!-- ==================== TAB: GASTOS DEL MES ==================== -->
         <div id="tab-panel-gastos" class="tab-panel hidden space-y-5">
@@ -497,54 +539,6 @@
         </section>
 
         </div> <!-- fin tab-panel-gastos -->
-
-        <!-- ==================== TAB: MIS MOVIMIENTOS ==================== -->
-        <div id="tab-panel-movimientos" class="tab-panel hidden space-y-5">
-
-        <section class="space-y-3">
-            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-orange-400"></i> RESULTADOS DEL MES
-            </h2>
-
-            <div class="glass-panel p-5 rounded-3xl space-y-3">
-                <p class="text-sm font-bold text-white">Tu mayor gasto y mayor ingreso del mes</p>
-                <div class="h-40">
-                    <canvas id="topMovementsChart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-3 text-center">
-                    <div>
-                        <p class="text-[10px] text-rose-300 uppercase tracking-wide">Mayor Gasto</p>
-                        <p id="top-expense-label" class="text-xs text-slate-300 truncate">—</p>
-                        <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-orange-300 uppercase tracking-wide">Mayor Ingreso</p>
-                        <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
-                        <p id="top-income-amount" class="text-base font-bold text-orange-400">$0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
-                <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0" id="filter-container"></div>
-                <div class="relative w-full sm:w-56">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                    <input type="text" id="search-input" placeholder="Buscar concepto o día..." 
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500 transition-colors text-white placeholder-slate-500">
-                </div>
-            </div>
-        </section>
-
-        <main>
-            <div id="category-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"></div>
-            <div id="empty-state" class="hidden glass-panel rounded-3xl p-8 text-center my-4">
-                <i class="fa-solid fa-receipt text-3xl text-slate-600 mb-2 block"></i>
-                <h3 class="text-sm sm:text-base font-medium text-slate-300">No hay registros para el mes o filtro seleccionado</h3>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Agrega gastos o selecciona un mes diferente en el navegador superior.</p>
-            </div>
-        </main>
-
-        </div> <!-- fin tab-panel-movimientos -->
     </div>
 
     <footer class="max-w-6xl mx-auto w-full mt-6 z-10">
