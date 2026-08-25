@@ -17,6 +17,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
 
     <style>
         body {
@@ -1831,23 +1832,61 @@
             });
         }
 
+        // Convierte la primera página de un PDF en una imagen liviana (en vez de mandar
+        // el PDF completo, que a veces pesa mucho y puede agotar la memoria del celular)
+        // Convierte TODAS las páginas de un PDF (hasta un límite) en imágenes livianas,
+        // para que la IA pueda encontrar el monto sin importar en qué página esté.
+        async function pdfAllPagesToBase64(file, maxDimension = 1400, quality = 0.7, maxPages = 6) {
+            if (window.pdfjsLib && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+            }
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const totalPages = Math.min(pdf.numPages, maxPages);
+            const images = [];
+
+            for (let i = 1; i <= totalPages; i++) {
+                const page = await pdf.getPage(i);
+                const baseViewport = page.getViewport({ scale: 1 });
+                const scale = maxDimension / Math.max(baseViewport.width, baseViewport.height);
+                const viewport = page.getViewport({ scale });
+
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                images.push(dataUrl.split(',')[1]);
+
+                // Liberamos el canvas de la memoria antes de pasar a la próxima página
+                canvas.width = 0;
+                canvas.height = 0;
+            }
+
+            return images;
+        }
+
         async function processReceiptFile(file, kind, statusEl) {
             statusEl.textContent = 'Leyendo y analizando con IA...';
             try {
-                let base64Data, mediaType;
+                let body;
                 if (kind === 'pdf') {
-                    base64Data = await fileToBase64(file);
-                    mediaType = file.type;
+                    // Convertimos TODAS las páginas a imágenes livianas, en vez de mandar el PDF entero
+                    statusEl.textContent = 'Leyendo las páginas del PDF...';
+                    const images = await pdfAllPagesToBase64(file);
+                    body = { images, mediaType: 'image/jpeg', kind: 'multi-image' };
+                    statusEl.textContent = 'Analizando con IA...';
                 } else {
                     const compressed = await compressImageToBase64(file);
-                    base64Data = compressed.base64;
-                    mediaType = compressed.mediaType;
+                    body = { base64Data: compressed.base64, mediaType: compressed.mediaType, kind: 'image' };
                 }
 
                 const resp = await fetch('/api/parse-receipt', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ base64Data, mediaType, kind })
+                    body: JSON.stringify(body)
                 });
                 const parsed = await resp.json();
                 if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
