@@ -301,6 +301,30 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-3">
+                <label for="input-photo-receipt" class="glass-panel p-3 rounded-2xl flex items-center gap-2 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all">
+                    <div class="bg-orange-500/20 text-orange-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-camera"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs sm:text-sm font-semibold text-white">Foto de Ticket</p>
+                        <p id="photo-input-status" class="text-[10px] text-slate-400 truncate">Sacá o subí una foto</p>
+                    </div>
+                </label>
+                <input type="file" id="input-photo-receipt" accept="image/*" capture="environment" class="hidden">
+
+                <label for="input-pdf-invoice" class="glass-panel p-3 rounded-2xl flex items-center gap-2 cursor-pointer hover:border-orange-500/40 border border-transparent transition-all">
+                    <div class="bg-orange-500/20 text-orange-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs sm:text-sm font-semibold text-white">Subir Factura (PDF)</p>
+                        <p id="pdf-input-status" class="text-[10px] text-slate-400 truncate">Luz, gas, internet, etc.</p>
+                    </div>
+                </label>
+                <input type="file" id="input-pdf-invoice" accept="application/pdf" class="hidden">
+            </div>
+
             <form id="add-transaction-form" class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row flex-wrap gap-2.5 items-end shadow-lg">
                 <div class="flex-1 min-w-[140px]">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Concepto / Producto</label>
@@ -378,19 +402,33 @@
                 </div>
             </form>
 
-            <!-- Dos columnas: Ingresos y Egresos del mes (solo aparecen cuando hay registros de ese tipo) -->
+            <!-- Dos columnas colapsables: Ingresos y Egresos del mes, con buscador por fecha -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <h3 class="text-sm font-bold text-orange-300 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrow-down-left"></i> Ingresos
-                    </h3>
-                    <div id="movimientos-ingresos-list" class="space-y-2"></div>
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <button type="button" id="toggle-ingresos-btn" class="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors">
+                        <span class="text-sm font-bold text-orange-300 uppercase tracking-wide flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-down-left"></i> Ingresos
+                            <span id="ingresos-summary" class="text-[10px] text-slate-400 font-normal normal-case"></span>
+                        </span>
+                        <i id="toggle-ingresos-icon" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                    </button>
+                    <div id="ingresos-panel" class="hidden px-3 pb-3 space-y-2">
+                        <input type="date" id="filter-date-ingresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500 mb-1">
+                        <div id="movimientos-ingresos-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-sm font-bold text-rose-300 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                        <i class="fa-solid fa-arrow-up-right"></i> Egresos
-                    </h3>
-                    <div id="movimientos-egresos-list" class="space-y-2"></div>
+                <div class="glass-panel rounded-2xl overflow-hidden">
+                    <button type="button" id="toggle-egresos-btn" class="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors">
+                        <span class="text-sm font-bold text-rose-300 uppercase tracking-wide flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrow-up-right"></i> Egresos
+                            <span id="egresos-summary" class="text-[10px] text-slate-400 font-normal normal-case"></span>
+                        </span>
+                        <i id="toggle-egresos-icon" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
+                    </button>
+                    <div id="egresos-panel" class="hidden px-3 pb-3 space-y-2">
+                        <input type="date" id="filter-date-egresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500 mb-1">
+                        <div id="movimientos-egresos-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1052,37 +1090,65 @@
             }
         }
 
-        // Columnas de Ingresos / Egresos del mes (se llenan solas al registrar movimientos)
+        // Columnas de Ingresos / Egresos del mes: colapsadas por defecto, con buscador por fecha
+        let lastMonthProducts = [];
+
+        function buildMovementItemHTML(item, colorClass) {
+            return `
+                <div class="glass-card rounded-2xl p-3 flex items-center justify-between border-l-4 ${colorClass}">
+                    <div class="min-w-0">
+                        <p class="text-xs sm:text-sm font-semibold text-white truncate">${item.icon || ''} ${item.name}</p>
+                        <p class="text-[10px] text-slate-400">${formatDateDisplay(item.date)} · ${item.category}</p>
+                    </div>
+                    <p class="text-xs sm:text-sm font-bold text-white flex-shrink-0 ml-2">${formatMoney(item.price)}</p>
+                </div>`;
+        }
+
         function renderMovimientosColumns(monthProducts) {
-            const ingresosList = document.getElementById('movimientos-ingresos-list');
-            const egresosList = document.getElementById('movimientos-egresos-list');
+            lastMonthProducts = monthProducts;
 
-            const ingresos = monthProducts.filter(p => p.type === 'ingreso').sort((a, b) => new Date(b.date) - new Date(a.date));
-            const egresos = monthProducts.filter(p => p.type === 'egreso').sort((a, b) => new Date(b.date) - new Date(a.date));
+            const ingresos = monthProducts.filter(p => p.type === 'ingreso');
+            const egresos = monthProducts.filter(p => p.type === 'egreso');
 
-            function buildItemHTML(item, colorClass) {
-                return `
-                    <div class="glass-card rounded-2xl p-3 flex items-center justify-between border-l-4 ${colorClass}">
-                        <div class="min-w-0">
-                            <p class="text-xs sm:text-sm font-semibold text-white truncate">${item.icon || ''} ${item.name}</p>
-                            <p class="text-[10px] text-slate-400">${formatDateDisplay(item.date)} · ${item.category}</p>
-                        </div>
-                        <p class="text-xs sm:text-sm font-bold text-white flex-shrink-0 ml-2">${formatMoney(item.price)}</p>
-                    </div>`;
-            }
+            const ingresosTotal = ingresos.reduce((a, p) => a + p.price, 0);
+            const egresosTotal = egresos.reduce((a, p) => a + p.price, 0);
 
-            if (ingresos.length === 0) {
-                ingresosList.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Todavía no registraste ingresos este mes</p>';
+            document.getElementById('ingresos-summary').textContent = `(${ingresos.length} · ${formatMoney(ingresosTotal)})`;
+            document.getElementById('egresos-summary').textContent = `(${egresos.length} · ${formatMoney(egresosTotal)})`;
+
+            applyMovementDateFilter('ingresos');
+            applyMovementDateFilter('egresos');
+        }
+
+        function applyMovementDateFilter(kind) {
+            const listEl = document.getElementById(`movimientos-${kind}-list`);
+            const dateFilterVal = document.getElementById(`filter-date-${kind}`).value;
+            const colorClass = kind === 'ingresos' ? 'border-l-orange-500' : 'border-l-rose-500';
+
+            let items = lastMonthProducts.filter(p => (kind === 'ingresos' ? p.type === 'ingreso' : p.type === 'egreso'));
+            if (dateFilterVal) items = items.filter(p => p.date === dateFilterVal);
+            items = items.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            if (items.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">${dateFilterVal ? 'Nada registrado ese día' : `Todavía no registraste ${kind} este mes`}</p>`;
             } else {
-                ingresosList.innerHTML = ingresos.map(i => buildItemHTML(i, 'border-l-orange-500')).join('');
-            }
-
-            if (egresos.length === 0) {
-                egresosList.innerHTML = '<p class="text-xs text-slate-500 text-center py-4">Todavía no registraste egresos este mes</p>';
-            } else {
-                egresosList.innerHTML = egresos.map(i => buildItemHTML(i, 'border-l-rose-500')).join('');
+                listEl.innerHTML = items.map(i => buildMovementItemHTML(i, colorClass)).join('');
             }
         }
+
+        function setupMovementsAccordion(kind) {
+            const btn = document.getElementById(`toggle-${kind}-btn`);
+            const panel = document.getElementById(`${kind}-panel`);
+            const icon = document.getElementById(`toggle-${kind}-icon`);
+            btn.addEventListener('click', () => {
+                const isHidden = panel.classList.contains('hidden');
+                panel.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180', isHidden);
+            });
+            document.getElementById(`filter-date-${kind}`).addEventListener('change', () => applyMovementDateFilter(kind));
+        }
+        setupMovementsAccordion('ingresos');
+        setupMovementsAccordion('egresos');
 
         // Mayor gasto / mayor ingreso del mes, con gráfico de barras
         let topMovementsChart = null;
@@ -1404,14 +1470,16 @@
 
         document.getElementById('reset-btn').addEventListener('click', async () => {
             if (!currentUser) return;
-            if (confirm('¿Deseas eliminar TODOS tus registros y reiniciar el sueldo? Esta acción no se puede deshacer.')) {
-                await sb.from('transactions').delete().eq('user_id', currentUser.id);
-                salary = 500000;
-                await saveSalaryToDB();
-                products = [];
-                renderApp();
-                showToast('Lista restablecida correctamente');
-            }
+            const step1 = confirm('Esto borra TODOS tus gastos e ingresos registrados, para empezar de cero. ¿Continuar?');
+            if (!step1) return;
+            const step2 = confirm('Confirmá de nuevo: esta acción no se puede deshacer. ¿Reiniciar todo ahora?');
+            if (!step2) return;
+            await sb.from('transactions').delete().eq('user_id', currentUser.id);
+            salary = 500000;
+            await saveSalaryToDB();
+            products = [];
+            renderApp();
+            showToast('Lista restablecida correctamente');
         });
 
         document.getElementById('btn-subscribe').addEventListener('click', () => {
@@ -1552,7 +1620,7 @@
             'Servicios': ['recarga', 'celular', 'netflix', 'spotify', 'youtube premium', 'disney', 'meli', 'streaming', 'luz', 'gas', 'internet', 'wifi', 'suscripcion', 'suscripción', 'abogado', 'freelancer', 'editor de videos', 'contador', 'asesor de imagen', 'psicologo', 'psicólogo', 'telefono', 'teléfono'],
             'Almacén, Súper y Mayoristas': ['almacen', 'almacén', 'supermercado', 'mayorista', 'carne', 'arroz', 'fideos', 'gaseosa', 'agua', 'jugo en polvo', 'servilleta', 'papel de cocina', 'leche', 'yogur', 'verdura', 'dulce', 'chocolate', 'kiosco', 'quiosco'],
             'Panadería': ['medialuna', 'medialunas', 'pan', 'facturas', 'factura', 'panaderia', 'panadería', 'torta', 'pastel', 'biscocho', 'sandwich', 'sanguche'],
-            'Salidas y Diversión': ['desayuno', 'merienda', 'cena', 'hamburguesa', 'burguer', 'macdonalds', 'mcdonalds', 'moztaza', 'cafe martinez', 'café', 'restaurante', 'restorante', 'casino', 'parque de diversiones', 'juego de mesa', 'salida', 'boliche'],
+            'Salidas y Diversión': ['desayuno', 'merienda', 'cena', 'hamburguesa', 'burguer', 'macdonald', 'mcdonald', 'moztaza', 'cafe martinez', 'café', 'restaurante', 'restorante', 'casino', 'parque de diversiones', 'juego de mesa', 'salida', 'boliche', 'cine', 'pelicula', 'película', 'cinemark', 'hoyts', 'shopping'],
             'Farmacia': ['farmacia', 'medicamento', 'remedio', 'pastilla', 'metformina', 'ibuprofeno', 'paracetamol'],
             'Librería y Capacitación': ['libro', 'cuaderno', 'lapicera', 'lapiz', 'lápiz', 'borrador', 'libreria', 'librería', 'curso'],
             'Juguetería y Bazar': ['juguete', 'autito', 'cubo rubik', 'muñeca', 'jarro', 'plato', 'vaso', 'bazar', 'jugueteria', 'juguetería'],
@@ -1609,8 +1677,8 @@
         }
 
         // Agrega el movimiento directo, sin pasar por el formulario (usado por la carga por voz)
-        async function addTransactionFromVoice(parsed) {
-            const name = (parsed.concept || 'Movimiento por voz').trim();
+        async function addTransactionFromParsed(parsed, sourceLabel) {
+            const name = (parsed.concept || sourceLabel || 'Movimiento').trim();
             const amount = parseFloat(parsed.amount) || 0;
             const typeVal = parsed.type === 'ingreso' ? 'ingreso' : 'egreso';
 
@@ -1623,7 +1691,7 @@
             }
 
             if (amount <= 0) {
-                showToast('No entendí bien el monto, decilo de nuevo por favor', 'warning');
+                showToast('No se pudo entender el monto, probá de nuevo con otra foto o decilo más claro', 'warning');
                 return;
             }
 
@@ -1672,7 +1740,7 @@
                     showToast('⚠️ No se pudo conectar con la IA, se usó el detector simple (menos preciso)', 'warning');
                 }
 
-                await addTransactionFromVoice(parsed);
+                await addTransactionFromParsed(parsed, 'Movimiento por voz');
                 document.getElementById('voice-input-status').textContent = `Último: "${transcript}"`;
             };
 
@@ -1692,6 +1760,53 @@
                 showToast('Tu navegador no permite cargar por voz. Probá con Chrome.', 'warning');
             });
         }
+
+        // ============================================
+        // CARGA POR FOTO DE TICKET Y POR PDF DE FACTURA
+        // ============================================
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]); // saca el prefijo "data:...;base64,"
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function processReceiptFile(file, kind, statusEl) {
+            statusEl.textContent = 'Leyendo y analizando con IA...';
+            try {
+                const base64Data = await fileToBase64(file);
+                const resp = await fetch('/api/parse-receipt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ base64Data, mediaType: file.type, kind })
+                });
+                const parsed = await resp.json();
+                if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
+
+                await addTransactionFromParsed(parsed, kind === 'pdf' ? 'Factura' : 'Comprobante');
+                statusEl.textContent = kind === 'pdf' ? 'Luz, gas, internet, etc.' : 'Sacá o subí una foto';
+            } catch (err) {
+                console.error('Error al procesar el comprobante:', err);
+                showToast('⚠️ No se pudo leer el comprobante. Probá con otra foto o cargalo a mano.', 'warning');
+                statusEl.textContent = kind === 'pdf' ? 'Luz, gas, internet, etc.' : 'Sacá o subí una foto';
+            }
+        }
+
+        document.getElementById('input-photo-receipt').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            await processReceiptFile(file, 'image', document.getElementById('photo-input-status'));
+            e.target.value = '';
+        });
+
+        document.getElementById('input-pdf-invoice').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            await processReceiptFile(file, 'pdf', document.getElementById('pdf-input-status'));
+            e.target.value = '';
+        });
 
         window.onload = function() {
             updateFormSubtypes();
