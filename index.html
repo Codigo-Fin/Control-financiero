@@ -130,6 +130,33 @@
         <!-- ==================== TAB: RESUMEN DEL MES ==================== -->
         <div id="tab-panel-resumen" class="tab-panel space-y-5">
 
+        <!-- CUADRANTE DE FLUJO DE DINERO (Robert Kiyosaki) -->
+        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-4">
+            <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
+                <i class="fa-solid fa-table-cells-large text-orange-400"></i> Cuadrante de Flujo
+            </h3>
+            <p class="text-xs text-slate-400 -mt-2">Tocá cada cuadrante para conocerlo, y pensá en cuál te identificás hoy.</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="E">
+                    <div class="text-2xl mb-1">👔</div>
+                    <div class="font-bold text-white text-sm">Empleado</div>
+                </button>
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="B">
+                    <div class="text-2xl mb-1">🏢</div>
+                    <div class="font-bold text-white text-sm">Dueño de Negocio</div>
+                </button>
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="S">
+                    <div class="text-2xl mb-1">🛠️</div>
+                    <div class="font-bold text-white text-sm">Autoempleado</div>
+                </button>
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="I">
+                    <div class="text-2xl mb-1">📈</div>
+                    <div class="font-bold text-white text-sm">Inversionista</div>
+                </button>
+            </div>
+            <div id="quadrant-info" class="hidden bg-slate-900/60 border border-orange-500/20 rounded-2xl p-4 text-sm text-slate-300"></div>
+        </section>
+
         <!-- SUSCRIPCIÓN -->
         <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -1983,6 +2010,40 @@
             if (!file) return;
             await processReceiptFile(file, 'pdf', document.getElementById('photo-input-status'));
             e.target.value = '';
+        });
+
+        // ============================================
+        // CUADRANTE DE FLUJO DE DINERO (Robert Kiyosaki)
+        // ============================================
+        const QUADRANT_INFO = {
+            E: {
+                title: '👔 Empleado (E)',
+                text: 'Cambiás tu tiempo por un sueldo fijo. Como un remero en un bote: remás vos, y si dejás de remar, el bote se detiene. Tu ingreso depende directamente de que sigas presente todos los días.'
+            },
+            S: {
+                title: '🛠️ Autoempleado (S)',
+                text: 'Sos dueño de tu propio trabajo — un profesional, un comerciante, un freelancer. Como un artesano que vende lo que hace con sus propias manos: si él no trabaja ese día, no hay producto para vender.'
+            },
+            B: {
+                title: '🏢 Dueño de Negocio (B)',
+                text: 'Tenés un sistema o un equipo que genera dinero, con o sin que estés presente todo el tiempo. Como el dueño de una fábrica de pan: aunque él no amase, sus empleados igual producen y venden.'
+            },
+            I: {
+                title: '📈 Inversionista (I)',
+                text: 'Tu dinero trabaja para vos, en vez de que vos trabajes por dinero. Como una semilla plantada que crece sola con el tiempo: no hace falta regarla todos los minutos para que dé sus frutos.'
+            }
+        };
+
+        document.querySelectorAll('.quadrant-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const q = QUADRANT_INFO[btn.dataset.quadrant];
+                const infoBox = document.getElementById('quadrant-info');
+                infoBox.innerHTML = `<p class="font-bold text-orange-300 mb-1">${q.title}</p><p>${q.text}</p>`;
+                infoBox.classList.remove('hidden');
+
+                document.querySelectorAll('.quadrant-btn').forEach(b => b.classList.remove('border-orange-500/40'));
+                btn.classList.add('border-orange-500/40');
+            });
         });
 
         window.onload = function() {
