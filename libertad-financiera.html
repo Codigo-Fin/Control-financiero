@@ -310,7 +310,10 @@
                         <span class="text-[10px] text-slate-400 uppercase">Total</span>
                         <div id="extraTotalPreview" class="text-lg font-bold text-amber-300">$0</div>
                     </div>
-                    <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Pagar a mis deudas (opcional)</button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="submit" id="btnPayDebtWithExtra" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm">Pagar a mis deudas</button>
+                        <button type="button" id="btnKeepExtra" class="btn bg-slate-800 hover:bg-slate-700 border border-amber-500/30 text-amber-300 text-xs sm:text-sm">Mantener Dinero Extra</button>
+                    </div>
                 </form>
                 <div id="extraDebtStatus" class="hidden text-center text-xs font-bold rounded-xl p-2"></div>
                 <p class="text-[11px] text-slate-500 text-center pt-1">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
@@ -415,6 +418,20 @@
                 <div>
                     <label>Nombre del Activo / Acción / ETF</label>
                     <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label>Ticker / Símbolo (opcional)</label>
+                        <input type="text" id="investTicker" placeholder="Ej: NVDA, AAPL, SPY">
+                    </div>
+                    <div>
+                        <label>Mercado</label>
+                        <select id="investMarket">
+                            <option value="BCBA">🇦🇷 CEDEAR (BCBA)</option>
+                            <option value="NASDAQ">🇺🇸 NASDAQ</option>
+                            <option value="NYSE">🇺🇸 NYSE</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -811,10 +828,12 @@
     investForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('investName').value;
+        const ticker = document.getElementById('investTicker').value.trim().toUpperCase();
+        const market = document.getElementById('investMarket').value;
         const qty = parseFloat(document.getElementById('investQty').value);
         const price = parseFloat(document.getElementById('investPrice').value);
 
-        investments.push({ id: Date.now(), name, qty, price });
+        investments.push({ id: Date.now(), name, ticker, market, qty, price });
         investForm.reset();
         await saveStorage();
         render();
@@ -838,6 +857,30 @@
         render();
     }
     window.updateInvestCurrentPrice = updateInvestCurrentPrice;
+
+    // Actualización automática del precio (solo para acciones de EE.UU. vía Finnhub;
+    // los CEDEARs argentinos no están disponibles ahí, para esos se usa el botón de Google Finance)
+    async function autoUpdateInvestPrice(id) {
+        const inv = investments.find(i => i.id == id);
+        if (!inv || !inv.ticker) return;
+        const btn = document.getElementById(`auto-update-${id}`);
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        try {
+            const resp = await fetch(`/api/get-stock-price?ticker=${encodeURIComponent(inv.ticker)}`);
+            const data = await resp.json();
+            if (!resp.ok || data.error || !data.price) throw new Error(data.error || 'Sin precio');
+            inv.currentPrice = data.price;
+            await saveStorage();
+            render();
+            showLibertadToast(`Precio de ${inv.ticker} actualizado: $${data.price.toLocaleString()}`);
+        } catch (err) {
+            console.error('Error al actualizar precio automático:', err);
+            showLibertadToast('No se pudo traer el precio automático, probá con Google Finance');
+            btn.innerHTML = originalHTML;
+        }
+    }
+    window.autoUpdateInvestPrice = autoUpdateInvestPrice;
 
     // Reparte un pago entre TODAS las deudas pendientes (de menor a mayor) y
     // manda cualquier sobrante al Saldo a Favor una vez que ya no queda deuda.
@@ -997,30 +1040,45 @@
     document.getElementById('extraQty').addEventListener('input', updateExtraTotalPreview);
     document.getElementById('extraAmount').addEventListener('input', updateExtraTotalPreview);
 
-    extraForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
+    function getExtraFormValues() {
         let category = categorySelect.value;
         if (category === 'Otros') {
             category = `Otros (${otherCategoryDetail.value.trim()})`;
         }
-
         const detail = document.getElementById('extraDetail').value;
         const qty = parseFloat(document.getElementById('extraQty').value) || 1;
         const unitPrice = parseFloat(document.getElementById('extraAmount').value) || 0;
-        const extra = qty * unitPrice;
+        return { category, detail, amount: qty * unitPrice };
+    }
+
+    function resetExtraForm() {
+        extraForm.reset();
+        document.getElementById('extraQty').value = 1;
+        updateExtraTotalPreview();
+        otherCategoryGroup.style.display = 'none';
+    }
+
+    // Botón "Pagar a mis deudas" (submit del form)
+    extraForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const { category, detail, amount } = getExtraFormValues();
+        if (amount <= 0) { alert('Completá un monto válido'); return; }
+
         const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
-        const totalPendingBefore = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
-
-        const useForDebt = pendingDebts.length > 0 &&
-            confirm(`¿Querés usar este ingreso de $${extra.toLocaleString()} para pagar tus deudas? Cancelar = se guarda como Saldo a Favor.`);
-
         const statusBox = document.getElementById('extraDebtStatus');
+        statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
 
-        if (useForDebt) {
-            await applyPaymentAcrossDebts(extra, category, detail);
+        if (pendingDebts.length === 0) {
+            alert('No tenés deudas pendientes. Este ingreso se va a guardar como Saldo a Favor.');
+            creditBalance += amount;
+            history.unshift({ date: new Date().toLocaleDateString(), category, detail, amount, targetName: 'Saldo a Favor', isMin: false });
+            await saveStorage();
+            render();
+            statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
+            statusBox.textContent = '✅ CANCELADO DEUDA (no tenías deuda pendiente)';
+        } else {
+            await applyPaymentAcrossDebts(amount, category, detail);
             const remainingAfter = debts.filter(d => !d.cleared && d.amount > 0).reduce((acc, d) => acc + d.amount, 0);
-
-            statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
             if (remainingAfter <= 0) {
                 statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
                 statusBox.textContent = '✅ CANCELADO DEUDA';
@@ -1028,35 +1086,35 @@
                 statusBox.classList.add('bg-rose-500/10', 'text-rose-300');
                 statusBox.textContent = `⚠️ FALTA PAGAR DEUDA: $${remainingAfter.toLocaleString()}`;
             }
-        } else {
-            // No hay deuda, o la persona decidió no usarlo ahora: se registra igual en el historial
-            // y se suma directo al Saldo a Favor.
-            creditBalance += extra;
-            history.unshift({
-                date: new Date().toLocaleDateString(),
-                category,
-                detail,
-                amount: extra,
-                targetName: 'Saldo a Favor',
-                isMin: false
-            });
-            await saveStorage();
-            render();
-
-            statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
-            if (totalPendingBefore <= 0) {
-                statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
-                statusBox.textContent = '✅ CANCELADO DEUDA (no tenías deuda pendiente)';
-            } else {
-                statusBox.classList.add('bg-rose-500/10', 'text-rose-300');
-                statusBox.textContent = `⚠️ FALTA PAGAR DEUDA: $${totalPendingBefore.toLocaleString()}`;
-            }
         }
 
-        extraForm.reset();
-        document.getElementById('extraQty').value = 1;
-        updateExtraTotalPreview();
-        otherCategoryGroup.style.display = 'none';
+        resetExtraForm();
+    });
+
+    // Botón "Mantener Dinero Extra" — va directo al Saldo a Favor, sin tocar deudas
+    document.getElementById('btnKeepExtra').addEventListener('click', async () => {
+        const { category, detail, amount } = getExtraFormValues();
+        if (amount <= 0) { alert('Completá un monto válido'); return; }
+
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const totalPendingBefore = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
+
+        creditBalance += amount;
+        history.unshift({ date: new Date().toLocaleDateString(), category, detail, amount, targetName: 'Saldo a Favor', isMin: false });
+        await saveStorage();
+        render();
+
+        const statusBox = document.getElementById('extraDebtStatus');
+        statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
+        if (totalPendingBefore <= 0) {
+            statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
+            statusBox.textContent = '✅ Guardado en Saldo a Favor (no tenías deuda pendiente)';
+        } else {
+            statusBox.classList.add('bg-rose-500/10', 'text-rose-300');
+            statusBox.textContent = `💰 Guardado en Saldo a Favor. Igual tenés pendiente: $${totalPendingBefore.toLocaleString()}`;
+        }
+
+        resetExtraForm();
     });
 
     function updateChart() {
@@ -1195,14 +1253,24 @@
                 const gainLossPct = itemVal > 0 ? ((gainLoss / itemVal) * 100).toFixed(1) : 0;
                 const gainClass = gainLoss >= 0 ? 'text-emerald-400' : 'text-rose-400';
                 const gainSign = gainLoss >= 0 ? '+' : '';
-                const googleFinanceUrl = `https://www.google.com/search?q=${encodeURIComponent(inv.name)}+precio+acci%C3%B3n`;
+
+                // Link directo a Google Finance (funciona bien tanto para CEDEARs argentinos como acciones de EE.UU.)
+                const ticker = inv.ticker || '';
+                const market = inv.market || 'BCBA';
+                const googleFinanceUrl = ticker
+                    ? `https://www.google.com/finance/quote/${encodeURIComponent(ticker)}:${market}`
+                    : `https://www.google.com/finance/`;
+
+                // La actualización automática solo funciona para acciones de EE.UU. (NASDAQ/NYSE) vía Finnhub,
+                // no para CEDEARs argentinos (Finnhub no tiene precios de la bolsa de Buenos Aires)
+                const canAutoUpdate = ticker && (market === 'NASDAQ' || market === 'NYSE');
 
                 const item = document.createElement('div');
                 item.className = 'bg-slate-950/60 border border-purple-500/20 border-l-4 border-l-purple-500 rounded-xl p-3 space-y-2';
                 item.innerHTML = `
                     <div class="flex justify-between items-center gap-2">
                         <div class="min-w-0">
-                            <strong class="text-sm text-white block truncate">${inv.name}</strong>
+                            <strong class="text-sm text-white block truncate">${inv.name} ${ticker ? `<span class="text-purple-400 text-[10px]">(${ticker})</span>` : ''}</strong>
                             <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} (compra) = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
                         </div>
                         <div class="flex gap-1.5 flex-shrink-0">
@@ -1210,10 +1278,11 @@
                             <button onclick="deleteInvest(${inv.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 bg-slate-900/60 rounded-xl p-2">
+                    <div class="flex items-center gap-2 bg-slate-900/60 rounded-xl p-2 flex-wrap">
                         <a href="${googleFinanceUrl}" target="_blank" class="text-[10px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold px-2 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1">
-                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver precio
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Google Finance
                         </a>
+                        ${canAutoUpdate ? `<button onclick="autoUpdateInvestPrice(${inv.id})" id="auto-update-${inv.id}" class="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold px-2 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1"><i class="fa-solid fa-rotate"></i> Auto</button>` : ''}
                         <input type="number" step="any" value="${currentPrice}" onchange="updateInvestCurrentPrice(${inv.id}, this.value)"
                             class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white" placeholder="Precio Actual">
                         <span class="text-[11px] font-bold ${gainClass} whitespace-nowrap">${gainSign}$${Math.abs(gainLoss).toLocaleString()} (${gainSign}${gainLossPct}%)</span>
