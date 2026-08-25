@@ -109,7 +109,7 @@
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS</button>
             <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
-            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALIR DE DEUDAS</button>
+            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PAGAR DEUDAS</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
         </div>
 
@@ -128,13 +128,13 @@
             </div>
         </div>
 
-        <!-- Saldo a favor -->
+        <!-- Saldo a favor / en contra -->
         <div class="glass-panel neon-card neon-orange rounded-3xl p-5 sm:p-7 space-y-4">
-            <h2 class="font-bold text-base sm:text-lg text-orange-300 flex items-center gap-2">
-                <i class="fa-solid fa-circle-check"></i> Saldo a Favor
+            <h2 id="saldoBoxTitle" class="font-bold text-base sm:text-lg text-orange-300 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i> Saldo Favor/Contra
             </h2>
             <div class="text-center">
-                <div class="text-xs font-bold text-orange-300 uppercase tracking-wider">Total pagado / a favor</div>
+                <div id="saldoStatusLabel" class="text-xs font-bold text-orange-300 uppercase tracking-wider">Saldo Favor</div>
                 <div class="text-3xl sm:text-4xl font-bold text-orange-400 mt-1" id="creditBalanceDisplay">$0</div>
             </div>
             <div class="max-w-[240px] mx-auto">
@@ -183,48 +183,62 @@
             <div class="max-w-[280px] mx-auto">
                 <canvas id="debtPieChart"></canvas>
             </div>
-        </div>
 
-        <!-- Liquidadas -->
-        <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3 border border-slate-500/20">
-            <h2 class="font-bold text-base sm:text-lg text-slate-300 flex items-center gap-2">
-                🏁 Deudas Liquidadas (Tachadas)
-            </h2>
-            <div id="clearedList" class="space-y-2"></div>
-        </div>
-
-        <!-- Historial -->
-        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-                <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
-                </h2>
-                <button id="btnClearHistory" title="Vaciar historial" class="text-slate-500 hover:text-rose-400 text-xs bg-slate-900/60 hover:bg-rose-500/10 border border-white/10 px-2.5 py-1.5 rounded-lg transition-colors">
-                    <i class="fa-solid fa-broom"></i>
-                </button>
+            <div id="debt-vs-salary-warning" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 text-center">
+                <p class="text-rose-300 font-bold text-sm">⚠️ PÉRDIDA</p>
+                <p class="text-[11px] text-rose-200">Tu deuda total supera tu sueldo + inversiones</p>
             </div>
-            <div id="historyList" class="space-y-1"></div>
+
+            <div class="space-y-2">
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>💼 Sueldo</span>
+                        <span id="salaryBarValue">$0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="salaryBar" class="bg-sky-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>📈 Inversiones / Ingresos Extra</span>
+                        <span id="investBarValue">$0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="investBar" class="bg-purple-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>🔻 Deuda Total</span>
+                        <span id="debtBarValue">$0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="debtBar" class="bg-rose-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        </div> <!-- fin lf-tab-deudas -->
-
-        <!-- ==================== TAB: SALIR DE DEUDAS ==================== -->
-        <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
-
-        <!-- Paso 1: Prioridad de Pago Sugerido (ex Bola de Nieve) -->
+        <!-- Prioridad de Pago Sugerido -->
         <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
             <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
-                <i class="fa-solid fa-snowflake"></i> 1- Prioridad de Pago Sugerido
+                <i class="fa-solid fa-snowflake"></i> Prioridad de Pago Sugerido
             </h2>
             <p class="text-[11px] text-slate-500">Priorizamos tus deudas de menor a mayor, para que vayas cancelando rápido y ganando impulso.</p>
             <div id="debtList" class="space-y-3"></div>
         </div>
 
+        </div> <!-- fin lf-tab-deudas -->
+
+        <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
+        <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
+
         <!-- Fondos de Emergencia -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
                 <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> 2- Crear Fondo Emergencias
+                    <i class="fa-solid fa-shield-halved"></i> 1- Crear Fondo Emergencias
                 </h2>
                 <p class="text-[11px] text-slate-500">El primer paso para salir de deudas es protegerte con un capital de 1000 dólares o su equivalente en pesos ante imprevistos.</p>
                 <div>
@@ -242,10 +256,10 @@
                 <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
             </div>
 
-            <!-- Paso 3: Ingresos Extras (movido desde Inversiones) -->
+            <!-- Ingresos Extras -->
             <div class="glass-panel neon-card neon-amber rounded-3xl p-5 space-y-3">
                 <h2 class="font-bold text-sm sm:text-base text-amber-300 flex items-center gap-2">
-                    <i class="fa-solid fa-bolt"></i> 3- Ingresos Extras
+                    <i class="fa-solid fa-bolt"></i> 2- Ingresos Extras
                 </h2>
                 <p class="text-[11px] text-slate-500">Este paso es importante porque agregar dinero extra en tu bolsillo acelera tu libertad financiera.</p>
                 <form id="extraForm" class="space-y-3">
@@ -267,19 +281,30 @@
                         <label>Detalle del Ingreso</label>
                         <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
                     </div>
-                    <div>
-                        <label>Monto ($)</label>
-                        <input type="number" id="extraAmount" step="any" placeholder="500" required>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label>Cantidad</label>
+                            <input type="number" id="extraQty" step="any" placeholder="1" value="1" required>
+                        </div>
+                        <div>
+                            <label>Monto Unitario ($)</label>
+                            <input type="number" id="extraAmount" step="any" placeholder="500" required>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 rounded-xl p-2.5 text-center">
+                        <span class="text-[10px] text-slate-400 uppercase">Total</span>
+                        <div id="extraTotalPreview" class="text-lg font-bold text-amber-300">$0</div>
                     </div>
                     <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Pagar a mis deudas (opcional)</button>
                 </form>
-                <p class="text-[11px] text-slate-500 text-center pt-2">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
+                <div id="extraDebtStatus" class="hidden text-center text-xs font-bold rounded-xl p-2"></div>
+                <p class="text-[11px] text-slate-500 text-center pt-1">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
             </div>
 
-            <!-- Paso 4: Emergencia 3 a 6 Sueldos (bloqueado) -->
+            <!-- Emergencia 3 a 6 Sueldos (bloqueado) -->
             <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5 relative sm:col-span-2">
                 <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-life-ring"></i> 4- Emergencia 3 a 6 Sueldos
+                    <i class="fa-solid fa-life-ring"></i> 3- Emergencia 3 a 6 Sueldos
                 </h2>
                 <p class="text-[11px] text-slate-500">Meta ej: $9.000.000</p>
                 <div>
@@ -303,6 +328,27 @@
                     <p id="emergencyFullLockReason" class="text-[11px] text-slate-500"></p>
                 </div>
             </div>
+        </div>
+
+        <!-- Liquidadas -->
+        <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3 border border-slate-500/20">
+            <h2 class="font-bold text-base sm:text-lg text-slate-300 flex items-center gap-2">
+                🏁 Deudas Liquidadas (Tachadas)
+            </h2>
+            <div id="clearedList" class="space-y-2"></div>
+        </div>
+
+        <!-- Historial -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
+                </h2>
+                <button id="btnClearHistory" title="Vaciar historial" class="text-slate-500 hover:text-rose-400 text-xs bg-slate-900/60 hover:bg-rose-500/10 border border-white/10 px-2.5 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-broom"></i>
+                </button>
+            </div>
+            <div id="historyList" class="space-y-1"></div>
         </div>
 
         </div> <!-- fin lf-tab-emergencia -->
@@ -442,6 +488,7 @@
     let investments = [];
     let history = [];
     let creditBalance = 0;
+    let userSalary = 0;
     let pieChart = null;
     let progressChart = null;
 
@@ -477,7 +524,7 @@
         }
         currentUser = session.user;
 
-        const { data: settings } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at').eq('user_id', currentUser.id).maybeSingle();
+        const { data: settings } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary').eq('user_id', currentUser.id).maybeSingle();
         const subscriptionActive = settings && settings.is_premium === true &&
             (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
         const trialActive = settings && settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
@@ -497,6 +544,7 @@
 
         document.getElementById('gate-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
+        userSalary = parseFloat(settings?.salary) || 0;
         await loadLibertadData();
     }
 
@@ -908,6 +956,15 @@
         btnCancelEdit.style.display = 'none';
     }
 
+    // Vista previa en vivo del total (Cantidad × Monto), igual que la compra de inversiones
+    function updateExtraTotalPreview() {
+        const qty = parseFloat(document.getElementById('extraQty').value) || 0;
+        const price = parseFloat(document.getElementById('extraAmount').value) || 0;
+        document.getElementById('extraTotalPreview').textContent = `$${(qty * price).toLocaleString()}`;
+    }
+    document.getElementById('extraQty').addEventListener('input', updateExtraTotalPreview);
+    document.getElementById('extraAmount').addEventListener('input', updateExtraTotalPreview);
+
     extraForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         let category = categorySelect.value;
@@ -916,14 +973,29 @@
         }
 
         const detail = document.getElementById('extraDetail').value;
-        const extra = parseFloat(document.getElementById('extraAmount').value);
+        const qty = parseFloat(document.getElementById('extraQty').value) || 1;
+        const unitPrice = parseFloat(document.getElementById('extraAmount').value) || 0;
+        const extra = qty * unitPrice;
         const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const totalPendingBefore = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
 
         const useForDebt = pendingDebts.length > 0 &&
             confirm(`¿Querés usar este ingreso de $${extra.toLocaleString()} para pagar tus deudas? Cancelar = se guarda como Saldo a Favor.`);
 
+        const statusBox = document.getElementById('extraDebtStatus');
+
         if (useForDebt) {
             await applyPaymentAcrossDebts(extra, category, detail);
+            const remainingAfter = debts.filter(d => !d.cleared && d.amount > 0).reduce((acc, d) => acc + d.amount, 0);
+
+            statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
+            if (remainingAfter <= 0) {
+                statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
+                statusBox.textContent = '✅ CANCELADO DEUDA';
+            } else {
+                statusBox.classList.add('bg-rose-500/10', 'text-rose-300');
+                statusBox.textContent = `⚠️ FALTA PAGAR DEUDA: $${remainingAfter.toLocaleString()}`;
+            }
         } else {
             // No hay deuda, o la persona decidió no usarlo ahora: se registra igual en el historial
             // y se suma directo al Saldo a Favor.
@@ -938,60 +1010,110 @@
             });
             await saveStorage();
             render();
-            alert(`Ingreso de $${extra.toLocaleString()} registrado en tu Saldo a Favor`);
+
+            statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
+            if (totalPendingBefore <= 0) {
+                statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
+                statusBox.textContent = '✅ CANCELADO DEUDA (no tenías deuda pendiente)';
+            } else {
+                statusBox.classList.add('bg-rose-500/10', 'text-rose-300');
+                statusBox.textContent = `⚠️ FALTA PAGAR DEUDA: $${totalPendingBefore.toLocaleString()}`;
+            }
         }
 
         extraForm.reset();
+        document.getElementById('extraQty').value = 1;
+        updateExtraTotalPreview();
         otherCategoryGroup.style.display = 'none';
     });
 
     function updateChart() {
         const ctx = document.getElementById('debtPieChart').getContext('2d');
         const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
-        const labels = activeDebts.map(d => d.name);
-        const data = activeDebts.map(d => d.amount);
+
+        // Consolidamos deudas con el mismo nombre en una sola porción (sumando montos)
+        const consolidated = {};
+        activeDebts.forEach(d => {
+            const key = d.name.trim().toLowerCase();
+            if (!consolidated[key]) consolidated[key] = { name: d.name.trim(), total: 0 };
+            consolidated[key].total += d.amount;
+        });
+        const grouped = Object.values(consolidated);
+
+        const labels = grouped.map(g => g.name);
+        const data = grouped.map(g => g.total);
 
         if (pieChart) pieChart.destroy();
-        if (activeDebts.length === 0) return;
 
-        pieChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: data,
-                    backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#f97316', '#a855f7', '#f472b6'],
-                    borderWidth: 2,
-                    borderColor: '#111827'
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } }
+        if (grouped.length > 0) {
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#f97316', '#a855f7', '#f472b6'],
+                        borderWidth: 2,
+                        borderColor: '#111827'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => {
+                                    const pctSalary = userSalary > 0 ? ` (${((c.parsed / userSalary) * 100).toFixed(0)}% del sueldo)` : '';
+                                    return ` ${c.label}: $${c.parsed.toLocaleString()}${pctSalary}`;
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-        });
+            });
+        }
+
+        // Barras de comparación: Sueldo vs Inversiones/Ingresos Extra vs Deuda Total
+        const totalDebtAll = grouped.reduce((acc, g) => acc + g.total, 0);
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        const maxScale = Math.max(userSalary, totalInvestVal, totalDebtAll, 1);
+
+        document.getElementById('salaryBarValue').textContent = `$${userSalary.toLocaleString()}`;
+        document.getElementById('salaryBar').style.width = `${Math.min((userSalary / maxScale) * 100, 100)}%`;
+
+        document.getElementById('investBarValue').textContent = `$${totalInvestVal.toLocaleString()}`;
+        document.getElementById('investBar').style.width = `${Math.min((totalInvestVal / maxScale) * 100, 100)}%`;
+
+        document.getElementById('debtBarValue').textContent = `$${totalDebtAll.toLocaleString()}`;
+        document.getElementById('debtBar').style.width = `${Math.min((totalDebtAll / maxScale) * 100, 100)}%`;
+
+        const warningBox = document.getElementById('debt-vs-salary-warning');
+        if (totalDebtAll > (userSalary + totalInvestVal) && totalDebtAll > 0) {
+            warningBox.classList.remove('hidden');
+        } else {
+            warningBox.classList.add('hidden');
+        }
     }
 
     function updateProgressChart() {
         const ctx = document.getElementById('progressPieChart').getContext('2d');
-        const totalOwedOriginal = debts.reduce((acc, d) => acc + (d.originalAmount || d.amount), 0);
-        const totalPaid = history.reduce((acc, h) => acc + (h.amount || 0), 0);
         const totalRemaining = debts.filter(d => !d.cleared).reduce((acc, d) => acc + d.amount, 0);
+        const netBalance = creditBalance - totalRemaining;
 
         if (progressChart) progressChart.destroy();
 
-        const paidSlice = Math.max(totalPaid, 0.01);
-        const remainingSlice = Math.max(totalRemaining, 0.01);
+        const isFavor = netBalance >= 0;
+        const favorSlice = isFavor ? Math.max(netBalance, 0.01) : 0.01;
+        const contraSlice = isFavor ? 0.01 : Math.max(Math.abs(netBalance), 0.01);
 
         progressChart = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Saldo a Favor / Pagado', 'Deuda Restante'],
+                labels: isFavor ? ['Saldo Favor', 'Deuda Restante'] : ['Saldo (cubierto)', 'Saldo Contra'],
                 datasets: [{
-                    data: [paidSlice, remainingSlice],
-                    backgroundColor: ['#f97316', 'rgba(244,63,94,0.35)'],
+                    data: [favorSlice, contraSlice],
+                    backgroundColor: isFavor ? ['#f97316', 'rgba(244,63,94,0.35)'] : ['rgba(148,163,184,0.25)', '#f43f5e'],
                     borderWidth: 2,
                     borderColor: '#111827'
                 }]
@@ -1005,7 +1127,26 @@
     }
 
     function render() {
-        document.getElementById('creditBalanceDisplay').textContent = `$${creditBalance.toLocaleString()}`;
+        const totalRemainingForBalance = debts.filter(d => !d.cleared).reduce((acc, d) => acc + d.amount, 0);
+        const netBalance = creditBalance - totalRemainingForBalance;
+        const balanceDisplayEl = document.getElementById('creditBalanceDisplay');
+        const statusLabelEl = document.getElementById('saldoStatusLabel');
+
+        if (netBalance >= 0) {
+            balanceDisplayEl.textContent = `$${netBalance.toLocaleString()}`;
+            balanceDisplayEl.classList.remove('text-rose-400');
+            balanceDisplayEl.classList.add('text-orange-400');
+            statusLabelEl.textContent = 'Saldo Favor';
+            statusLabelEl.classList.remove('text-rose-300');
+            statusLabelEl.classList.add('text-orange-300');
+        } else {
+            balanceDisplayEl.textContent = `$${Math.abs(netBalance).toLocaleString()}`;
+            balanceDisplayEl.classList.remove('text-orange-400');
+            balanceDisplayEl.classList.add('text-rose-400');
+            statusLabelEl.textContent = 'Saldo Contra';
+            statusLabelEl.classList.remove('text-orange-300');
+            statusLabelEl.classList.add('text-rose-300');
+        }
 
         const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
         totalInvestEl.textContent = `$${totalInvestVal.toLocaleString()}`;
