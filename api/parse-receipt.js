@@ -26,9 +26,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { base64Data, mediaType, kind } = req.body || {};
-  if (!base64Data || !mediaType) {
+  const { base64Data, images, mediaType, kind } = req.body || {};
+  const isMultiImage = kind === 'multi-image' && Array.isArray(images) && images.length > 0;
+
+  if (!isMultiImage && !base64Data) {
     return res.status(400).json({ error: 'Falta el archivo' });
+  }
+  if (!mediaType) {
+    return res.status(400).json({ error: 'Falta el tipo de archivo' });
   }
 
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -66,15 +71,17 @@ Guía de categorías (con ejemplos, usá tu criterio para casos parecidos):
 Reglas:
 - El monto tiene que ser el TOTAL final a pagar del ticket/factura — buscá específicamente la línea que dice "TOTAL" (no "Efectivo", no "Vuelto", no "Cambio", esos son otra cosa).
 - Los tickets argentinos usan el punto como separador de miles y la coma como separador decimal: "$5.890,00" significa cinco mil ochocientos noventa pesos (5890), NO 5,89 ni 589000. Prestá mucha atención a esto para no leer mal el monto.
+- Si te llegan VARIAS imágenes (varias páginas de un mismo PDF), es UN SOLO comprobante — el monto total puede estar en cualquiera de las páginas (a veces en la primera, a veces en la última, a veces en un comprobante de pago que viene en una página aparte). Revisá TODAS las páginas antes de decidir el monto.
 - Casi siempre es un "egreso" (es un comprobante de algo que se pagó). Solo poné "ingreso" si es evidente que es un recibo de cobro a favor de la persona.
-- "concept" tiene que ser el nombre del comercio si se lee, o si no es legible, un resumen corto de lo comprado (ej. "Café y Tostado"), nunca una lista larga de todos los ítems.
+- "concept" tiene que ser el nombre del comercio o servicio si se lee (ej. "Factura de Edesur", "VEP AFIP", "Boleta de patentes"), o si no es legible, un resumen corto de lo comprado, nunca una lista larga de todos los ítems.
 - category tiene que ser EXACTAMENTE una de la lista.
-- Si la imagen o el PDF no se puede leer bien, devolvé amount: null.
+- Si las imágenes no se pueden leer bien, devolvé amount: null.
 - Devolvé SOLO el JSON, nada de explicaciones ni texto extra.`;
 
-  const contentBlock = kind === 'pdf'
-    ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
-    : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } };
+  // Armamos los bloques de imagen: uno solo, o varios si son las páginas de un PDF
+  const imageBlocks = isMultiImage
+    ? images.map(img => ({ type: 'image', source: { type: 'base64', media_type: mediaType, data: img } }))
+    : [{ type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } }];
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -91,8 +98,8 @@ Reglas:
         messages: [{
           role: 'user',
           content: [
-            contentBlock,
-            { type: 'text', text: 'Analizá este comprobante y devolveme el JSON pedido.' }
+            ...imageBlocks,
+            { type: 'text', text: isMultiImage ? 'Estas son las páginas de un mismo comprobante/factura. Analizalas todas y devolveme el JSON pedido.' : 'Analizá este comprobante y devolveme el JSON pedido.' }
           ]
         }]
       })
