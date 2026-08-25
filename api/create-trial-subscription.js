@@ -3,12 +3,42 @@
 // la persona autoriza su medio de pago YA, pero Mercado Pago no le cobra nada
 // hasta que pasen los 14 días de prueba gratis (usamos "start_date" para eso).
 
+async function applyDiscountIfValid(discountCode, price, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) {
+  if (!discountCode || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return { finalPrice: price, codeUsed: null };
+
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/discount_codes?code=eq.${encodeURIComponent(discountCode.toUpperCase())}&select=*`, {
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` }
+  });
+  const rows = await resp.json();
+  const row = rows?.[0];
+
+  if (!row || row.used_count >= row.max_uses) {
+    return { finalPrice: price, codeUsed: null };
+  }
+
+  const finalPrice = Math.round(price * (1 - row.discount_pct / 100));
+
+  // Incrementamos el contador de usos (no perfectamente atómico, pero suficiente para 100 usos manuales)
+  await fetch(`${SUPABASE_URL}/rest/v1/discount_codes?code=eq.${encodeURIComponent(discountCode.toUpperCase())}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': SUPABASE_SERVICE_ROLE_KEY,
+      'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify({ used_count: row.used_count + 1 })
+  });
+
+  return { finalPrice, codeUsed: row.code };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { userId, userEmail, plan, price } = req.body;
+  const { userId, userEmail, plan, price, discountCode } = req.body;
 
   if (!userId || !userEmail || !price) {
     return res.status(400).json({ error: 'Faltan datos (userId, userEmail o price)' });
@@ -25,11 +55,13 @@ export default async function handler(req, res) {
   const SITE_URL = process.env.SITE_URL || `https://${req.headers.host}`;
 
   const frequency = plan === 'anual' ? 12 : 1;
-  const reason = plan === 'anual' ? 'Suscripción Anual - Control Financiero' : 'Suscripción Mensual - Control Financiero';
+  const reason = plan === 'anual' ? 'Suscripción Anual - Finzia' : 'Suscripción Mensual - Finzia';
 
   // El primer cobro se programa recién dentro de 14 días (fin de la prueba gratis)
   const startDate = new Date();
   startDate.setDate(startDate.getDate() + 14);
+
+  const { finalPrice, codeUsed } = await applyDiscountIfValid(discountCode, price, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
     const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
@@ -39,7 +71,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${MP_ACCESS_TOKEN}`
       },
       body: JSON.stringify({
-        reason: reason,
+        reason: codeUsed ? `${reason} (código ${codeUsed})` : reason,
         external_reference: userId,
         payer_email: userEmail,
         back_url: `${SITE_URL}/index.html`,
@@ -47,7 +79,7 @@ export default async function handler(req, res) {
         auto_recurring: {
           frequency: frequency,
           frequency_type: 'months',
-          transaction_amount: Number(price),
+          transaction_amount: Number(finalPrice),
           currency_id: 'ARS',
           start_date: startDate.toISOString()
         },
