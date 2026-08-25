@@ -122,16 +122,19 @@
 
         <!-- Navegación por pestañas estilo Mercado Pago -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
-            <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">RESUMEN DEL MES</button>
-            <button data-tab="gastos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INGRESOS & EGRESOS DEL MES</button>
+            <button data-tab="cuadrante" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">CUADRANTE DE FLUJO</button>
+            <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS DEL MES</button>
+            <button data-tab="gastos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INGRESOS Y EGRESOS</button>
             <button data-tab="movimientos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">RESULTADOS DEL MES</button>
         </div>
 
-        <!-- ==================== TAB: RESUMEN DEL MES ==================== -->
-        <div id="tab-panel-resumen" class="tab-panel space-y-5">
+        <!-- ==================== TAB: CUADRANTE DE FLUJO ==================== -->
+        <div id="tab-panel-cuadrante" class="tab-panel hidden space-y-5">
 
-        <!-- CUADRANTE DE FLUJO DE DINERO (Robert Kiyosaki) -->
         <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-4">
+            <p class="text-sm text-slate-300 leading-relaxed">
+                <strong class="text-orange-400">Finzia</strong> nació para ayudarte a entender y controlar tu dinero de punta a punta: llevar tus gastos e ingresos del día a día, salir de deudas con un plan claro, armar un fondo de emergencia, y empezar a invertir — todo en un solo lugar, pensado para el bolsillo argentino. La idea de fondo es simple: cuanto más entendés cómo se mueve tu plata, más rápido podés pasar de <em>cambiar tu tiempo por dinero</em> a que <em>tu dinero y tus sistemas trabajen para vos</em>.
+            </p>
             <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
                 <i class="fa-solid fa-table-cells-large text-orange-400"></i> Cuadrante de Flujo
             </h3>
@@ -156,6 +159,11 @@
             </div>
             <div id="quadrant-info" class="hidden bg-slate-900/60 border border-orange-500/20 rounded-2xl p-4 text-sm text-slate-300"></div>
         </section>
+
+        </div> <!-- fin tab-panel-cuadrante -->
+
+        <!-- ==================== TAB: SALDOS DEL MES ==================== -->
+        <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
 
         <!-- SUSCRIPCIÓN -->
         <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
@@ -2048,7 +2056,7 @@
 
         window.onload = function() {
             updateFormSubtypes();
-            switchTab('resumen');
+            switchTab('cuadrante');
             checkSession().then(() => checkReturnFromPayment());
 
             if ('serviceWorker' in navigator) {
