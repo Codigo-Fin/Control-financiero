@@ -852,35 +852,13 @@
     async function updateInvestCurrentPrice(id, newPrice) {
         const inv = investments.find(i => i.id == id);
         if (!inv) return;
-        inv.currentPrice = parseFloat(newPrice) || inv.price;
+        const parsed = parseFloat(newPrice);
+        inv.currentPrice = (!isNaN(parsed) && parsed > 0) ? parsed : inv.price;
         await saveStorage();
         render();
+        showLibertadToast(`Precio de "${inv.name}" actualizado a $${inv.currentPrice.toLocaleString()}`);
     }
     window.updateInvestCurrentPrice = updateInvestCurrentPrice;
-
-    // Actualización automática del precio (solo para acciones de EE.UU. vía Finnhub;
-    // los CEDEARs argentinos no están disponibles ahí, para esos se usa el botón de Google Finance)
-    async function autoUpdateInvestPrice(id) {
-        const inv = investments.find(i => i.id == id);
-        if (!inv || !inv.ticker) return;
-        const btn = document.getElementById(`auto-update-${id}`);
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-        try {
-            const resp = await fetch(`/api/get-stock-price?ticker=${encodeURIComponent(inv.ticker)}`);
-            const data = await resp.json();
-            if (!resp.ok || data.error || !data.price) throw new Error(data.error || 'Sin precio');
-            inv.currentPrice = data.price;
-            await saveStorage();
-            render();
-            showLibertadToast(`Precio de ${inv.ticker} actualizado: $${data.price.toLocaleString()}`);
-        } catch (err) {
-            console.error('Error al actualizar precio automático:', err);
-            showLibertadToast('No se pudo traer el precio automático, probá con Google Finance');
-            btn.innerHTML = originalHTML;
-        }
-    }
-    window.autoUpdateInvestPrice = autoUpdateInvestPrice;
 
     // Reparte un pago entre TODAS las deudas pendientes (de menor a mayor) y
     // manda cualquier sobrante al Saldo a Favor una vez que ya no queda deuda.
@@ -1261,10 +1239,6 @@
                     ? `https://www.google.com/finance/quote/${encodeURIComponent(ticker)}:${market}`
                     : `https://www.google.com/finance/`;
 
-                // La actualización automática solo funciona para acciones de EE.UU. (NASDAQ/NYSE) vía Finnhub,
-                // no para CEDEARs argentinos (Finnhub no tiene precios de la bolsa de Buenos Aires)
-                const canAutoUpdate = ticker && (market === 'NASDAQ' || market === 'NYSE');
-
                 const item = document.createElement('div');
                 item.className = 'bg-slate-950/60 border border-purple-500/20 border-l-4 border-l-purple-500 rounded-xl p-3 space-y-2';
                 item.innerHTML = `
@@ -1282,9 +1256,14 @@
                         <a href="${googleFinanceUrl}" target="_blank" class="text-[10px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold px-2 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1">
                             <i class="fa-solid fa-arrow-up-right-from-square"></i> Google Finance
                         </a>
-                        ${canAutoUpdate ? `<button onclick="autoUpdateInvestPrice(${inv.id})" id="auto-update-${inv.id}" class="text-[10px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold px-2 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1"><i class="fa-solid fa-rotate"></i> Auto</button>` : ''}
-                        <input type="number" step="any" value="${currentPrice}" onchange="updateInvestCurrentPrice(${inv.id}, this.value)"
+                        <input type="number" step="any" id="price-input-${inv.id}" value="${currentPrice}"
                             class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white" placeholder="Precio Actual">
+                        <button onclick="updateInvestCurrentPrice(${inv.id}, document.getElementById('price-input-${inv.id}').value)"
+                            class="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] font-bold px-2 py-1.5 rounded-lg whitespace-nowrap">
+                            Guardar
+                        </button>
+                    </div>
+                    <div class="text-right">
                         <span class="text-[11px] font-bold ${gainClass} whitespace-nowrap">${gainSign}$${Math.abs(gainLoss).toLocaleString()} (${gainSign}${gainLossPct}%)</span>
                     </div>
                 `;
