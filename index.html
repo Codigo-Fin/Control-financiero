@@ -165,45 +165,11 @@
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="cuadrante" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">CUADRANTE DE FLUJO</button>
             <button data-tab="gastos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INGRESOS Y EGRESOS</button>
-            <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS Y MOVIMIENTOS</button>
+            <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS MOVIMIENTOS</button>
         </div>
 
         <!-- ==================== TAB: CUADRANTE DE FLUJO ==================== -->
         <div id="tab-panel-cuadrante" class="tab-panel hidden space-y-5">
-
-        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-4">
-            <p class="text-sm text-slate-300 leading-relaxed">
-                <strong class="text-orange-400">Finzia</strong> nació para ayudarte a entender y controlar tu dinero de punta a punta: llevar tus gastos e ingresos del día a día, salir de deudas con un plan claro, armar un fondo de emergencia, y empezar a invertir — todo en un solo lugar, pensado para el bolsillo argentino. La idea de fondo es simple: cuanto más entendés cómo se mueve tu plata, más rápido podés pasar de <em>cambiar tu tiempo por dinero</em> a que <em>tu dinero y tus sistemas trabajen para vos</em>.
-            </p>
-            <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                <i class="fa-solid fa-table-cells-large text-orange-400"></i> Cuadrante de Flujo
-            </h3>
-            <p class="text-xs text-slate-400 -mt-2">Tocá cada cuadrante para conocerlo, y pensá en cuál te identificás hoy.</p>
-            <div class="grid grid-cols-2 gap-3">
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="E">
-                    <div class="text-2xl mb-1">👔</div>
-                    <div class="font-bold text-white text-sm">Empleado</div>
-                </button>
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="B">
-                    <div class="text-2xl mb-1">🏢</div>
-                    <div class="font-bold text-white text-sm">Dueño de Negocio</div>
-                </button>
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="S">
-                    <div class="text-2xl mb-1">🛠️</div>
-                    <div class="font-bold text-white text-sm">Autoempleado</div>
-                </button>
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="I">
-                    <div class="text-2xl mb-1">📈</div>
-                    <div class="font-bold text-white text-sm">Inversionista</div>
-                </button>
-            </div>
-            <div id="quadrant-info" class="hidden bg-slate-900/60 border border-orange-500/20 rounded-2xl p-4 text-sm text-slate-300"></div>
-        </section>
-
-        </div> <!-- fin tab-panel-cuadrante -->
-
-        <!-- ==================== TAB: SALDOS DEL MES ==================== -->
-        <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
 
         <!-- SUSCRIPCIÓN -->
         <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
@@ -257,47 +223,39 @@
             </button>
         </section>
 
-        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
-            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center bg-slate-900/90 border border-orange-500/30 rounded-2xl p-1 gap-1 shadow-inner">
-                        <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-orange-400 rounded-xl transition-colors">
-                            <i class="fa-solid fa-chevron-left text-xs"></i>
-                        </button>
-                        <div class="flex items-center gap-1.5 px-2">
-                            <i class="fa-regular fa-calendar-days text-orange-400 text-xs"></i>
-                            <select id="header-month-select" class="bg-transparent text-orange-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
-                        </div>
-                        <button id="next-month-btn" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-orange-400 rounded-xl transition-colors">
-                            <i class="fa-solid fa-chevron-right text-xs"></i>
-                        </button>
-                    </div>
-
-                    <button onclick="toggleMonthDrawer()" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-layer-group text-orange-400"></i>
-                        <span id="drawer-toggle-text">Ver Calendario Anual</span>
-                        <i id="drawer-arrow" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
-                    </button>
-
-                    <button onclick="openSalaryModal()" class="bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span>Ingresar Sueldo</span>
-                    </button>
-                </div>
+        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-4">
+            <p class="text-sm text-slate-300 leading-relaxed">
+                <strong class="text-orange-400">Finzia</strong> nació para ayudarte a entender y controlar tu dinero de punta a punta: llevar tus gastos e ingresos del día a día, salir de deudas con un plan claro, armar un fondo de emergencia, y empezar a invertir — todo en un solo lugar, pensado para el bolsillo argentino. La idea de fondo es simple: cuanto más entendés cómo se mueve tu plata, más rápido podés pasar de <em>cambiar tu tiempo por dinero</em> a que <em>tu dinero y tus sistemas trabajen para vos</em>.
+            </p>
+            <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
+                <i class="fa-solid fa-table-cells-large text-orange-400"></i> Cuadrante de Flujo
+            </h3>
+            <p class="text-xs text-slate-400 -mt-2">Tocá cada cuadrante para conocerlo, y pensá en cuál te identificás hoy.</p>
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="E">
+                    <div class="text-2xl mb-1">👔</div>
+                    <div class="font-bold text-white text-sm">Empleado</div>
+                </button>
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="B">
+                    <div class="text-2xl mb-1">🏢</div>
+                    <div class="font-bold text-white text-sm">Dueño de Negocio</div>
+                </button>
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="S">
+                    <div class="text-2xl mb-1">🛠️</div>
+                    <div class="font-bold text-white text-sm">Autoempleado</div>
+                </button>
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="I">
+                    <div class="text-2xl mb-1">📈</div>
+                    <div class="font-bold text-white text-sm">Inversionista</div>
+                </button>
             </div>
+            <div id="quadrant-info" class="hidden bg-slate-900/60 border border-orange-500/20 rounded-2xl p-4 text-sm text-slate-300"></div>
+        </section>
 
-            <div id="month-drawer" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Resumen por Meses del Año</span>
-                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
-                </div>
-                <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
-            </div>
-
-            <!-- Regla de Reparto de Ingresos -->
+                    <!-- Regla de Reparto de Ingresos -->
             <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3">
                 <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                    <i class="fa-solid fa-scale-balanced text-orange-400"></i> Regla de Reparto
+                    <i class="fa-solid fa-scale-balanced text-orange-400"></i> Reparto de mi Dinero
                 </h3>
                 <p class="text-xs text-slate-400 -mt-1">Elegí una filosofía de reparto conocida, o armá la tuya propia, y te mostramos cuánto te corresponde en cada parte según tus ingresos.</p>
 
@@ -323,51 +281,54 @@
                 <div id="allocation-result" class="hidden space-y-2"></div>
             </div>
 
+        </div> <!-- fin tab-panel-cuadrante -->
+
+        <!-- ==================== TAB: SALDOS DEL MES ==================== -->
+        <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
+
+
+
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center bg-slate-900/90 border border-orange-500/30 rounded-2xl p-1 gap-1 shadow-inner">
+                        <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-orange-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <div class="flex items-center gap-1.5 px-2">
+                            <i class="fa-regular fa-calendar-days text-orange-400 text-xs"></i>
+                            <select id="header-month-select" class="bg-transparent text-orange-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
+                        </div>
+                        <button id="next-month-btn" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-orange-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="toggleMonthDrawer()" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-orange-400"></i>
+                        <span id="drawer-toggle-text">Ver Calendario Anual</span>
+                        <i id="drawer-arrow" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                    </button>
+
+
+                </div>
+            </div>
+
+            <div id="month-drawer" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Resumen por Meses del Año</span>
+                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
+                </div>
+                <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
+            </div>
+
+
+
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2 pt-1">
                 <i class="fa-solid fa-money-bill-trend-up text-orange-400"></i> RESUMEN DEL MES
             </h2>
 
-            <!-- Ingresos vs Egresos claramente separados -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div class="bg-orange-950/40 p-4 rounded-2xl border-2 border-orange-500/30 flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-orange-300 uppercase tracking-wider">💰 Ingresos Totales</span>
-                        <div class="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-arrow-down-left"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 flex items-baseline justify-between">
-                        <span id="stat-salary" class="text-2xl sm:text-3xl font-bold text-orange-400">$0</span>
-                        <span class="text-[10px] text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-full">Sueldo + Extra</span>
-                    </div>
-                </div>
 
-                <div class="bg-rose-950/40 p-4 rounded-2xl border-2 border-rose-500/30 flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-rose-300 uppercase tracking-wider">💸 Egresos del Mes</span>
-                        <div class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-arrow-up-right"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 flex items-baseline justify-between">
-                        <span id="stat-expenses" class="text-2xl sm:text-3xl font-bold text-rose-400">$0</span>
-                        <span class="text-[10px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full">Gastos</span>
-                    </div>
-                </div>
-
-                <div class="bg-slate-900/50 p-4 rounded-2xl border-2 border-teal-500/30 flex flex-col justify-between">
-                    <div class="flex items-center justify-between">
-                        <span class="text-xs font-bold text-teal-300 uppercase tracking-wider">📊 Patrimonio Neto</span>
-                        <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-chart-line"></i>
-                        </div>
-                    </div>
-                    <div class="mt-2 flex items-baseline justify-between">
-                        <span id="stat-networth" class="text-2xl sm:text-3xl font-bold text-teal-300">$0</span>
-                        <span id="networth-badge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold">Disponible</span>
-                    </div>
-                </div>
-            </div>
 
             <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
                 <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
@@ -434,6 +395,55 @@
 
         <!-- ==================== TAB: GASTOS DEL MES ==================== -->
         <div id="tab-panel-gastos" class="tab-panel hidden space-y-5">
+
+        <div class="flex justify-end">
+            <button onclick="openSalaryModal()" class="bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Ingresar Sueldo</span>
+            </button>
+        </div>
+
+        <!-- Ingresos vs Egresos claramente separados (destacado en verde neón, como se pidió) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" style="box-shadow: 0 0 24px rgba(74,222,128,0.25); border-radius: 1.5rem; padding: 4px;">
+            <div class="bg-orange-950/40 p-4 rounded-2xl border-2 border-orange-500/30 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-orange-300 uppercase tracking-wider">💰 Ingresos Totales</span>
+                <div class="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-arrow-down-left"></i>
+                </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                <span id="stat-salary" class="text-2xl sm:text-3xl font-bold text-orange-400">$0</span>
+                <span class="text-[10px] text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-full">Sueldo + Extra</span>
+                </div>
+            </div>
+
+            <div class="bg-rose-950/40 p-4 rounded-2xl border-2 border-rose-500/30 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-rose-300 uppercase tracking-wider">💸 Egresos del Mes</span>
+                <div class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-arrow-up-right"></i>
+                </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                <span id="stat-expenses" class="text-2xl sm:text-3xl font-bold text-rose-400">$0</span>
+                <span class="text-[10px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full">Gastos</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900/50 p-4 rounded-2xl border-2 border-teal-500/30 flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-teal-300 uppercase tracking-wider">📊 Patrimonio Neto</span>
+                <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center text-xs">
+                    <i class="fa-solid fa-chart-line"></i>
+                </div>
+                </div>
+                <div class="mt-2 flex items-baseline justify-between">
+                <span id="stat-networth" class="text-2xl sm:text-3xl font-bold text-teal-300">$0</span>
+                <span id="networth-badge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold">Disponible</span>
+                </div>
+            </div>
+        </div>
 
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
@@ -714,7 +724,6 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button id="btn-toggle-speak" title="Leer las respuestas en voz alta" class="text-slate-400 hover:text-orange-300 text-base px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-volume-xmark"></i></button>
                     <button id="btn-close-assistant" class="text-slate-400 hover:text-white text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
@@ -2565,15 +2574,28 @@
             const bubble = document.createElement('div');
             bubble.className = isUser
                 ? 'bg-orange-500/20 border border-orange-500/30 rounded-2xl rounded-tr-sm p-3 text-base text-white max-w-[90%] sm:max-w-[85%] ml-auto'
-                : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]';
-            bubble.style.whiteSpace = 'pre-wrap';
-            bubble.textContent = text;
+                : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%] space-y-2';
+
+            if (isUser) {
+                bubble.style.whiteSpace = 'pre-wrap';
+                bubble.textContent = text;
+            } else {
+                const textEl = document.createElement('p');
+                textEl.style.whiteSpace = 'pre-wrap';
+                textEl.textContent = text;
+                bubble.appendChild(textEl);
+
+                // Botón para escuchar (y repetir tantas veces como quieras)
+                const speakBtn = document.createElement('button');
+                speakBtn.type = 'button';
+                speakBtn.className = 'text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5';
+                speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
+                speakBtn.addEventListener('click', () => speakAssistantText(text));
+                bubble.appendChild(speakBtn);
+            }
+
             container.appendChild(bubble);
             container.scrollTop = container.scrollHeight;
-
-            if (!isUser && assistantSpeakEnabled) {
-                speakAssistantText(text);
-            }
         }
 
         document.getElementById('btn-open-assistant').addEventListener('click', () => {
@@ -2587,16 +2609,6 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
             if (window.speechSynthesis) window.speechSynthesis.cancel();
-        });
-
-        // Leer las respuestas en voz alta (opcional, la persona lo prende si quiere)
-        let assistantSpeakEnabled = false;
-        document.getElementById('btn-toggle-speak').addEventListener('click', () => {
-            assistantSpeakEnabled = !assistantSpeakEnabled;
-            const icon = document.getElementById('btn-toggle-speak').querySelector('i');
-            icon.className = assistantSpeakEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
-            document.getElementById('btn-toggle-speak').classList.toggle('text-orange-300', assistantSpeakEnabled);
-            if (!assistantSpeakEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
         });
 
         // Preguntar por voz, dentro del chat del asistente
