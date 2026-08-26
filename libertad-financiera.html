@@ -703,6 +703,11 @@
                 inversiones: investmentsData.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
                 inversiones_total: totalInvest,
                 saldo_favor_o_contra: creditBalanceData - totalDebt,
+                // Guardamos también los datos completos, para que Control Financiero pueda
+                // aplicar un pago de verdad sin depender de un pedido directo a Supabase
+                // (que resultó poco confiable desde esa página).
+                debts_full: debtsData,
+                credit_balance_full: creditBalanceData,
                 updated_at: Date.now()
             };
             localStorage.setItem(`finzia_lf_snapshot_${currentUser.id}`, JSON.stringify(snapshot));
