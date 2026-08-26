@@ -2614,7 +2614,25 @@
                 saldo_favor_o_contra: null
             };
 
-            // Traemos también los datos de Libertad Financiera (deudas e inversiones), si existen
+            // 1) Primero probamos con la copia local que guarda Libertad Financiera —
+            // es más rápida y confiable, no depende de un pedido extra a la nube.
+            const localSnapshotRaw = localStorage.getItem(`finzia_lf_snapshot_${currentUser.id}`);
+            if (localSnapshotRaw) {
+                try {
+                    const local = JSON.parse(localSnapshotRaw);
+                    snapshot.deudas = local.deudas || [];
+                    snapshot.deuda_total = local.deuda_total || 0;
+                    snapshot.inversiones = local.inversiones || [];
+                    snapshot.inversiones_total = local.inversiones_total || 0;
+                    snapshot.saldo_favor_o_contra = local.saldo_favor_o_contra ?? null;
+                    return snapshot;
+                } catch (err) {
+                    console.warn('No se pudo leer la copia local de Libertad Financiera:', err);
+                }
+            }
+
+            // 2) Si todavía no existe esa copia (nunca entró a Libertad Financiera en este
+            // dispositivo), intentamos el pedido directo a Supabase como respaldo.
             try {
                 const { data: lfData, error: lfError } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
                 if (lfError) {
@@ -2632,7 +2650,7 @@
                     snapshot.inversiones_total = totalInvest;
                     snapshot.saldo_favor_o_contra = (parseFloat(lfData.credit_balance) || 0) - totalDebt;
                 } else {
-                    // No hay fila todavía en Libertad Financiera: confirmado que no cargó nada ahí
+                    // Ni copia local, ni fila en Supabase: recién ahí confirmamos que no hay nada cargado
                     snapshot.deudas = [];
                     snapshot.deuda_total = 0;
                     snapshot.inversiones = [];
