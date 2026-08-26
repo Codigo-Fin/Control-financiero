@@ -1369,13 +1369,21 @@
                 return;
             }
 
-            const { data: lfData, error } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
-            if (error || !lfData) {
-                showToast('No se pudo consultar tu deuda ahora, probá de nuevo en un momento', 'warning');
+            // Leemos la copia local guardada por Libertad Financiera (más confiable que
+            // pedirle esta tabla puntual directo a Supabase desde esta página).
+            const localSnapshotRaw = localStorage.getItem(`finzia_lf_snapshot_${currentUser.id}`);
+            if (!localSnapshotRaw) {
+                showToast('Todavía no hay datos de Libertad Financiera guardados en este dispositivo. Entrá una vez a esa sección y volvé.', 'warning');
                 return;
             }
 
-            const debts = lfData.debts || [];
+            let localSnapshot;
+            try { localSnapshot = JSON.parse(localSnapshotRaw); } catch (e) {
+                showToast('No se pudo leer tu información de deudas, probá de nuevo', 'warning');
+                return;
+            }
+
+            const debts = localSnapshot.debts_full || [];
             const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
             const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
 
@@ -1392,7 +1400,7 @@
 
             // Repartimos el pago entre las deudas, de menor a mayor (mismo criterio que Libertad Financiera)
             let remaining = amountToApply;
-            const history = lfData.history || [];
+            const history = [];
             const sortedActive = [...activeDebts].sort((a, b) => a.amount - b.amount);
 
             for (const debtRef of sortedActive) {
@@ -1412,18 +1420,28 @@
                 }
             }
 
-            const newCreditBalance = (parseFloat(lfData.credit_balance) || 0) + remaining;
+            const newCreditBalance = (parseFloat(localSnapshot.credit_balance_full) || 0) + remaining;
 
-            const { error: saveError } = await sb.from('libertad_financiera_data').upsert({
-                ...lfData,
-                debts,
-                history,
-                credit_balance: newCreditBalance
-            });
-
-            if (saveError) {
-                showToast('Error al actualizar tu deuda, probá de nuevo', 'warning');
-                return;
+            // Guardamos el cambio en Supabase. Traemos la fila actual primero solo para no
+            // pisar campos que no tocamos (inversiones, fondos de emergencia, etc.) — si este
+            // pedido puntual llegara a fallar, igual actualizamos la copia local y seguimos,
+            // para no dejar a la persona sin poder completar la acción.
+            let saveOk = true;
+            try {
+                const { data: currentRow } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+                const baseRow = currentRow || { user_id: currentUser.id };
+                const mergedHistory = [...history, ...(baseRow.history || [])];
+                const { error: saveError } = await sb.from('libertad_financiera_data').upsert({
+                    ...baseRow,
+                    user_id: currentUser.id,
+                    debts,
+                    history: mergedHistory,
+                    credit_balance: newCreditBalance
+                });
+                if (saveError) saveOk = false;
+            } catch (err) {
+                console.warn('No se pudo guardar el pago en Supabase ahora, se actualizó igual localmente:', err);
+                saveOk = false;
             }
 
             // Registramos el egreso acá, para que el Patrimonio Neto baje y quede reflejado
@@ -1436,23 +1454,27 @@
                 typeVal: 'egreso'
             });
 
-            // Actualizamos la copia local que usa el asistente, para que ya sepa el nuevo estado
+            // Actualizamos la copia local ya mismo, para que el asistente y este mismo botón
+            // reflejen el nuevo estado al toque, sin esperar a volver a entrar a Libertad Financiera.
             const newActiveDebts = debts.filter(d => !d.cleared && d.amount > 0);
             const newTotalDebt = newActiveDebts.reduce((a, d) => a + d.amount, 0);
-            const investmentsData = lfData.investments || [];
-            const totalInvest = investmentsData.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
             localStorage.setItem(`finzia_lf_snapshot_${currentUser.id}`, JSON.stringify({
+                ...localSnapshot,
                 deudas: newActiveDebts.map(d => ({ nombre: d.name, monto: d.amount })),
                 deuda_total: newTotalDebt,
-                inversiones: investmentsData.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
-                inversiones_total: totalInvest,
                 saldo_favor_o_contra: newCreditBalance - newTotalDebt,
+                debts_full: debts,
+                credit_balance_full: newCreditBalance,
                 updated_at: Date.now()
             }));
 
-            showToast(remainingAfter > 0
-                ? `✅ Pagaste ${formatMoney(amountToApply)}. Te falta ${formatMoney(remainingAfter)} para terminar de pagar tu deuda.`
-                : `🎉 ¡Pagaste toda tu deuda con tu Patrimonio Neto!`);
+            if (!saveOk) {
+                showToast('⚠️ Se aplicó el pago acá, pero no se pudo confirmar en la nube todavía. Entrá a Libertad Financiera para verificar y sincronizar.', 'warning');
+            } else {
+                showToast(remainingAfter > 0
+                    ? `✅ Pagaste ${formatMoney(amountToApply)}. Te falta ${formatMoney(remainingAfter)} para terminar de pagar tu deuda.`
+                    : `🎉 ¡Pagaste toda tu deuda con tu Patrimonio Neto!`);
+            }
         }
 
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
