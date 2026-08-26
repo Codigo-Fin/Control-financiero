@@ -1220,6 +1220,9 @@
 
             selectedMonthFilter = currentM;
             renderApp();
+
+            // Por si quedó algo pendiente de sincronizar de una sesión anterior sin internet
+            if (navigator.onLine) syncPendingTransactions();
         }
 
         async function saveSalaryToDB() {
@@ -1318,24 +1321,97 @@
         renderCategoryCardsPicker();
 
         // Función compartida: agrega una transacción directo a la base, sin pasar por el formulario visual
+        // Cola local de movimientos hechos sin internet, pendientes de subir a Supabase
+        function getPendingSyncKey() { return `pending_sync_${currentUser.id}`; }
+
+        function getPendingQueue() {
+            try { return JSON.parse(localStorage.getItem(getPendingSyncKey()) || '[]'); }
+            catch (e) { return []; }
+        }
+
+        function savePendingQueue(queue) {
+            localStorage.setItem(getPendingSyncKey(), JSON.stringify(queue));
+        }
+
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
             const monthVal = dateVal.substring(0, 7);
             const iconVal = getEmoji(name, categoryVal, fuelTypeVal);
-
-            const { data, error } = await sb.from('transactions').insert({
+            const payload = {
                 user_id: currentUser.id, name, date: dateVal, month: monthVal,
                 qty_num: 1, unit: '', unit_price: amount, price: amount,
                 category: categoryVal, fuel_type: fuelTypeVal, type: typeVal, icon: iconVal, completed: false
-            }).select().single();
+            };
 
-            if (error) { showToast('Error al guardar: ' + error.message, 'warning'); return null; }
+            // Sin conexión (o Supabase no responde): lo guardamos local y lo mostramos igual,
+            // marcado como "pendiente de sincronizar" — no se pierde nada.
+            if (!navigator.onLine) {
+                return addTransactionOffline(payload, monthVal, name, amount, categoryVal, fuelTypeVal, typeVal, iconVal);
+            }
 
-            const newItem = { id: data.id, name, date: dateVal, month: monthVal, unitPrice: amount, price: amount, category: categoryVal, fuelType: fuelTypeVal, type: typeVal, icon: iconVal, completed: false };
+            try {
+                const { data, error } = await sb.from('transactions').insert(payload).select().single();
+                if (error) throw error;
+
+                const newItem = { id: data.id, name, date: dateVal, month: monthVal, unitPrice: amount, price: amount, category: categoryVal, fuelType: fuelTypeVal, type: typeVal, icon: iconVal, completed: false };
+                products.unshift(newItem);
+                selectedMonthFilter = monthVal;
+                renderApp();
+                return newItem;
+            } catch (err) {
+                console.warn('Falló el guardado en la nube (probablemente sin señal), se guarda localmente:', err);
+                return addTransactionOffline(payload, monthVal, name, amount, categoryVal, fuelTypeVal, typeVal, iconVal);
+            }
+        }
+
+        function addTransactionOffline(payload, monthVal, name, amount, categoryVal, fuelTypeVal, typeVal, iconVal) {
+            const tempId = 'local_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+            const newItem = { id: tempId, name, date: payload.date, month: monthVal, unitPrice: amount, price: amount, category: categoryVal, fuelType: fuelTypeVal, type: typeVal, icon: iconVal, completed: false, pendingSync: true };
+
             products.unshift(newItem);
+            const queue = getPendingQueue();
+            queue.push({ tempId, payload });
+            savePendingQueue(queue);
+
             selectedMonthFilter = monthVal;
             renderApp();
+            showToast('📴 Guardado sin conexión — se va a subir solo cuando vuelva internet');
             return newItem;
         }
+
+        // Cuando vuelve la conexión, subimos todo lo que quedó pendiente
+        async function syncPendingTransactions() {
+            if (!currentUser) return;
+            const queue = getPendingQueue();
+            if (queue.length === 0) return;
+
+            const stillPending = [];
+            let syncedCount = 0;
+
+            for (const item of queue) {
+                try {
+                    const { data, error } = await sb.from('transactions').insert(item.payload).select().single();
+                    if (error) throw error;
+                    // Actualizamos el ítem local (que ya se veía en pantalla) con el ID real de la base
+                    const localItem = products.find(p => p.id === item.tempId);
+                    if (localItem) { localItem.id = data.id; delete localItem.pendingSync; }
+                    syncedCount++;
+                } catch (err) {
+                    console.warn('Todavía no se pudo sincronizar un pendiente:', err);
+                    stillPending.push(item);
+                }
+            }
+
+            savePendingQueue(stillPending);
+            if (syncedCount > 0) {
+                renderApp();
+                showToast(`✅ ${syncedCount} movimiento(s) sincronizado(s) con la nube`);
+            }
+        }
+
+        window.addEventListener('online', () => {
+            showToast('🌐 Conexión recuperada, sincronizando...');
+            syncPendingTransactions();
+        });
 
         addForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1427,10 +1503,13 @@
         let lastMonthProducts = [];
 
         function buildMovementItemHTML(item, colorClass) {
+            const pendingBadge = item.pendingSync
+                ? '<span class="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded-full ml-1.5"><i class="fa-solid fa-cloud-arrow-up"></i> sin sincronizar</span>'
+                : '';
             return `
                 <div class="glass-card rounded-2xl p-3 flex items-center justify-between border-l-4 ${colorClass}">
                     <div class="min-w-0">
-                        <p class="text-xs sm:text-sm font-semibold text-white truncate">${item.icon || ''} ${item.name}</p>
+                        <p class="text-xs sm:text-sm font-semibold text-white truncate">${item.icon || ''} ${item.name} ${pendingBadge}</p>
                         <p class="text-[10px] text-slate-400">${formatDateDisplay(item.date)} · ${item.category}</p>
                     </div>
                     <p class="text-xs sm:text-sm font-bold text-white flex-shrink-0 ml-2">${formatMoney(item.price)}</p>
@@ -2569,7 +2648,18 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        function addAssistantMessage(text, isUser) {
+        // Traduce el código de sección que devuelve la IA a un texto de botón + acción de navegación
+        const SECTION_LABELS = {
+            cuadrante: 'Ir a Cuadrante de Flujo',
+            gastos: 'Ir a Ingresos y Egresos',
+            resumen: 'Ir a Mis Movimientos',
+            lf_saldo: 'Ir a Libertad Financiera → Saldos',
+            lf_deudas: 'Ir a Libertad Financiera → Registrar Deudas',
+            lf_emergencia: 'Ir a Libertad Financiera → Pagar Deudas',
+            lf_inversiones: 'Ir a Libertad Financiera → Inversiones'
+        };
+
+        function addAssistantMessage(text, isUser, suggestedSection) {
             const container = document.getElementById('assistant-messages');
             const bubble = document.createElement('div');
             bubble.className = isUser
@@ -2585,13 +2675,28 @@
                 textEl.textContent = text;
                 bubble.appendChild(textEl);
 
+                const actionsRow = document.createElement('div');
+                actionsRow.className = 'flex flex-wrap items-center gap-3';
+
                 // Botón para escuchar (y repetir tantas veces como quieras)
                 const speakBtn = document.createElement('button');
                 speakBtn.type = 'button';
                 speakBtn.className = 'text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5';
                 speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
                 speakBtn.addEventListener('click', () => speakAssistantText(text));
-                bubble.appendChild(speakBtn);
+                actionsRow.appendChild(speakBtn);
+
+                // Link directo a la sección sugerida (si la IA indicó una)
+                if (suggestedSection && SECTION_LABELS[suggestedSection]) {
+                    const goBtn = document.createElement('button');
+                    goBtn.type = 'button';
+                    goBtn.className = 'text-sky-400 hover:text-sky-300 text-xs font-semibold flex items-center gap-1.5';
+                    goBtn.innerHTML = `<i class="fa-solid fa-arrow-right"></i> ${SECTION_LABELS[suggestedSection]}`;
+                    goBtn.addEventListener('click', () => navigateToSuggestedSection(suggestedSection));
+                    actionsRow.appendChild(goBtn);
+                }
+
+                bubble.appendChild(actionsRow);
             }
 
             container.appendChild(bubble);
@@ -2640,6 +2745,15 @@
             }
         });
 
+        function navigateToSuggestedSection(section) {
+            if (section.startsWith('lf_')) {
+                window.open('libertad-financiera.html', '_blank');
+                return;
+            }
+            document.getElementById('btn-close-assistant').click();
+            switchTab(section);
+        }
+
         async function sendAssistantMessage() {
             const input = document.getElementById('assistant-input');
             const question = input.value.trim();
@@ -2667,7 +2781,7 @@
 
                 if (!resp.ok || data.error) throw new Error(data.error || 'Error del asistente');
 
-                addAssistantMessage(data.answer, false);
+                addAssistantMessage(data.answer, false, data.suggestedSection);
                 assistantConversation.push({ role: 'user', content: question });
                 assistantConversation.push({ role: 'assistant', content: data.answer });
                 // Limitamos el historial para no mandar de más en cada mensaje
