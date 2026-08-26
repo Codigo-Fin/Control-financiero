@@ -68,9 +68,15 @@
         }
 
         /* Que el chat de Finzia se vea bien también con el celular acostado */
-        @media (orientation: landscape) and (max-height: 500px) {
-            #assistant-modal .glass-panel { height: 100dvh !important; max-height: 100dvh !important; }
-            #assistant-messages { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        @media (orientation: landscape) {
+            #assistant-modal .glass-panel, #assistant-modal-lf .glass-panel {
+                height: 100dvh !important;
+                max-height: 100dvh !important;
+                width: 100vw !important;
+                max-width: 100vw !important;
+                border-radius: 0 !important;
+            }
+            #assistant-messages, #assistant-messages-lf { padding-top: 0.4rem; padding-bottom: 0.4rem; }
         }
     </style>
 </head>
@@ -2506,6 +2512,46 @@
             return snapshot;
         }
 
+        // Elige la mejor voz en español disponible en el celular/navegador (esperando a que
+        // carguen, porque a veces tardan y si no, el navegador se queda "mudo" en silencio)
+        let cachedSpanishVoice = null;
+        function getBestSpanishVoice() {
+            if (cachedSpanishVoice) return cachedSpanishVoice;
+            const voices = window.speechSynthesis.getVoices();
+            if (!voices || voices.length === 0) return null;
+
+            const priorities = ['es-AR', 'es-419', 'es-MX', 'es-US', 'es-ES', 'es'];
+            for (const lang of priorities) {
+                // Primero intentamos encontrar una voz de mujer en ese idioma
+                const femaleMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()) &&
+                    /female|mujer|paulina|monica|helena|isabela|marisol/i.test(v.name));
+                if (femaleMatch) { cachedSpanishVoice = femaleMatch; return femaleMatch; }
+            }
+            for (const lang of priorities) {
+                const anyMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+                if (anyMatch) { cachedSpanishVoice = anyMatch; return anyMatch; }
+            }
+            return voices[0] || null;
+        }
+
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = () => { cachedSpanishVoice = null; getBestSpanishVoice(); };
+            // Algunos navegadores ya tienen las voces cargadas al instante
+            getBestSpanishVoice();
+        }
+
+        function speakAssistantText(text) {
+            if (!window.speechSynthesis) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            const voice = getBestSpanishVoice();
+            if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
+            else { utterance.lang = 'es-AR'; }
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+
         function addAssistantMessage(text, isUser) {
             const container = document.getElementById('assistant-messages');
             const bubble = document.createElement('div');
@@ -2517,11 +2563,8 @@
             container.appendChild(bubble);
             container.scrollTop = container.scrollHeight;
 
-            if (!isUser && assistantSpeakEnabled && window.speechSynthesis) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'es-AR';
-                window.speechSynthesis.speak(utterance);
+            if (!isUser && assistantSpeakEnabled) {
+                speakAssistantText(text);
             }
         }
 
