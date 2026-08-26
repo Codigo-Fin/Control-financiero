@@ -1800,6 +1800,40 @@
         };
     }
 
+    // Elige la mejor voz en español disponible (esperando a que carguen; si no, se queda mudo en silencio)
+    let cachedSpanishVoiceLF = null;
+    function getBestSpanishVoiceLF() {
+        if (cachedSpanishVoiceLF) return cachedSpanishVoiceLF;
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) return null;
+        const priorities = ['es-AR', 'es-419', 'es-MX', 'es-US', 'es-ES', 'es'];
+        for (const lang of priorities) {
+            const femaleMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()) &&
+                /female|mujer|paulina|monica|helena|isabela|marisol/i.test(v.name));
+            if (femaleMatch) { cachedSpanishVoiceLF = femaleMatch; return femaleMatch; }
+        }
+        for (const lang of priorities) {
+            const anyMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+            if (anyMatch) { cachedSpanishVoiceLF = anyMatch; return anyMatch; }
+        }
+        return voices[0] || null;
+    }
+    if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => { cachedSpanishVoiceLF = null; getBestSpanishVoiceLF(); };
+        getBestSpanishVoiceLF();
+    }
+    function speakAssistantTextLF(text) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voice = getBestSpanishVoiceLF();
+        if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
+        else { utterance.lang = 'es-AR'; }
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        window.speechSynthesis.speak(utterance);
+    }
+
     function addAssistantMessageLF(text, isUser) {
         const container = document.getElementById('assistant-messages-lf');
         const bubble = document.createElement('div');
@@ -1811,11 +1845,8 @@
         container.appendChild(bubble);
         container.scrollTop = container.scrollHeight;
 
-        if (!isUser && assistantSpeakEnabledLF && window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'es-AR';
-            window.speechSynthesis.speak(utterance);
+        if (!isUser && assistantSpeakEnabledLF) {
+            speakAssistantTextLF(text);
         }
     }
 
