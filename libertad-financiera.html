@@ -1841,7 +1841,27 @@
         window.speechSynthesis.speak(utterance);
     }
 
-    function addAssistantMessageLF(text, isUser) {
+    const SECTION_LABELS_LF = {
+        cuadrante: 'Ir a Control Financiero → Cuadrante de Flujo',
+        gastos: 'Ir a Control Financiero → Ingresos y Egresos',
+        resumen: 'Ir a Control Financiero → Mis Movimientos',
+        lf_saldo: 'Ir a Saldos',
+        lf_deudas: 'Ir a Registrar Deudas',
+        lf_emergencia: 'Ir a Pagar Deudas',
+        lf_inversiones: 'Ir a Inversiones'
+    };
+
+    function navigateToSuggestedSectionLF(section) {
+        if (!section.startsWith('lf_')) {
+            window.open('index.html', '_blank');
+            return;
+        }
+        document.getElementById('btn-close-assistant-lf').click();
+        const tabMap = { lf_saldo: 'saldo', lf_deudas: 'deudas', lf_emergencia: 'emergencia', lf_inversiones: 'inversiones' };
+        switchLfTab(tabMap[section]);
+    }
+
+    function addAssistantMessageLF(text, isUser, suggestedSection) {
         const container = document.getElementById('assistant-messages-lf');
         const bubble = document.createElement('div');
         bubble.className = isUser
@@ -1857,12 +1877,26 @@
             textEl.textContent = text;
             bubble.appendChild(textEl);
 
+            const actionsRow = document.createElement('div');
+            actionsRow.className = 'flex flex-wrap items-center gap-3';
+
             const speakBtn = document.createElement('button');
             speakBtn.type = 'button';
             speakBtn.className = 'text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5';
             speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
             speakBtn.addEventListener('click', () => speakAssistantTextLF(text));
-            bubble.appendChild(speakBtn);
+            actionsRow.appendChild(speakBtn);
+
+            if (suggestedSection && SECTION_LABELS_LF[suggestedSection]) {
+                const goBtn = document.createElement('button');
+                goBtn.type = 'button';
+                goBtn.className = 'text-sky-400 hover:text-sky-300 text-xs font-semibold flex items-center gap-1.5';
+                goBtn.innerHTML = `<i class="fa-solid fa-arrow-right"></i> ${SECTION_LABELS_LF[suggestedSection]}`;
+                goBtn.addEventListener('click', () => navigateToSuggestedSectionLF(suggestedSection));
+                actionsRow.appendChild(goBtn);
+            }
+
+            bubble.appendChild(actionsRow);
         }
 
         container.appendChild(bubble);
@@ -1933,7 +1967,7 @@
             loadingBubble.remove();
             if (!resp.ok || data.error) throw new Error(data.error || 'Error del asistente');
 
-            addAssistantMessageLF(data.answer, false);
+            addAssistantMessageLF(data.answer, false, data.suggestedSection);
             assistantConversationLF.push({ role: 'user', content: question });
             assistantConversationLF.push({ role: 'assistant', content: data.answer });
             if (assistantConversationLF.length > 10) assistantConversationLF = assistantConversationLF.slice(-10);
