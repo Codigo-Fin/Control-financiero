@@ -535,13 +535,14 @@
                 </div>
             </div>
             <div class="flex items-center gap-1">
+                <button id="btn-clear-assistant-lf" title="Borrar esta conversación" class="text-slate-400 hover:text-rose-300 text-base px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                 <button id="btn-close-assistant-lf" class="text-slate-400 hover:text-white text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
         <p class="text-xs text-slate-500 px-3 sm:px-4 pt-2 pb-2 border-b border-white/5 flex-shrink-0">Te ayudo a entender tus deudas, inversiones y a usar las funciones de la app. No reemplazo a un asesor financiero matriculado.</p>
 
         <div id="assistant-messages-lf" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
-            <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]">
+            <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]" id="assistant-welcome-bubble-lf">
                 Hola, soy Finzia 🔥. Puedo mirar tus deudas, inversiones y tu saldo, y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿cómo salgo de esta deuda?"</em>
             </div>
         </div>
@@ -1762,6 +1763,39 @@
     // ============================================
     let assistantConversationLF = [];
 
+    // Misma clave que en Control Financiero: el chat es UNO SOLO, compartido entre las 2 páginas
+    function getAssistantStorageKeyLF() { return `finzia_chat_${currentUser.id}`; }
+
+    function saveAssistantConversationLF() {
+        if (!currentUser) return;
+        localStorage.setItem(getAssistantStorageKeyLF(), JSON.stringify(assistantConversationLF));
+    }
+
+    function restoreAssistantConversationLF() {
+        if (!currentUser) return;
+        const saved = localStorage.getItem(getAssistantStorageKeyLF());
+        if (!saved) return;
+        try {
+            const history = JSON.parse(saved);
+            if (!Array.isArray(history) || history.length === 0) return;
+            assistantConversationLF = history;
+            document.getElementById('assistant-welcome-bubble-lf').style.display = 'none';
+            history.forEach(msg => addAssistantMessageLF(msg.content, msg.role === 'user', msg.suggestedSection));
+        } catch (e) { /* ignoramos si está corrupto */ }
+    }
+
+    document.getElementById('btn-clear-assistant-lf').addEventListener('click', () => {
+        if (!confirm('¿Borrar toda esta conversación con Finzia? No se puede deshacer.')) return;
+        assistantConversationLF = [];
+        localStorage.removeItem(getAssistantStorageKeyLF());
+        document.getElementById('assistant-messages-lf').innerHTML = '';
+        const welcomeBubble = document.createElement('div');
+        welcomeBubble.id = 'assistant-welcome-bubble-lf';
+        welcomeBubble.className = 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]';
+        welcomeBubble.innerHTML = 'Hola, soy Finzia 🔥. Puedo mirar tus deudas, inversiones y tu saldo, y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿cómo salgo de esta deuda?"</em>';
+        document.getElementById('assistant-messages-lf').appendChild(welcomeBubble);
+    });
+
     async function buildFinancialSnapshotLF() {
         let salaryVal = 0;
         let egresosDelMes = 0;
@@ -1903,10 +1937,15 @@
         container.scrollTop = container.scrollHeight;
     }
 
+    let assistantConversationRestoredLF = false;
     document.getElementById('btn-open-assistant-lf').addEventListener('click', () => {
         const modal = document.getElementById('assistant-modal-lf');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+        if (!assistantConversationRestoredLF) {
+            assistantConversationRestoredLF = true;
+            restoreAssistantConversationLF();
+        }
     });
 
     document.getElementById('btn-close-assistant-lf').addEventListener('click', () => {
@@ -1969,8 +2008,9 @@
 
             addAssistantMessageLF(data.answer, false, data.suggestedSection);
             assistantConversationLF.push({ role: 'user', content: question });
-            assistantConversationLF.push({ role: 'assistant', content: data.answer });
-            if (assistantConversationLF.length > 10) assistantConversationLF = assistantConversationLF.slice(-10);
+            assistantConversationLF.push({ role: 'assistant', content: data.answer, suggestedSection: data.suggestedSection });
+            if (assistantConversationLF.length > 20) assistantConversationLF = assistantConversationLF.slice(-20);
+            saveAssistantConversationLF();
         } catch (err) {
             loadingBubble.remove();
             addAssistantMessageLF('No pude procesar tu consulta ahora. Probá de nuevo en un momento.', false);
