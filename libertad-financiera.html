@@ -16,6 +16,15 @@
             background: linear-gradient(135deg, #090d16 0%, #111827 40%, #06201b 100%);
             min-height: 100vh;
         }
+
+        /* Botón del asistente: efecto de flotar suave, como rebotando despacio en el aire */
+        @keyframes float-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .float-bounce {
+            animation: float-bounce 2.4s ease-in-out infinite;
+        }
         @keyframes floatSlow { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-6px) rotate(0.5deg); } }
         @keyframes floatDelay { 0%, 100% { transform: translateY(-4px) rotate(-0.5deg); } 50% { transform: translateY(4px) rotate(0.5deg); } }
         .floating-card-1 { animation: floatSlow 6s ease-in-out infinite; }
@@ -242,6 +251,17 @@
 
         <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
         <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
+
+        <!-- Saldo a Favor visible acá también, para que no quede escondido en otra pestaña -->
+        <div id="saldo-favor-banner-pd" class="hidden glass-panel rounded-2xl p-4 flex items-center justify-between gap-3 border border-orange-500/30">
+            <div>
+                <p class="text-[11px] text-slate-400 uppercase tracking-wide">Saldo a Favor disponible</p>
+                <p id="saldo-favor-banner-amount" class="text-xl font-bold text-orange-400">$0</p>
+            </div>
+            <button onclick="switchLfTab('saldo'); document.getElementById('btnInjectCredit').scrollIntoView({behavior:'smooth'})" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold text-xs px-3 py-2 rounded-xl whitespace-nowrap">
+                Usar para pagar deuda →
+            </button>
+        </div>
 
         <!-- Fondos de Emergencia -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -517,9 +537,17 @@
     </div>
 
 <!-- Botón flotante del Asistente Finzia -->
-<button id="btn-open-assistant-lf" title="Preguntale a Finzia" class="fixed bottom-6 right-5 z-30 bg-gradient-to-br from-orange-500 to-amber-500 text-slate-950 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-xl active:scale-95 transition-all">
-    <i class="fa-solid fa-comment-dots"></i>
-</button>
+<div class="fixed bottom-6 right-5 z-30 flex flex-col items-end gap-2">
+    <div id="assistant-hint-bubble-lf" class="hidden bg-slate-900 border border-sky-400/40 text-sky-200 text-xs font-semibold px-3 py-2 rounded-2xl rounded-br-sm shadow-xl max-w-[180px] text-center">
+        ¿Tenés dudas? Preguntame acá 👋
+    </div>
+    <div class="relative">
+        <span class="absolute inset-0 rounded-full bg-sky-400/40 animate-ping"></span>
+        <button id="btn-open-assistant-lf" title="Preguntale a Finzia" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
+            <i class="fa-solid fa-comment-dots"></i>
+        </button>
+    </div>
+</div>
 
 <!-- Modal del Asistente Finzia -->
 <div id="assistant-modal-lf" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
@@ -1294,6 +1322,16 @@
         const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
         totalInvestEl.textContent = `$${totalInvestVal.toLocaleString()}`;
 
+        // Banner de Saldo a Favor visible también en la pestaña Pagar Deudas
+        const bannerPD = document.getElementById('saldo-favor-banner-pd');
+        const activeDebtCount = debts.filter(d => !d.cleared && d.amount > 0).length;
+        if (creditBalance > 0 && activeDebtCount > 0) {
+            bannerPD.classList.remove('hidden');
+            document.getElementById('saldo-favor-banner-amount').textContent = `$${creditBalance.toLocaleString()}`;
+        } else {
+            bannerPD.classList.add('hidden');
+        }
+
         investList.innerHTML = '';
         if (investments.length === 0) {
             investList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">Sin inversiones en cartera.</p>';
@@ -1674,6 +1712,18 @@
     switchLfTab('saldo');
 
     checkAccess();
+
+    // Le mostramos el globito "¿Tenés dudas?" solo la primera vez (misma clave que Control Financiero)
+    if (!localStorage.getItem('assistant_hint_shown')) {
+        setTimeout(() => {
+            const hint = document.getElementById('assistant-hint-bubble-lf');
+            if (hint) {
+                hint.classList.remove('hidden');
+                setTimeout(() => hint.classList.add('hidden'), 6000);
+            }
+            localStorage.setItem('assistant_hint_shown', '1');
+        }, 2500);
+    }
 
     // ============================================
     // CARGA POR VOZ (Registrar Deuda, Ingresos Extra, Cartera de Inversiones)
