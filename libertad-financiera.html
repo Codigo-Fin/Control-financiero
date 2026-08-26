@@ -516,6 +516,51 @@
         <div id="pdf-report-content"></div>
     </div>
 
+<!-- Botón flotante del Asistente Finzia -->
+<button id="btn-open-assistant-lf" title="Preguntale a Finzia" class="fixed bottom-6 right-5 z-30 bg-gradient-to-br from-orange-500 to-amber-500 text-slate-950 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-xl active:scale-95 transition-all">
+    <i class="fa-solid fa-comment-dots"></i>
+</button>
+
+<!-- Modal del Asistente Finzia -->
+<div id="assistant-modal-lf" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
+    <div class="glass-panel w-full sm:max-w-lg h-[100dvh] sm:h-[80vh] sm:max-h-[700px] rounded-none sm:rounded-3xl flex flex-col border border-orange-500/30 overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-fire"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-base">Finzia</p>
+                    <p class="text-xs text-slate-400">Tu guía dentro de la app</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button id="btn-toggle-speak-lf" title="Leer las respuestas en voz alta" class="text-slate-400 hover:text-orange-300 text-base px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-volume-xmark"></i></button>
+                <button id="btn-close-assistant-lf" class="text-slate-400 hover:text-white text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <p class="text-xs text-slate-500 px-3 sm:px-4 pt-2 pb-2 border-b border-white/5 flex-shrink-0">Te ayudo a entender tus deudas, inversiones y a usar las funciones de la app. No reemplazo a un asesor financiero matriculado.</p>
+
+        <div id="assistant-messages-lf" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
+            <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]">
+                Hola, soy Finzia 🔥. Puedo mirar tus deudas, inversiones y tu saldo, y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿cómo salgo de esta deuda?"</em>
+            </div>
+        </div>
+
+        <div class="p-3 border-t border-white/10 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <button type="button" id="btn-assistant-voice-lf" title="Preguntar por voz" class="bg-sky-400 hover:bg-sky-300 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i id="assistant-voice-icon-lf" class="fa-solid fa-microphone"></i>
+                </button>
+                <input type="text" id="assistant-input-lf" placeholder="Escribí o hablá tu consulta..." class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-3 text-base text-white focus:outline-none focus:border-orange-500">
+                <button id="btn-send-assistant-lf" class="bg-orange-500 hover:bg-orange-400 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
@@ -1712,7 +1757,158 @@
         clearTimeout(window._libertadToastTimeout);
         window._libertadToastTimeout = setTimeout(() => { el.style.opacity = '0'; }, 3500);
     }
+
+    // ============================================
+    // ASISTENTE FINZIA (misma IA, con contexto de deudas e inversiones de esta página)
+    // ============================================
+    let assistantConversationLF = [];
+
+    async function buildFinancialSnapshotLF() {
+        let salaryVal = 0;
+        let egresosDelMes = 0;
+        let ingresosExtraDelMes = 0;
+        try {
+            const { data: settings } = await sb.from('user_settings').select('salary').eq('user_id', currentUser.id).maybeSingle();
+            salaryVal = parseFloat(settings?.salary) || 0;
+
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id).eq('month', currentMonth);
+            (txs || []).forEach(t => {
+                if (t.type === 'egreso') egresosDelMes += parseFloat(t.price) || 0;
+                if (t.type === 'ingreso') ingresosExtraDelMes += parseFloat(t.price) || 0;
+            });
+        } catch (err) {
+            console.warn('No se pudo traer sueldo/gastos para el asistente:', err);
+        }
+
+        const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
+        const totalInvest = investments.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
+
+        return {
+            sueldo: salaryVal,
+            ingresos_extra_del_mes: ingresosExtraDelMes,
+            ingresos_totales_del_mes: salaryVal + ingresosExtraDelMes,
+            egresos_totales_del_mes: egresosDelMes,
+            saldo_neto_del_mes: (salaryVal + ingresosExtraDelMes) - egresosDelMes,
+            egresos_por_categoria: {},
+            deudas: activeDebts.map(d => ({ nombre: d.name, monto: d.amount })),
+            deuda_total: totalDebt,
+            inversiones: investments.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
+            inversiones_total: totalInvest,
+            saldo_favor_o_contra: creditBalance - totalDebt
+        };
+    }
+
+    function addAssistantMessageLF(text, isUser) {
+        const container = document.getElementById('assistant-messages-lf');
+        const bubble = document.createElement('div');
+        bubble.className = isUser
+            ? 'bg-orange-500/20 border border-orange-500/30 rounded-2xl rounded-tr-sm p-3 text-base text-white max-w-[90%] sm:max-w-[85%] ml-auto'
+            : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]';
+        bubble.style.whiteSpace = 'pre-wrap';
+        bubble.textContent = text;
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+
+        if (!isUser && assistantSpeakEnabledLF && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-AR';
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    document.getElementById('btn-open-assistant-lf').addEventListener('click', () => {
+        const modal = document.getElementById('assistant-modal-lf');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    });
+
+    document.getElementById('btn-close-assistant-lf').addEventListener('click', () => {
+        const modal = document.getElementById('assistant-modal-lf');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+    });
+
+    let assistantSpeakEnabledLF = false;
+    document.getElementById('btn-toggle-speak-lf').addEventListener('click', () => {
+        assistantSpeakEnabledLF = !assistantSpeakEnabledLF;
+        const icon = document.getElementById('btn-toggle-speak-lf').querySelector('i');
+        icon.className = assistantSpeakEnabledLF ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+        document.getElementById('btn-toggle-speak-lf').classList.toggle('text-orange-300', assistantSpeakEnabledLF);
+        if (!assistantSpeakEnabledLF && window.speechSynthesis) window.speechSynthesis.cancel();
+    });
+
+    const AssistantSpeechRecognitionAPI_LF = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let assistantVoiceRecognizerLF = null;
+    if (AssistantSpeechRecognitionAPI_LF) {
+        assistantVoiceRecognizerLF = new AssistantSpeechRecognitionAPI_LF();
+        assistantVoiceRecognizerLF.lang = 'es-AR';
+        assistantVoiceRecognizerLF.continuous = false;
+        assistantVoiceRecognizerLF.interimResults = false;
+        assistantVoiceRecognizerLF.onstart = () => {
+            document.getElementById('assistant-voice-icon-lf').className = 'fa-solid fa-microphone-lines animate-pulse';
+        };
+        assistantVoiceRecognizerLF.onend = () => {
+            document.getElementById('assistant-voice-icon-lf').className = 'fa-solid fa-microphone';
+        };
+        assistantVoiceRecognizerLF.onresult = (event) => {
+            document.getElementById('assistant-input-lf').value = event.results[0][0].transcript;
+            sendAssistantMessageLF();
+        };
+    }
+    document.getElementById('btn-assistant-voice-lf').addEventListener('click', () => {
+        if (assistantVoiceRecognizerLF) {
+            assistantVoiceRecognizerLF.start();
+        } else {
+            alert('Tu navegador no permite preguntar por voz. Probá con Chrome.');
+        }
+    });
+
+    async function sendAssistantMessageLF() {
+        const input = document.getElementById('assistant-input-lf');
+        const question = input.value.trim();
+        if (!question || !currentUser) return;
+
+        addAssistantMessageLF(question, true);
+        input.value = '';
+
+        const loadingBubble = document.createElement('div');
+        loadingBubble.className = 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-400 max-w-[85%]';
+        loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
+        document.getElementById('assistant-messages-lf').appendChild(loadingBubble);
+        document.getElementById('assistant-messages-lf').scrollTop = 999999;
+
+        try {
+            const snapshot = await buildFinancialSnapshotLF();
+            const resp = await fetch('/api/finzia-assistant', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, snapshot, history: assistantConversationLF })
+            });
+            const data = await resp.json();
+            loadingBubble.remove();
+            if (!resp.ok || data.error) throw new Error(data.error || 'Error del asistente');
+
+            addAssistantMessageLF(data.answer, false);
+            assistantConversationLF.push({ role: 'user', content: question });
+            assistantConversationLF.push({ role: 'assistant', content: data.answer });
+            if (assistantConversationLF.length > 10) assistantConversationLF = assistantConversationLF.slice(-10);
+        } catch (err) {
+            loadingBubble.remove();
+            addAssistantMessageLF('No pude procesar tu consulta ahora. Probá de nuevo en un momento.', false);
+        }
+    }
+
+    document.getElementById('btn-send-assistant-lf').addEventListener('click', sendAssistantMessageLF);
+    document.getElementById('assistant-input-lf').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendAssistantMessageLF();
+    });
 </script>
+
+
 
 </body>
 </html>
