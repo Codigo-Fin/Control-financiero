@@ -50,6 +50,10 @@ REGLAS ESTRICTAS QUE TENÉS QUE SEGUIR SIEMPRE (aplican al contenido de "answer"
 10. No uses markdown con asteriscos ni títulos con #, escribí en texto plano simple, con saltos de línea y números (1, 2, 3) para los pasos, dentro del campo "answer".
 11. Devolvé SOLO el JSON pedido, nada de texto antes ni después.`;
 
+  const debtStatusLine = snapshot.deudas_no_verificable
+    ? '- Deudas activas: NO SE PUDO VERIFICAR AHORA (hubo un error técnico al consultar) — NUNCA le digas a la persona que no tiene deuda por esto. Si te preguntan sobre deudas, aclarales que hubo un problema técnico para chequear y que reintenten en un momento.'
+    : `- Deudas activas: ${snapshot.deudas ? JSON.stringify(snapshot.deudas) : '[]'} (si esta lista está vacía, es porque CONFIRMADO no tiene deudas cargadas, no por un error)`;
+
   const dataContext = `DATOS FINANCIEROS ACTUALES DE LA PERSONA (este mes):
 - Sueldo: $${snapshot.sueldo?.toLocaleString('es-AR') || 0}
 - Ingresos extra del mes: $${snapshot.ingresos_extra_del_mes?.toLocaleString('es-AR') || 0}
@@ -57,7 +61,7 @@ REGLAS ESTRICTAS QUE TENÉS QUE SEGUIR SIEMPRE (aplican al contenido de "answer"
 - Egresos totales del mes: $${snapshot.egresos_totales_del_mes?.toLocaleString('es-AR') || 0}
 - Saldo neto del mes (ingresos - egresos): $${snapshot.saldo_neto_del_mes?.toLocaleString('es-AR') || 0}
 - Egresos por categoría: ${JSON.stringify(snapshot.egresos_por_categoria || {})}
-- Deudas activas: ${snapshot.deudas ? JSON.stringify(snapshot.deudas) : 'sin datos'}
+${debtStatusLine}
 - Deuda total: ${snapshot.deuda_total !== undefined ? '$' + snapshot.deuda_total.toLocaleString('es-AR') : 'sin datos'}
 - Inversiones: ${snapshot.inversiones ? JSON.stringify(snapshot.inversiones) : 'sin datos'}
 - Valor total de inversiones: ${snapshot.inversiones_total !== undefined ? '$' + snapshot.inversiones_total.toLocaleString('es-AR') : 'sin datos'}
