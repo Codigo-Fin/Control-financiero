@@ -1806,17 +1806,25 @@
         if (cachedSpanishVoiceLF) return cachedSpanishVoiceLF;
         const voices = window.speechSynthesis.getVoices();
         if (!voices || voices.length === 0) return null;
+
         const priorities = ['es-AR', 'es-419', 'es-MX', 'es-US', 'es-ES', 'es'];
+        const spanishVoices = voices.filter(v => v.lang && priorities.some(p => v.lang.toLowerCase().startsWith(p.toLowerCase())));
+        if (spanishVoices.length === 0) { cachedSpanishVoiceLF = voices[0] || null; return cachedSpanishVoiceLF; }
+
+        // Las voces "de red" (localService: false) suenan mucho más naturales que las básicas
+        // del celular (localService: true) — les damos prioridad siempre que existan.
+        const networkVoices = spanishVoices.filter(v => v.localService === false);
+        const pool = networkVoices.length > 0 ? networkVoices : spanishVoices;
+
+        const femaleMatch = pool.find(v => /female|mujer|paulina|monica|mónica|helena|isabela|marisol|lucia|lucía|camila|valeria/i.test(v.name));
+        if (femaleMatch) { cachedSpanishVoiceLF = femaleMatch; return femaleMatch; }
+
         for (const lang of priorities) {
-            const femaleMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()) &&
-                /female|mujer|paulina|monica|helena|isabela|marisol/i.test(v.name));
-            if (femaleMatch) { cachedSpanishVoiceLF = femaleMatch; return femaleMatch; }
-        }
-        for (const lang of priorities) {
-            const anyMatch = voices.find(v => v.lang && v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+            const anyMatch = pool.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
             if (anyMatch) { cachedSpanishVoiceLF = anyMatch; return anyMatch; }
         }
-        return voices[0] || null;
+        cachedSpanishVoiceLF = pool[0];
+        return cachedSpanishVoiceLF;
     }
     if (window.speechSynthesis) {
         window.speechSynthesis.onvoiceschanged = () => { cachedSpanishVoiceLF = null; getBestSpanishVoiceLF(); };
