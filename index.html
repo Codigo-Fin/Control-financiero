@@ -656,6 +656,72 @@
         <p class="text-[11px] text-slate-500 text-center max-w-xs">Encuadrá el ticket bien iluminado y tocá Capturar</p>
     </div>
 
+    <!-- Establecer nueva contraseña (aparece al entrar desde el link de "Olvidé mi contraseña") -->
+    <div id="reset-password-modal" class="fixed inset-0 bg-slate-950/95 hidden items-center justify-center p-4 z-50">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-orange-500/30">
+            <div class="text-center space-y-1">
+                <i class="fa-solid fa-key text-orange-400 text-2xl"></i>
+                <h3 class="font-bold text-white text-base">Elegí tu nueva contraseña</h3>
+                <p class="text-xs sm:text-sm text-slate-400">Escribí una contraseña nueva para tu cuenta de Finzia.</p>
+            </div>
+            <div class="relative">
+                <input type="password" id="reset-new-password" placeholder="Nueva contraseña (mínimo 6 caracteres)"
+                    class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                <button type="button" id="btn-toggle-reset-password" tabindex="-1" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-sm">
+                    <i id="toggle-reset-password-icon" class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+            <input type="password" id="reset-confirm-password" placeholder="Repetí la nueva contraseña"
+                class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+            <p id="reset-password-message" class="text-xs min-h-[16px] text-rose-400"></p>
+            <button id="btn-confirm-reset-password" class="w-full bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
+                Guardar nueva contraseña
+            </button>
+        </div>
+    </div>
+
+    <!-- Aviso de que la prueba gratis está por terminar -->
+    <div id="trial-ending-toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold shadow-2xl z-40 max-w-[92%] text-center"></div>
+
+    <!-- Botón flotante del Asistente Finzia (visible en cualquier pestaña) -->
+    <button id="btn-open-assistant" title="Preguntale a Finzia" class="fixed bottom-6 right-5 z-30 bg-gradient-to-br from-orange-500 to-amber-500 text-slate-950 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center text-xl active:scale-95 transition-all">
+        <i class="fa-solid fa-comment-dots"></i>
+    </button>
+
+    <!-- Modal del Asistente Finzia -->
+    <div id="assistant-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+        <div class="glass-panel w-full sm:max-w-lg h-[85vh] sm:h-[80vh] rounded-t-3xl sm:rounded-3xl flex flex-col border border-orange-500/30 overflow-hidden">
+            <div class="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center">
+                        <i class="fa-solid fa-fire"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-white text-sm">Finzia</p>
+                        <p class="text-[10px] text-slate-400">Tu guía dentro de la app</p>
+                    </div>
+                </div>
+                <button id="btn-close-assistant" class="text-slate-400 hover:text-white text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[10px] text-slate-500 px-4 pt-2 pb-1 border-b border-white/5">Te ayudo a entender tus datos y a usar las funciones de la app. No reemplazo a un asesor financiero matriculado.</p>
+
+            <div id="assistant-messages" class="flex-1 overflow-y-auto p-4 space-y-3">
+                <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-sm text-slate-200 max-w-[85%]">
+                    Hola, soy Finzia 🔥. Puedo mirar tus gastos, ingresos, deudas e inversiones y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿en qué estoy gastando más?"</em> o <em>"¿cómo salgo de esta deuda?"</em>
+                </div>
+            </div>
+
+            <div class="p-3 border-t border-white/10 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <input type="text" id="assistant-input" placeholder="Escribí tu consulta..." class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+                    <button id="btn-send-assistant" class="bg-orange-500 hover:bg-orange-400 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Configurar medio de pago (aparece en el primer ingreso real, sin importar si hubo confirmación de mail en el medio) -->
     <div id="payment-setup-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-orange-500/30">
@@ -684,9 +750,7 @@
                 <p id="discount-code-status" class="text-[11px] mt-1 hidden"></p>
             </div>
 
-            <button id="btn-skip-payment-setup" class="w-full text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 pt-1">
-                Prefiero hacerlo más tarde
-            </button>
+            <p class="text-[11px] text-slate-500 text-center">Para usar Finzia es necesario autorizar un medio de pago (no se cobra nada hasta el fin de la prueba gratis).</p>
         </div>
     </div>
 
@@ -854,7 +918,70 @@
             el.className = ok ? 'text-orange-400 text-xs min-h-[16px]' : 'text-rose-400 text-xs min-h-[16px]';
         }
 
+        let isPasswordRecoveryFlow = false;
+
+        sb.auth.onAuthStateChange((event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                isPasswordRecoveryFlow = true;
+                document.getElementById('gate-loading')?.classList.add('hidden');
+                document.getElementById('login-screen')?.classList.add('hidden');
+                document.getElementById('app-content')?.classList.add('hidden');
+                const modal = document.getElementById('reset-password-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        });
+
+        document.getElementById('btn-toggle-reset-password').addEventListener('click', () => {
+            const input = document.getElementById('reset-new-password');
+            const icon = document.getElementById('toggle-reset-password-icon');
+            if (input.type === 'password') { input.type = 'text'; icon.className = 'fa-solid fa-eye-slash'; }
+            else { input.type = 'password'; icon.className = 'fa-solid fa-eye'; }
+        });
+
+        document.getElementById('btn-confirm-reset-password').addEventListener('click', async () => {
+            const newPassword = document.getElementById('reset-new-password').value;
+            const confirmPassword = document.getElementById('reset-confirm-password').value;
+            const messageEl = document.getElementById('reset-password-message');
+
+            if (!newPassword || newPassword.length < 6) {
+                messageEl.textContent = 'La contraseña tiene que tener al menos 6 caracteres';
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                messageEl.textContent = 'Las dos contraseñas no coinciden';
+                return;
+            }
+
+            messageEl.classList.remove('text-rose-400');
+            messageEl.classList.add('text-emerald-400');
+            messageEl.textContent = 'Guardando...';
+
+            const { error } = await sb.auth.updateUser({ password: newPassword });
+            if (error) {
+                messageEl.classList.remove('text-emerald-400');
+                messageEl.classList.add('text-rose-400');
+                messageEl.textContent = error.message;
+                return;
+            }
+
+            messageEl.textContent = '¡Contraseña actualizada! Entrando...';
+            isPasswordRecoveryFlow = false;
+            const modal = document.getElementById('reset-password-modal');
+            setTimeout(async () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                const { data: { session } } = await sb.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    showAppScreen();
+                    await loadAllUserData();
+                }
+            }, 1000);
+        });
+
         async function checkSession() {
+            if (isPasswordRecoveryFlow) return; // ya se está mostrando el modal de nueva contraseña
             const { data: { session } } = await sb.auth.getSession();
             if (session) {
                 currentUser = session.user;
@@ -904,9 +1031,8 @@
             // no le mostramos esto de nuevo.
             if (!settings || settings.mp_preapproval_id || settings.is_premium) return;
 
-            // Si ya lo descartó en esta misma sesión de navegador, no insistimos de nuevo ahora.
-            if (sessionStorage.getItem('payment_setup_dismissed')) return;
-
+            // Este paso ahora es obligatorio (como Netflix): no se puede "posponer",
+            // reaparece siempre hasta que autorice un medio de pago.
             document.getElementById('payment-setup-modal').classList.remove('hidden');
             document.getElementById('payment-setup-modal').classList.add('flex');
         }
@@ -959,12 +1085,6 @@
                 statusEl.textContent = 'No se pudo verificar el código ahora';
                 statusEl.classList.add('text-rose-400');
             }
-        });
-
-        document.getElementById('btn-skip-payment-setup').addEventListener('click', () => {
-            sessionStorage.setItem('payment_setup_dismissed', '1');
-            document.getElementById('payment-setup-modal').classList.add('hidden');
-            document.getElementById('payment-setup-modal').classList.remove('flex');
         });
 
         async function handleForgotPassword() {
@@ -1033,6 +1153,19 @@
             }
         }
 
+        function checkTrialEndingSoon(settings) {
+            if (!settings || !settings.trial_ends_at || settings.is_premium) return;
+            const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 2 && daysLeft >= 0) {
+                const toast = document.getElementById('trial-ending-toast');
+                const hasPayment = !!settings.mp_preapproval_id;
+                toast.textContent = hasPayment
+                    ? `⏰ Tu prueba gratis termina en ${daysLeft} día(s). Después de eso empieza el cobro automático de tu suscripción.`
+                    : `⚠️ Tu prueba gratis termina en ${daysLeft} día(s) y todavía no autorizaste tu medio de pago. Andá a "Suscribirme" para no perder el acceso.`;
+                toast.classList.remove('hidden');
+            }
+        }
+
         async function loadAllUserData() {
             const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
             if (settings) {
@@ -1041,6 +1174,7 @@
                     (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
                 applyPremiumUI(subscriptionActive, settings.current_plan);
                 await offerPaymentSetupIfNeeded(settings);
+                checkTrialEndingSoon(settings);
             } else {
                 salary = 500000;
                 const trialEnd = new Date();
@@ -2308,6 +2442,123 @@
             const isActive = document.body.classList.contains('large-text-mode');
             applyLargeTextMode(!isActive);
             showToast(isActive ? 'Texto normal activado' : 'Texto grande activado');
+        });
+
+        // ============================================
+        // ASISTENTE FINZIA (IA con contexto de tus datos financieros reales)
+        // ============================================
+        let assistantConversation = [];
+
+        async function buildFinancialSnapshot() {
+            const monthProducts = products.filter(p => p.month === currentM);
+            const totalExpenses = monthProducts.reduce((a, p) => p.type === 'egreso' ? a + p.price : a, 0);
+            const totalExtraIncome = monthProducts.reduce((a, p) => p.type === 'ingreso' ? a + p.price : a, 0);
+            const totalIncome = salary + totalExtraIncome;
+
+            const expensesByCategory = {};
+            monthProducts.filter(p => p.type === 'egreso').forEach(p => {
+                expensesByCategory[p.category] = (expensesByCategory[p.category] || 0) + p.price;
+            });
+
+            let snapshot = {
+                sueldo: salary,
+                ingresos_extra_del_mes: totalExtraIncome,
+                ingresos_totales_del_mes: totalIncome,
+                egresos_totales_del_mes: totalExpenses,
+                saldo_neto_del_mes: totalIncome - totalExpenses,
+                egresos_por_categoria: expensesByCategory,
+                deudas: null,
+                inversiones: null,
+                saldo_favor_o_contra: null
+            };
+
+            // Traemos también los datos de Libertad Financiera (deudas e inversiones), si existen
+            try {
+                const { data: lfData } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+                if (lfData) {
+                    const debts = (lfData.debts || []).filter(d => !d.cleared && d.amount > 0);
+                    const totalDebt = debts.reduce((a, d) => a + d.amount, 0);
+                    const investments = lfData.investments || [];
+                    const totalInvest = investments.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
+
+                    snapshot.deudas = debts.map(d => ({ nombre: d.name, monto: d.amount }));
+                    snapshot.deuda_total = totalDebt;
+                    snapshot.inversiones = investments.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) }));
+                    snapshot.inversiones_total = totalInvest;
+                    snapshot.saldo_favor_o_contra = (parseFloat(lfData.credit_balance) || 0) - totalDebt;
+                }
+            } catch (err) {
+                console.warn('No se pudo traer datos de Libertad Financiera para el asistente:', err);
+            }
+
+            return snapshot;
+        }
+
+        function addAssistantMessage(text, isUser) {
+            const container = document.getElementById('assistant-messages');
+            const bubble = document.createElement('div');
+            bubble.className = isUser
+                ? 'bg-orange-500/20 border border-orange-500/30 rounded-2xl rounded-tr-sm p-3 text-sm text-white max-w-[85%] ml-auto'
+                : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-sm text-slate-200 max-w-[85%]';
+            bubble.style.whiteSpace = 'pre-wrap';
+            bubble.textContent = text;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        document.getElementById('btn-open-assistant').addEventListener('click', () => {
+            const modal = document.getElementById('assistant-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        });
+
+        document.getElementById('btn-close-assistant').addEventListener('click', () => {
+            const modal = document.getElementById('assistant-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+
+        async function sendAssistantMessage() {
+            const input = document.getElementById('assistant-input');
+            const question = input.value.trim();
+            if (!question || !currentUser) return;
+
+            addAssistantMessage(question, true);
+            input.value = '';
+
+            const loadingBubble = document.createElement('div');
+            loadingBubble.id = 'assistant-loading';
+            loadingBubble.className = 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-sm text-slate-400 max-w-[85%]';
+            loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
+            document.getElementById('assistant-messages').appendChild(loadingBubble);
+            document.getElementById('assistant-messages').scrollTop = 999999;
+
+            try {
+                const snapshot = await buildFinancialSnapshot();
+                const resp = await fetch('/api/finzia-assistant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question, snapshot, history: assistantConversation })
+                });
+                const data = await resp.json();
+                loadingBubble.remove();
+
+                if (!resp.ok || data.error) throw new Error(data.error || 'Error del asistente');
+
+                addAssistantMessage(data.answer, false);
+                assistantConversation.push({ role: 'user', content: question });
+                assistantConversation.push({ role: 'assistant', content: data.answer });
+                // Limitamos el historial para no mandar de más en cada mensaje
+                if (assistantConversation.length > 10) assistantConversation = assistantConversation.slice(-10);
+            } catch (err) {
+                loadingBubble.remove();
+                addAssistantMessage('No pude procesar tu consulta ahora. Probá de nuevo en un momento.', false);
+            }
+        }
+
+        document.getElementById('btn-send-assistant').addEventListener('click', sendAssistantMessage);
+        document.getElementById('assistant-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendAssistantMessage();
         });
 
         window.onload = function() {
