@@ -724,13 +724,14 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
+                    <button id="btn-clear-assistant" title="Borrar esta conversación" class="text-slate-400 hover:text-rose-300 text-base px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                     <button id="btn-close-assistant" class="text-slate-400 hover:text-white text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             </div>
             <p class="text-xs text-slate-500 px-3 sm:px-4 pt-2 pb-2 border-b border-white/5 flex-shrink-0">Te ayudo a entender tus datos y a usar las funciones de la app. No reemplazo a un asesor financiero matriculado.</p>
 
             <div id="assistant-messages" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
-                <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]">
+                <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]" id="assistant-welcome-bubble">
                     Hola, soy Finzia 🔥. Puedo mirar tus gastos, ingresos, deudas e inversiones y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿en qué estoy gastando más?"</em> o <em>"¿cómo salgo de esta deuda?"</em>
                 </div>
             </div>
@@ -2555,6 +2556,41 @@
         // ============================================
         let assistantConversation = [];
 
+        // Guardamos la conversación en localStorage, compartida entre esta página y
+        // Libertad Financiera (misma clave), para que no se pierda al cambiar de pestaña,
+        // navegar, o cerrar y volver a abrir el chat.
+        function getAssistantStorageKey() { return `finzia_chat_${currentUser.id}`; }
+
+        function saveAssistantConversation() {
+            if (!currentUser) return;
+            localStorage.setItem(getAssistantStorageKey(), JSON.stringify(assistantConversation));
+        }
+
+        function restoreAssistantConversation() {
+            if (!currentUser) return;
+            const saved = localStorage.getItem(getAssistantStorageKey());
+            if (!saved) return;
+            try {
+                const history = JSON.parse(saved);
+                if (!Array.isArray(history) || history.length === 0) return;
+                assistantConversation = history;
+                document.getElementById('assistant-welcome-bubble').style.display = 'none';
+                history.forEach(msg => addAssistantMessage(msg.content, msg.role === 'user', msg.suggestedSection, false));
+            } catch (e) { /* ignoramos si está corrupto */ }
+        }
+
+        document.getElementById('btn-clear-assistant').addEventListener('click', () => {
+            if (!confirm('¿Borrar toda esta conversación con Finzia? No se puede deshacer.')) return;
+            assistantConversation = [];
+            localStorage.removeItem(getAssistantStorageKey());
+            document.getElementById('assistant-messages').innerHTML = '';
+            const welcomeBubble = document.createElement('div');
+            welcomeBubble.id = 'assistant-welcome-bubble';
+            welcomeBubble.className = 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]';
+            welcomeBubble.innerHTML = 'Hola, soy Finzia 🔥. Puedo mirar tus gastos, ingresos, deudas e inversiones y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿en qué estoy gastando más?"</em> o <em>"¿cómo salgo de esta deuda?"</em>';
+            document.getElementById('assistant-messages').appendChild(welcomeBubble);
+        });
+
         async function buildFinancialSnapshot() {
             const monthProducts = products.filter(p => p.month === currentM);
             const totalExpenses = monthProducts.reduce((a, p) => p.type === 'egreso' ? a + p.price : a, 0);
@@ -2580,8 +2616,11 @@
 
             // Traemos también los datos de Libertad Financiera (deudas e inversiones), si existen
             try {
-                const { data: lfData } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
-                if (lfData) {
+                const { data: lfData, error: lfError } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+                if (lfError) {
+                    console.error('Error al traer datos de Libertad Financiera para el asistente:', lfError);
+                    snapshot.deudas_no_verificable = true;
+                } else if (lfData) {
                     const debts = (lfData.debts || []).filter(d => !d.cleared && d.amount > 0);
                     const totalDebt = debts.reduce((a, d) => a + d.amount, 0);
                     const investments = lfData.investments || [];
@@ -2592,9 +2631,16 @@
                     snapshot.inversiones = investments.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) }));
                     snapshot.inversiones_total = totalInvest;
                     snapshot.saldo_favor_o_contra = (parseFloat(lfData.credit_balance) || 0) - totalDebt;
+                } else {
+                    // No hay fila todavía en Libertad Financiera: confirmado que no cargó nada ahí
+                    snapshot.deudas = [];
+                    snapshot.deuda_total = 0;
+                    snapshot.inversiones = [];
+                    snapshot.inversiones_total = 0;
                 }
             } catch (err) {
-                console.warn('No se pudo traer datos de Libertad Financiera para el asistente:', err);
+                console.error('Error interno al traer datos de Libertad Financiera para el asistente:', err);
+                snapshot.deudas_no_verificable = true;
             }
 
             return snapshot;
@@ -2703,10 +2749,15 @@
             container.scrollTop = container.scrollHeight;
         }
 
+        let assistantConversationRestored = false;
         document.getElementById('btn-open-assistant').addEventListener('click', () => {
             const modal = document.getElementById('assistant-modal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
+            if (!assistantConversationRestored) {
+                assistantConversationRestored = true;
+                restoreAssistantConversation();
+            }
         });
 
         document.getElementById('btn-close-assistant').addEventListener('click', () => {
@@ -2783,9 +2834,10 @@
 
                 addAssistantMessage(data.answer, false, data.suggestedSection);
                 assistantConversation.push({ role: 'user', content: question });
-                assistantConversation.push({ role: 'assistant', content: data.answer });
-                // Limitamos el historial para no mandar de más en cada mensaje
-                if (assistantConversation.length > 10) assistantConversation = assistantConversation.slice(-10);
+                assistantConversation.push({ role: 'assistant', content: data.answer, suggestedSection: data.suggestedSection });
+                // Limitamos el historial para no mandar de más en cada mensaje (afecta costo de la IA)
+                if (assistantConversation.length > 20) assistantConversation = assistantConversation.slice(-20);
+                saveAssistantConversation();
             } catch (err) {
                 loadingBubble.remove();
                 addAssistantMessage('No pude procesar tu consulta ahora. Probá de nuevo en un momento.', false);
