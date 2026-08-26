@@ -2555,7 +2555,7 @@
             const voice = getBestSpanishVoice();
             if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
             else { utterance.lang = 'es-AR'; }
-            utterance.rate = 1;
+            utterance.rate = 1.15;
             utterance.pitch = 1;
             window.speechSynthesis.speak(utterance);
         }
