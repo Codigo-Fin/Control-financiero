@@ -451,6 +451,9 @@
                 <span id="stat-networth" class="text-2xl sm:text-3xl font-bold text-teal-300">$0</span>
                 <span id="networth-badge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold">Disponible</span>
                 </div>
+                <button id="btn-pay-debt-with-networth" onclick="payDebtFromPatrimonio()" class="hidden mt-3 w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs py-2 rounded-xl">
+                    💳 Pagar tu deuda con este Patrimonio
+                </button>
             </div>
         </div>
 
@@ -1351,6 +1354,107 @@
             localStorage.setItem(getPendingSyncKey(), JSON.stringify(queue));
         }
 
+        // Mueve plata real: toma tu Patrimonio Neto (Control Financiero) y lo aplica a
+        // tu deuda (Libertad Financiera), actualizando los dos lados a la vez.
+        async function payDebtFromPatrimonio() {
+            if (!currentUser) return;
+
+            const monthProducts = products.filter(p => p.month === currentM);
+            const totalExpenses = monthProducts.reduce((a, p) => p.type === 'egreso' ? a + p.price : a, 0);
+            const extraIncome = monthProducts.reduce((a, p) => p.type === 'ingreso' ? a + p.price : a, 0);
+            const patrimonioNeto = (salary + extraIncome) - totalExpenses;
+
+            if (patrimonioNeto <= 0) {
+                showToast('No tenés Patrimonio Neto positivo para usar ahora mismo', 'warning');
+                return;
+            }
+
+            const { data: lfData, error } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+            if (error || !lfData) {
+                showToast('No se pudo consultar tu deuda ahora, probá de nuevo en un momento', 'warning');
+                return;
+            }
+
+            const debts = lfData.debts || [];
+            const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
+            const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
+
+            if (totalDebt <= 0) {
+                showToast('No tenés deuda activa registrada en Libertad Financiera', 'warning');
+                return;
+            }
+
+            const amountToApply = Math.min(patrimonioNeto, totalDebt);
+            const remainingAfter = totalDebt - amountToApply;
+
+            const confirmMsg = `¿Aplicar ${formatMoney(amountToApply)} de tu Patrimonio Neto a tu deuda?\n\nEsto se registra como un egreso acá (tu Patrimonio Neto va a bajar), y reduce tu deuda en Libertad Financiera. ${remainingAfter > 0 ? `Te quedaría pendiente ${formatMoney(remainingAfter)}.` : '¡Quedarías sin deuda!'}`;
+            if (!confirm(confirmMsg)) return;
+
+            // Repartimos el pago entre las deudas, de menor a mayor (mismo criterio que Libertad Financiera)
+            let remaining = amountToApply;
+            const history = lfData.history || [];
+            const sortedActive = [...activeDebts].sort((a, b) => a.amount - b.amount);
+
+            for (const debtRef of sortedActive) {
+                if (remaining <= 0) break;
+                const target = debts.find(d => d.id === debtRef.id);
+                if (!target) continue;
+
+                if (remaining >= target.amount) {
+                    history.unshift({ date: new Date().toLocaleDateString(), category: 'Patrimonio Neto', detail: 'Pago desde Control Financiero', amount: target.amount, targetName: target.name, isMin: false });
+                    remaining -= target.amount;
+                    target.amount = 0;
+                    target.cleared = true;
+                } else {
+                    history.unshift({ date: new Date().toLocaleDateString(), category: 'Patrimonio Neto', detail: 'Pago desde Control Financiero', amount: remaining, targetName: target.name, isMin: false });
+                    target.amount -= remaining;
+                    remaining = 0;
+                }
+            }
+
+            const newCreditBalance = (parseFloat(lfData.credit_balance) || 0) + remaining;
+
+            const { error: saveError } = await sb.from('libertad_financiera_data').upsert({
+                ...lfData,
+                debts,
+                history,
+                credit_balance: newCreditBalance
+            });
+
+            if (saveError) {
+                showToast('Error al actualizar tu deuda, probá de nuevo', 'warning');
+                return;
+            }
+
+            // Registramos el egreso acá, para que el Patrimonio Neto baje y quede reflejado
+            await addTransactionRecord({
+                name: 'Pago a Deuda (Libertad Financiera)',
+                dateVal: todayDate,
+                amount: amountToApply,
+                categoryVal: 'Servicios',
+                fuelTypeVal: null,
+                typeVal: 'egreso'
+            });
+
+            // Actualizamos la copia local que usa el asistente, para que ya sepa el nuevo estado
+            const newActiveDebts = debts.filter(d => !d.cleared && d.amount > 0);
+            const newTotalDebt = newActiveDebts.reduce((a, d) => a + d.amount, 0);
+            const investmentsData = lfData.investments || [];
+            const totalInvest = investmentsData.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
+            localStorage.setItem(`finzia_lf_snapshot_${currentUser.id}`, JSON.stringify({
+                deudas: newActiveDebts.map(d => ({ nombre: d.name, monto: d.amount })),
+                deuda_total: newTotalDebt,
+                inversiones: investmentsData.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
+                inversiones_total: totalInvest,
+                saldo_favor_o_contra: newCreditBalance - newTotalDebt,
+                updated_at: Date.now()
+            }));
+
+            showToast(remainingAfter > 0
+                ? `✅ Pagaste ${formatMoney(amountToApply)}. Te falta ${formatMoney(remainingAfter)} para terminar de pagar tu deuda.`
+                : `🎉 ¡Pagaste toda tu deuda con tu Patrimonio Neto!`);
+        }
+
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
             const monthVal = dateVal.substring(0, 7);
             const iconVal = getEmoji(name, categoryVal, fuelTypeVal);
@@ -1807,6 +1911,18 @@
                 networthBadge.textContent = 'En Déficit';
                 networthBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-semibold text-rose-300 bg-rose-500/20';
             }
+
+            // Mostramos el botón de "pagar deuda" solo si hay patrimonio positivo Y deuda registrada
+            const payDebtBtn = document.getElementById('btn-pay-debt-with-networth');
+            try {
+                const lfSnapshotRaw = currentUser ? localStorage.getItem(`finzia_lf_snapshot_${currentUser.id}`) : null;
+                const lfSnapshot = lfSnapshotRaw ? JSON.parse(lfSnapshotRaw) : null;
+                if (netWorth > 0 && lfSnapshot && lfSnapshot.deuda_total > 0) {
+                    payDebtBtn.classList.remove('hidden');
+                } else {
+                    payDebtBtn.classList.add('hidden');
+                }
+            } catch (e) { payDebtBtn.classList.add('hidden'); }
 
             renderCategoryChart(monthProducts);
             renderMovimientosColumns(monthProducts);
