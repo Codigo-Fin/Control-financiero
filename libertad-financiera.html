@@ -535,7 +535,6 @@
                 </div>
             </div>
             <div class="flex items-center gap-1">
-                <button id="btn-toggle-speak-lf" title="Leer las respuestas en voz alta" class="text-slate-400 hover:text-orange-300 text-base px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-volume-xmark"></i></button>
                 <button id="btn-close-assistant-lf" class="text-slate-400 hover:text-white text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
             </div>
         </div>
@@ -1847,15 +1846,27 @@
         const bubble = document.createElement('div');
         bubble.className = isUser
             ? 'bg-orange-500/20 border border-orange-500/30 rounded-2xl rounded-tr-sm p-3 text-base text-white max-w-[90%] sm:max-w-[85%] ml-auto'
-            : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]';
-        bubble.style.whiteSpace = 'pre-wrap';
-        bubble.textContent = text;
+            : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%] space-y-2';
+
+        if (isUser) {
+            bubble.style.whiteSpace = 'pre-wrap';
+            bubble.textContent = text;
+        } else {
+            const textEl = document.createElement('p');
+            textEl.style.whiteSpace = 'pre-wrap';
+            textEl.textContent = text;
+            bubble.appendChild(textEl);
+
+            const speakBtn = document.createElement('button');
+            speakBtn.type = 'button';
+            speakBtn.className = 'text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5';
+            speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
+            speakBtn.addEventListener('click', () => speakAssistantTextLF(text));
+            bubble.appendChild(speakBtn);
+        }
+
         container.appendChild(bubble);
         container.scrollTop = container.scrollHeight;
-
-        if (!isUser && assistantSpeakEnabledLF) {
-            speakAssistantTextLF(text);
-        }
     }
 
     document.getElementById('btn-open-assistant-lf').addEventListener('click', () => {
@@ -1869,15 +1880,6 @@
         modal.classList.add('hidden');
         modal.classList.remove('flex');
         if (window.speechSynthesis) window.speechSynthesis.cancel();
-    });
-
-    let assistantSpeakEnabledLF = false;
-    document.getElementById('btn-toggle-speak-lf').addEventListener('click', () => {
-        assistantSpeakEnabledLF = !assistantSpeakEnabledLF;
-        const icon = document.getElementById('btn-toggle-speak-lf').querySelector('i');
-        icon.className = assistantSpeakEnabledLF ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
-        document.getElementById('btn-toggle-speak-lf').classList.toggle('text-orange-300', assistantSpeakEnabledLF);
-        if (!assistantSpeakEnabledLF && window.speechSynthesis) window.speechSynthesis.cancel();
     });
 
     const AssistantSpeechRecognitionAPI_LF = window.SpeechRecognition || window.webkitSpeechRecognition;
