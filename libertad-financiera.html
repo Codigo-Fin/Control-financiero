@@ -145,6 +145,7 @@
             <div class="text-center">
                 <div id="saldoStatusLabel" class="text-xs font-bold text-orange-300 uppercase tracking-wider">Saldo Favor</div>
                 <div class="text-3xl sm:text-4xl font-bold text-orange-400 mt-1" id="creditBalanceDisplay">$0</div>
+                <p id="creditBalanceDetail" class="text-[11px] text-slate-400 mt-1"></p>
             </div>
             <div class="max-w-[240px] mx-auto">
                 <canvas id="progressPieChart"></canvas>
@@ -600,6 +601,7 @@
     let history = [];
     let creditBalance = 0;
     let userSalary = 0;
+    let externalPatrimonioNeto = 0; // Patrimonio Neto de Control Financiero (index.html), este mes
     let pieChart = null;
     let progressChart = null;
 
@@ -656,7 +658,26 @@
         document.getElementById('gate-screen').classList.add('hidden');
         document.getElementById('app-content').classList.remove('hidden');
         userSalary = parseFloat(settings?.salary) || 0;
+        await fetchExternalPatrimonioNeto();
         await loadLibertadData();
+    }
+
+    // Trae el Patrimonio Neto de este mes desde Control Financiero (index.html),
+    // para que "Saldo Favor/Contra" muestre el panorama real completo, no solo lo de acá.
+    async function fetchExternalPatrimonioNeto() {
+        try {
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id).eq('month', currentMonth);
+            let egresosDelMes = 0, ingresosExtraDelMes = 0;
+            (txs || []).forEach(t => {
+                if (t.type === 'egreso') egresosDelMes += parseFloat(t.price) || 0;
+                if (t.type === 'ingreso') ingresosExtraDelMes += parseFloat(t.price) || 0;
+            });
+            externalPatrimonioNeto = (userSalary + ingresosExtraDelMes) - egresosDelMes;
+        } catch (err) {
+            console.warn('No se pudo traer el Patrimonio Neto de Control Financiero:', err);
+            externalPatrimonioNeto = 0;
+        }
     }
 
     function getBackupKey() {
@@ -1270,7 +1291,8 @@
     function updateProgressChart() {
         const ctx = document.getElementById('progressPieChart').getContext('2d');
         const totalRemaining = debts.filter(d => !d.cleared).reduce((acc, d) => acc + d.amount, 0);
-        const netBalance = creditBalance - totalRemaining;
+        const totalDisponible = creditBalance + Math.max(externalPatrimonioNeto, 0);
+        const netBalance = totalDisponible - totalRemaining;
 
         if (progressChart) progressChart.destroy();
 
@@ -1299,7 +1321,10 @@
 
     function render() {
         const totalRemainingForBalance = debts.filter(d => !d.cleared).reduce((acc, d) => acc + d.amount, 0);
-        const netBalance = creditBalance - totalRemainingForBalance;
+        // Ahora sumamos TODO el dinero disponible: el saldo guardado acá + el Patrimonio Neto
+        // de Control Financiero, para que el panorama sea el real, completo, no solo la mitad.
+        const totalDisponible = creditBalance + Math.max(externalPatrimonioNeto, 0);
+        const netBalance = totalDisponible - totalRemainingForBalance;
         const balanceDisplayEl = document.getElementById('creditBalanceDisplay');
         const statusLabelEl = document.getElementById('saldoStatusLabel');
 
@@ -1317,6 +1342,16 @@
             statusLabelEl.textContent = 'Saldo Contra';
             statusLabelEl.classList.remove('text-orange-300');
             statusLabelEl.classList.add('text-rose-300');
+        }
+
+        // Detalle claro: cuánta plata hay en total, y cuánta deuda falta pagar
+        const balanceDetailEl = document.getElementById('creditBalanceDetail');
+        if (balanceDetailEl) {
+            if (totalRemainingForBalance > 0) {
+                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible (saldo + patrimonio) contra $${totalRemainingForBalance.toLocaleString()} de deuda pendiente.`;
+            } else {
+                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible y no tenés deuda pendiente.`;
+            }
         }
 
         const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
