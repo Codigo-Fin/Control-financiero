@@ -1369,21 +1369,21 @@
                 return;
             }
 
-            // Leemos la copia local guardada por Libertad Financiera (más confiable que
-            // pedirle esta tabla puntual directo a Supabase desde esta página).
-            const localSnapshotRaw = localStorage.getItem(`finzia_lf_snapshot_${currentUser.id}`);
-            if (!localSnapshotRaw) {
+            // Leemos la fila COMPLETA guardada por Libertad Financiera (evita un segundo
+            // pedido de lectura a Supabase, que es lo que fallaba antes).
+            const rawDataRaw = localStorage.getItem(`finzia_lf_rawdata_${currentUser.id}`);
+            if (!rawDataRaw) {
                 showToast('Todavía no hay datos de Libertad Financiera guardados en este dispositivo. Entrá una vez a esa sección y volvé.', 'warning');
                 return;
             }
 
-            let localSnapshot;
-            try { localSnapshot = JSON.parse(localSnapshotRaw); } catch (e) {
+            let lfRow;
+            try { lfRow = JSON.parse(rawDataRaw); } catch (e) {
                 showToast('No se pudo leer tu información de deudas, probá de nuevo', 'warning');
                 return;
             }
 
-            const debts = localSnapshot.debts_full || [];
+            const debts = JSON.parse(JSON.stringify(lfRow.debts || [])); // copia, no tocamos el original todavía
             const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
             const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
 
@@ -1398,9 +1398,9 @@
             const confirmMsg = `¿Aplicar ${formatMoney(amountToApply)} de tu Patrimonio Neto a tu deuda?\n\nEsto se registra como un egreso acá (tu Patrimonio Neto va a bajar), y reduce tu deuda en Libertad Financiera. ${remainingAfter > 0 ? `Te quedaría pendiente ${formatMoney(remainingAfter)}.` : '¡Quedarías sin deuda!'}`;
             if (!confirm(confirmMsg)) return;
 
-            // Repartimos el pago entre las deudas, de menor a mayor (mismo criterio que Libertad Financiera)
+            // Repartimos el pago entre las deudas, de menor a mayor (todavía en memoria, sin guardar nada)
             let remaining = amountToApply;
-            const history = [];
+            const newHistoryEntries = [];
             const sortedActive = [...activeDebts].sort((a, b) => a.amount - b.amount);
 
             for (const debtRef of sortedActive) {
@@ -1409,42 +1409,46 @@
                 if (!target) continue;
 
                 if (remaining >= target.amount) {
-                    history.unshift({ date: new Date().toLocaleDateString(), category: 'Patrimonio Neto', detail: 'Pago desde Control Financiero', amount: target.amount, targetName: target.name, isMin: false });
+                    newHistoryEntries.unshift({ date: new Date().toLocaleDateString(), category: 'Patrimonio Neto', detail: 'Pago desde Control Financiero', amount: target.amount, targetName: target.name, isMin: false });
                     remaining -= target.amount;
                     target.amount = 0;
                     target.cleared = true;
                 } else {
-                    history.unshift({ date: new Date().toLocaleDateString(), category: 'Patrimonio Neto', detail: 'Pago desde Control Financiero', amount: remaining, targetName: target.name, isMin: false });
+                    newHistoryEntries.unshift({ date: new Date().toLocaleDateString(), category: 'Patrimonio Neto', detail: 'Pago desde Control Financiero', amount: remaining, targetName: target.name, isMin: false });
                     target.amount -= remaining;
                     remaining = 0;
                 }
             }
 
-            const newCreditBalance = (parseFloat(localSnapshot.credit_balance_full) || 0) + remaining;
+            const newCreditBalance = (parseFloat(lfRow.credit_balance) || 0) + remaining;
+            const mergedHistory = [...newHistoryEntries, ...(lfRow.history || [])];
 
-            // Guardamos el cambio en Supabase. Traemos la fila actual primero solo para no
-            // pisar campos que no tocamos (inversiones, fondos de emergencia, etc.) — si este
-            // pedido puntual llegara a fallar, igual actualizamos la copia local y seguimos,
-            // para no dejar a la persona sin poder completar la acción.
-            let saveOk = true;
+            // PRIMERO intentamos guardar el cambio de la deuda. Recién si esto se confirma
+            // bien, tocamos la plata del Patrimonio Neto — así nunca se puede dar el caso de
+            // "se descontó la plata pero la deuda no bajó".
+            let saveOk = false;
             try {
-                const { data: currentRow } = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
-                const baseRow = currentRow || { user_id: currentUser.id };
-                const mergedHistory = [...history, ...(baseRow.history || [])];
                 const { error: saveError } = await sb.from('libertad_financiera_data').upsert({
-                    ...baseRow,
+                    ...lfRow,
                     user_id: currentUser.id,
                     debts,
                     history: mergedHistory,
                     credit_balance: newCreditBalance
                 });
-                if (saveError) saveOk = false;
+                saveOk = !saveError;
+                if (saveError) console.error('Error al guardar el pago de deuda:', saveError);
             } catch (err) {
-                console.warn('No se pudo guardar el pago en Supabase ahora, se actualizó igual localmente:', err);
+                console.error('Error interno al guardar el pago de deuda:', err);
                 saveOk = false;
             }
 
-            // Registramos el egreso acá, para que el Patrimonio Neto baje y quede reflejado
+            if (!saveOk) {
+                showToast('⚠️ No se pudo confirmar el pago ahora mismo. No se descontó nada de tu Patrimonio Neto — probá de nuevo en un momento.', 'warning');
+                return;
+            }
+
+            // Recién ahora, con la deuda ya actualizada y confirmada, registramos el egreso
+            // acá para que el Patrimonio Neto baje y quede reflejado.
             await addTransactionRecord({
                 name: 'Pago a Deuda (Libertad Financiera)',
                 dateVal: todayDate,
@@ -1458,23 +1462,27 @@
             // reflejen el nuevo estado al toque, sin esperar a volver a entrar a Libertad Financiera.
             const newActiveDebts = debts.filter(d => !d.cleared && d.amount > 0);
             const newTotalDebt = newActiveDebts.reduce((a, d) => a + d.amount, 0);
+            const investmentsData = lfRow.investments || [];
+            const totalInvest = investmentsData.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
+
             localStorage.setItem(`finzia_lf_snapshot_${currentUser.id}`, JSON.stringify({
-                ...localSnapshot,
                 deudas: newActiveDebts.map(d => ({ nombre: d.name, monto: d.amount })),
                 deuda_total: newTotalDebt,
+                inversiones: investmentsData.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
+                inversiones_total: totalInvest,
                 saldo_favor_o_contra: newCreditBalance - newTotalDebt,
-                debts_full: debts,
-                credit_balance_full: newCreditBalance,
                 updated_at: Date.now()
             }));
+            localStorage.setItem(`finzia_lf_rawdata_${currentUser.id}`, JSON.stringify({
+                ...lfRow,
+                debts,
+                history: mergedHistory,
+                credit_balance: newCreditBalance
+            }));
 
-            if (!saveOk) {
-                showToast('⚠️ Se aplicó el pago acá, pero no se pudo confirmar en la nube todavía. Entrá a Libertad Financiera para verificar y sincronizar.', 'warning');
-            } else {
-                showToast(remainingAfter > 0
-                    ? `✅ Pagaste ${formatMoney(amountToApply)}. Te falta ${formatMoney(remainingAfter)} para terminar de pagar tu deuda.`
-                    : `🎉 ¡Pagaste toda tu deuda con tu Patrimonio Neto!`);
-            }
+            showToast(remainingAfter > 0
+                ? `✅ Pagaste ${formatMoney(amountToApply)}. Te falta ${formatMoney(remainingAfter)} para terminar de pagar tu deuda.`
+                : `🎉 ¡Pagaste toda tu deuda con tu Patrimonio Neto!`);
         }
 
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
