@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finzia - Control Financiero & Mercado</title>
+    <title>Ressetia - Control Financiero & Mercado</title>
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#f97316">
+    <meta name="theme-color" content="#22d3ee">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Finzia">
+    <meta name="apple-mobile-web-app-title" content="Ressetia">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         .glass-card:hover { border-color: rgba(52, 211, 153, 0.35); box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.4); }
         .custom-checkbox { appearance: none; width: 1.2rem; height: 1.2rem; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 0.375rem; outline: none; cursor: pointer; position: relative; transition: all 0.2s ease; flex-shrink: 0; }
-        .custom-checkbox:checked { background-color: #f97316; border-color: #f97316; }
+        .custom-checkbox:checked { background-color: #22d3ee; border-color: #22d3ee; }
         .custom-checkbox:checked::after { content: '✓'; position: absolute; color: white; font-size: 0.8rem; font-weight: bold; top: 50%; left: 50%; transform: translate(-50%, -50%); }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
@@ -76,7 +76,7 @@
             animation: float-bounce 2.4s ease-in-out infinite;
         }
 
-        /* Que el chat de Finzia se vea bien también con el celular acostado */
+        /* Que el chat de Ressetia se vea bien también con el celular acostado */
         @media (orientation: landscape) {
             #assistant-modal .glass-panel, #assistant-modal-lf .glass-panel {
                 height: 100dvh !important;
@@ -91,37 +91,37 @@
 </head>
 <body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen flex flex-col justify-between">
 
-    <div class="fixed top-10 left-10 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
+    <div class="fixed top-10 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
     <div class="fixed bottom-10 right-10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
 
     <!-- LOGIN / SIGNUP SCREEN -->
     <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-[#090d16] via-[#111827] to-[#06201b]">
         <div class="glass-panel rounded-3xl p-8 w-full max-w-sm space-y-5 shadow-2xl">
             <div class="text-center space-y-1">
-                <div class="mx-auto w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 text-xl mb-2">
-                    <i class="fa-solid fa-fire"></i>
+                <div class="mx-auto w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-2">
+                    <i class="fa-solid fa-arrow-rotate-right"></i>
                 </div>
-                <h1 class="text-lg font-bold text-white">Finzia</h1>
+                <h1 class="text-lg font-bold text-white">Ressetia</h1>
                 <p class="text-sm text-slate-400">Iniciá sesión o creá tu cuenta para continuar</p>
             </div>
             <div class="space-y-3">
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Email</label>
                     <input type="email" id="auth-email" placeholder="tu@email.com"
-                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-slate-400 mb-1">Contraseña</label>
                     <div class="relative">
                         <input type="password" id="auth-password" placeholder="••••••••"
-                            class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                            class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
                         <button type="button" id="btn-toggle-password" tabindex="-1" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-sm">
                             <i id="toggle-password-icon" class="fa-solid fa-eye"></i>
                         </button>
                     </div>
                 </div>
                 <div class="flex items-center justify-between -mt-1">
-                    <button type="button" id="btn-forgot-password" class="text-[11px] text-orange-400 hover:text-orange-300 underline underline-offset-2">
+                    <button type="button" id="btn-forgot-password" class="text-[11px] text-cyan-400 hover:text-cyan-300 underline underline-offset-2">
                         ¿Olvidaste tu contraseña?
                     </button>
                 </div>
@@ -130,7 +130,7 @@
                 <p class="text-[10px] text-slate-500 text-center">Al crear cuenta, en el siguiente paso vas a poder elegir tu plan y autorizar tu medio de pago (14 días gratis, sin cargo hasta entonces).</p>
 
                 <div class="flex flex-col gap-2 pt-1">
-                    <button id="btn-signin" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
+                    <button id="btn-signin" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
                         Iniciar Sesión
                     </button>
                     <button id="btn-signup" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition-all active:scale-95">
@@ -149,18 +149,18 @@
         <!-- Barra superior fija: identidad + logout -->
         <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <div class="p-3 bg-gradient-to-br from-orange-500/20 to-teal-500/20 border border-orange-500/30 rounded-2xl text-orange-400">
-                    <i class="fa-solid fa-fire text-xl"></i>
+                <div class="p-3 bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-2xl text-cyan-400">
+                    <i class="fa-solid fa-arrow-rotate-right text-xl"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-orange-400 bg-clip-text text-transparent">
-                        Finzia
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent">
+                        Ressetia
                     </h1>
                     <p class="text-slate-400 text-xs sm:text-sm">Control Financiero — Gastos, Deudas, Ahorro, Inversiones</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
-                <button id="btn-large-text" title="Texto grande (accesibilidad)" class="bg-slate-800/80 hover:bg-orange-500/10 border border-white/10 hover:border-orange-500/30 text-slate-300 hover:text-orange-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                <button id="btn-large-text" title="Texto grande (accesibilidad)" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
                     <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </button>
                 <button id="btn-logout" title="Cerrar sesión" class="bg-slate-800/80 hover:bg-rose-500/10 border border-white/10 hover:border-rose-500/30 text-slate-300 hover:text-rose-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
@@ -185,20 +185,20 @@
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
                     <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                        <i class="fa-solid fa-star text-amber-400"></i> Suscripción Premium
+                        <i class="fa-solid fa-star text-fuchsia-400"></i> Suscripción Premium
                     </h3>
                     <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
                     <a href="libertad-financiera.html" target="_blank"
                         class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-fire"></i> Libertad Financiera
+                        <i class="fa-solid fa-arrow-rotate-right"></i> Libertad Financiera
                     </a>
                     <button id="btn-subscribe"
                         class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
                         <i class="fa-solid fa-credit-card"></i> Suscribirme
                     </button>
-                    <span id="premium-badge" class="hidden bg-orange-500/20 border border-orange-500/40 text-orange-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
+                    <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
                         <i class="fa-solid fa-circle-check"></i> Ya sos Premium
                     </span>
                 </div>
@@ -234,41 +234,41 @@
 
         <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-4">
             <p class="text-sm text-slate-300 leading-relaxed">
-                <strong class="text-orange-400">Finzia</strong> nació para ayudarte a entender y controlar tu dinero de punta a punta: llevar tus gastos e ingresos del día a día, salir de deudas con un plan claro, armar un fondo de emergencia, y empezar a invertir — todo en un solo lugar, pensado para el bolsillo argentino. La idea de fondo es simple: cuanto más entendés cómo se mueve tu plata, más rápido podés pasar de <em>cambiar tu tiempo por dinero</em> a que <em>tu dinero y tus sistemas trabajen para vos</em>.
+                <strong class="text-cyan-400">Ressetia</strong> nació para ayudarte a entender y controlar tu dinero de punta a punta: llevar tus gastos e ingresos del día a día, salir de deudas con un plan claro, armar un fondo de emergencia, y empezar a invertir — todo en un solo lugar, pensado para el bolsillo argentino. La idea de fondo es simple: cuanto más entendés cómo se mueve tu plata, más rápido podés pasar de <em>cambiar tu tiempo por dinero</em> a que <em>tu dinero y tus sistemas trabajen para vos</em>.
             </p>
             <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                <i class="fa-solid fa-table-cells-large text-orange-400"></i> Cuadrante de Flujo
+                <i class="fa-solid fa-table-cells-large text-cyan-400"></i> Cuadrante de Flujo
             </h3>
             <p class="text-xs text-slate-400 -mt-2">Tocá cada cuadrante para conocerlo, y pensá en cuál te identificás hoy.</p>
             <div class="grid grid-cols-2 gap-3">
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="E">
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-cyan-500/40 border border-transparent transition-all" data-quadrant="E">
                     <div class="text-2xl mb-1">👔</div>
                     <div class="font-bold text-white text-sm">Empleado</div>
                 </button>
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="B">
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-cyan-500/40 border border-transparent transition-all" data-quadrant="B">
                     <div class="text-2xl mb-1">🏢</div>
                     <div class="font-bold text-white text-sm">Dueño de Negocio</div>
                 </button>
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="S">
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-cyan-500/40 border border-transparent transition-all" data-quadrant="S">
                     <div class="text-2xl mb-1">🛠️</div>
                     <div class="font-bold text-white text-sm">Autoempleado</div>
                 </button>
-                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-orange-500/40 border border-transparent transition-all" data-quadrant="I">
+                <button type="button" class="quadrant-btn glass-card rounded-2xl p-4 text-center hover:border-cyan-500/40 border border-transparent transition-all" data-quadrant="I">
                     <div class="text-2xl mb-1">📈</div>
                     <div class="font-bold text-white text-sm">Inversionista</div>
                 </button>
             </div>
-            <div id="quadrant-info" class="hidden bg-slate-900/60 border border-orange-500/20 rounded-2xl p-4 text-sm text-slate-300"></div>
+            <div id="quadrant-info" class="hidden bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-4 text-sm text-slate-300"></div>
         </section>
 
                     <!-- Regla de Reparto de Ingresos -->
             <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3">
                 <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                    <i class="fa-solid fa-scale-balanced text-orange-400"></i> Reparto de mi Dinero
+                    <i class="fa-solid fa-scale-balanced text-cyan-400"></i> Reparto de mi Dinero
                 </h3>
                 <p class="text-xs text-slate-400 -mt-1">Elegí una filosofía de reparto conocida, o armá la tuya propia, y te mostramos cuánto te corresponde en cada parte según tus ingresos.</p>
 
-                <select id="allocation-rule-select" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-orange-500">
+                <select id="allocation-rule-select" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
                     <option value="none">Elegí una regla...</option>
                     <option value="diezmo">✝️ Diezmo — 10% ofrenda / 90% vivir</option>
                     <option value="babilonia">🏛️ El Hombre Más Rico de Babilonia — 10% invertir / 90% vivir</option>
@@ -282,7 +282,7 @@
                     <div id="allocation-custom-rows" class="space-y-2"></div>
                     <div class="flex gap-2">
                         <button type="button" id="btn-add-allocation-row" class="text-xs bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg">+ Agregar categoría</button>
-                        <button type="button" id="btn-save-allocation-custom" class="text-xs bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">Guardar</button>
+                        <button type="button" id="btn-save-allocation-custom" class="text-xs bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">Guardar</button>
                     </div>
                     <p id="allocation-custom-error" class="hidden text-[11px] text-rose-400"></p>
                 </div>
@@ -300,21 +300,21 @@
         <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
             <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
                 <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center bg-slate-900/90 border border-orange-500/30 rounded-2xl p-1 gap-1 shadow-inner">
-                        <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-orange-400 rounded-xl transition-colors">
+                    <div class="flex items-center bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-1 gap-1 shadow-inner">
+                        <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
                             <i class="fa-solid fa-chevron-left text-xs"></i>
                         </button>
                         <div class="flex items-center gap-1.5 px-2">
-                            <i class="fa-regular fa-calendar-days text-orange-400 text-xs"></i>
-                            <select id="header-month-select" class="bg-transparent text-orange-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
+                            <i class="fa-regular fa-calendar-days text-cyan-400 text-xs"></i>
+                            <select id="header-month-select" class="bg-transparent text-cyan-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
                         </div>
-                        <button id="next-month-btn" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-orange-400 rounded-xl transition-colors">
+                        <button id="next-month-btn" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
                             <i class="fa-solid fa-chevron-right text-xs"></i>
                         </button>
                     </div>
 
                     <button onclick="toggleMonthDrawer()" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-layer-group text-orange-400"></i>
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i>
                         <span id="drawer-toggle-text">Ver Calendario Anual</span>
                         <i id="drawer-arrow" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
                     </button>
@@ -334,23 +334,23 @@
 
 
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2 pt-1">
-                <i class="fa-solid fa-money-bill-trend-up text-orange-400"></i> RESUMEN DEL MES
+                <i class="fa-solid fa-money-bill-trend-up text-cyan-400"></i> RESUMEN DEL MES
             </h2>
 
 
 
             <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
                 <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-share-nodes text-orange-400"></i>
+                    <i class="fa-solid fa-share-nodes text-cyan-400"></i>
                     <span>Comprobante Mensual:</span>
                 </span>
                 <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-orange-600/30 hover:bg-orange-600/50 border border-orange-500/40 text-orange-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
                         <i class="fa-solid fa-file-invoice text-rose-300"></i>
                         <span>Comprobante PDF a WhatsApp</span>
                     </button>
                     <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-brands fa-whatsapp text-orange-400 text-sm"></i>
+                        <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
                         <span>Compartir Resumen (texto)</span>
                     </button>
                 </div>
@@ -359,7 +359,7 @@
 
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-orange-400"></i> RESULTADOS DEL MES
+                <i class="fa-solid fa-list-check text-cyan-400"></i> RESULTADOS DEL MES
             </h2>
 
             <div class="glass-panel p-5 rounded-3xl space-y-3">
@@ -374,9 +374,9 @@
                         <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
                     </div>
                     <div>
-                        <p class="text-[10px] text-orange-300 uppercase tracking-wide">Mayor Ingreso</p>
+                        <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Mayor Ingreso</p>
                         <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
-                        <p id="top-income-amount" class="text-base font-bold text-orange-400">$0</p>
+                        <p id="top-income-amount" class="text-base font-bold text-cyan-400">$0</p>
                     </div>
                 </div>
             </div>
@@ -386,7 +386,7 @@
                 <div class="relative w-full sm:w-56">
                     <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
                     <input type="text" id="search-input" placeholder="Buscar concepto o día..." 
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-orange-500 transition-colors text-white placeholder-slate-500">
+                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors text-white placeholder-slate-500">
                 </div>
             </div>
         </section>
@@ -406,7 +406,7 @@
         <div id="tab-panel-gastos" class="tab-panel hidden space-y-5">
 
         <div class="flex justify-end">
-            <button onclick="openSalaryModal()" class="bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+            <button onclick="openSalaryModal()" class="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
                 <i class="fa-solid fa-pen-to-square"></i>
                 <span>Ingresar Sueldo</span>
             </button>
@@ -414,16 +414,16 @@
 
         <!-- Ingresos vs Egresos claramente separados (destacado en verde neón, como se pidió) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" style="box-shadow: 0 0 24px rgba(74,222,128,0.25); border-radius: 1.5rem; padding: 4px;">
-            <div class="bg-orange-950/40 p-4 rounded-2xl border-2 border-orange-500/30 flex flex-col justify-between">
+            <div class="bg-cyan-950/40 p-4 rounded-2xl border-2 border-cyan-500/30 flex flex-col justify-between">
                 <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-orange-300 uppercase tracking-wider">💰 Ingresos Totales</span>
-                <div class="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-xs">
+                <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">💰 Ingresos Totales</span>
+                <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">
                     <i class="fa-solid fa-arrow-down-left"></i>
                 </div>
                 </div>
                 <div class="mt-2 flex items-baseline justify-between">
-                <span id="stat-salary" class="text-2xl sm:text-3xl font-bold text-orange-400">$0</span>
-                <span class="text-[10px] text-orange-300 bg-orange-500/15 px-2 py-0.5 rounded-full">Sueldo + Extra</span>
+                <span id="stat-salary" class="text-2xl sm:text-3xl font-bold text-cyan-400">$0</span>
+                <span class="text-[10px] text-cyan-300 bg-cyan-500/15 px-2 py-0.5 rounded-full">Sueldo + Extra</span>
                 </div>
             </div>
 
@@ -459,7 +459,7 @@
 
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-cart-shopping text-orange-400"></i> MOVIMIENTOS
+                <i class="fa-solid fa-cart-shopping text-cyan-400"></i> MOVIMIENTOS
             </h2>
             <div class="glass-panel p-3 rounded-2xl flex items-center gap-3">
                 <button type="button" id="btn-voice-input" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-bold w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
@@ -501,19 +501,19 @@
                 <div class="flex-1 min-w-[140px]">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Concepto / Producto</label>
                     <input type="text" id="input-name" placeholder="Ej. Nafta YPF, Cebolla, Cena..." required
-                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
                 </div>
 
                 <div class="w-full sm:w-36">
-                    <label class="block text-xs font-medium text-orange-400 mb-1">📅 Día / Fecha</label>
+                    <label class="block text-xs font-medium text-cyan-400 mb-1">📅 Día / Fecha</label>
                     <input type="date" id="input-date" required
-                        class="w-full bg-slate-900/80 border border-orange-500/40 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-orange-400 text-white cursor-pointer">
+                        class="w-full bg-slate-900/80 border border-cyan-500/40 rounded-xl px-2 py-2 text-sm focus:outline-none focus:border-cyan-400 text-white cursor-pointer">
                 </div>
 
                 <div class="w-full sm:w-32">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Monto ($)</label>
                     <input type="number" step="0.01" min="0" id="input-price" placeholder="Ej. 10000" required
-                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500 font-semibold">
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500 font-semibold">
                 </div>
 
                 <div class="w-full sm:w-44">
@@ -556,15 +556,15 @@
                 </div>
 
                 <div id="custom-cat-wrapper" class="w-full sm:w-36 hidden">
-                    <label class="block text-xs font-medium text-orange-400 mb-1">Escribir Categoría</label>
+                    <label class="block text-xs font-medium text-cyan-400 mb-1">Escribir Categoría</label>
                     <input type="text" id="input-custom-category" placeholder="Ej. Otro rubro"
-                        class="w-full bg-slate-900 border border-orange-500/50 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-orange-400 text-white placeholder-slate-500">
+                        class="w-full bg-slate-900 border border-cyan-500/50 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-cyan-400 text-white placeholder-slate-500">
                 </div>
 
                 <div class="w-full sm:w-32">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Tipo</label>
                     <select id="input-type" 
-                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-orange-500 text-white cursor-pointer">
+                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white cursor-pointer">
                         <option value="egreso">🔴 Egreso</option>
                         <option value="ingreso">🟢 Ingreso Extra</option>
                     </select>
@@ -572,7 +572,7 @@
 
                 <div class="w-full sm:w-auto flex items-center justify-end gap-2">
                     <button type="submit" 
-                        class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition-all shadow-md shadow-orange-500/20 active:scale-95 flex items-center gap-1.5">
+                        class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm transition-all shadow-md shadow-cyan-500/20 active:scale-95 flex items-center gap-1.5">
                         <i class="fa-solid fa-plus"></i>
                         <span>Agregar</span>
                     </button>
@@ -590,7 +590,7 @@
                         <i id="toggle-ingresos-icon" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
                     </button>
                     <div id="ingresos-panel" class="hidden px-3 pb-3 space-y-2">
-                        <input type="date" id="filter-date-ingresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500 mb-1">
+                        <input type="date" id="filter-date-ingresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500 mb-1">
                         <div id="movimientos-ingresos-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
                     </div>
                 </div>
@@ -603,7 +603,7 @@
                         <i id="toggle-egresos-icon" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
                     </button>
                     <div id="egresos-panel" class="hidden px-3 pb-3 space-y-2">
-                        <input type="date" id="filter-date-egresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-orange-500 mb-1">
+                        <input type="date" id="filter-date-egresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500 mb-1">
                         <div id="movimientos-egresos-list" class="space-y-2 max-h-64 overflow-y-auto"></div>
                     </div>
                 </div>
@@ -612,10 +612,10 @@
             <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
                 <div class="flex items-center justify-between border-b border-white/10 pb-2">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-orange-400 text-sm"></i>
+                        <i class="fa-solid fa-chart-pie text-cyan-400 text-sm"></i>
                         <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Ingresos y Egresos del Mes</h3>
                     </div>
-                    <span id="chart-month-badge" class="text-[10px] bg-orange-500/10 border border-orange-500/20 text-orange-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
+                    <span id="chart-month-badge" class="text-[10px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                     <div class="h-48 md:h-56 relative flex items-center justify-center">
@@ -627,7 +627,7 @@
                             <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
                         </div>
                         <div class="border-t border-white/10 pt-3">
-                            <p class="text-[11px] font-bold text-orange-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
+                            <p class="text-[11px] font-bold text-cyan-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
                             <div id="chart-legend-grid-ingresos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
                         </div>
                     </div>
@@ -641,7 +641,7 @@
     <footer class="max-w-6xl mx-auto w-full mt-6 z-10">
         <div class="glass-panel p-3.5 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm text-slate-400">
             <div class="flex items-center gap-2">
-                <i class="fa-solid fa-circle-info text-orange-400 text-xs"></i>
+                <i class="fa-solid fa-circle-info text-cyan-400 text-xs"></i>
                 <span>Tocá un ítem para marcarlo como pagado/comprado.</span>
             </div>
             <div class="flex items-center gap-2 ml-auto">
@@ -657,7 +657,7 @@
 
     <!-- Salary Adjustment Modal -->
     <div id="salary-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-orange-500/30">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30">
             <div class="flex items-center justify-between">
                 <h3 class="font-bold text-white text-base">Ingresar Sueldo Mensual</h3>
                 <button onclick="closeSalaryModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
@@ -666,24 +666,24 @@
             <div>
                 <label class="block text-xs font-medium text-slate-400 mb-1">Monto del Sueldo ($)</label>
                 <input type="number" id="modal-salary-input" placeholder="Ej. 500000"
-                    class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-500 text-white font-bold">
+                    class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white font-bold">
             </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeSalaryModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">Cancelar</button>
-                <button onclick="saveSalaryModal()" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Guardar</button>
+                <button onclick="saveSalaryModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Guardar</button>
             </div>
         </div>
     </div>
 
     <!-- Cámara propia para fotos de tickets (más liviana que la cámara nativa del celu) -->
     <div id="camera-modal" class="fixed inset-0 bg-slate-950/95 hidden items-center justify-center p-4 z-50 flex-col gap-3">
-        <video id="camera-video" autoplay playsinline class="w-full max-w-md rounded-2xl border border-orange-500/30 bg-black"></video>
+        <video id="camera-video" autoplay playsinline class="w-full max-w-md rounded-2xl border border-cyan-500/30 bg-black"></video>
         <canvas id="camera-canvas" class="hidden"></canvas>
         <div class="flex items-center gap-3">
             <button type="button" id="btn-camera-cancel" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold px-5 py-2.5 rounded-xl text-sm">
                 Cancelar
             </button>
-            <button type="button" id="btn-camera-capture" class="bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2">
+            <button type="button" id="btn-camera-capture" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-6 py-2.5 rounded-xl text-sm flex items-center gap-2">
                 <i class="fa-solid fa-camera"></i> Capturar
             </button>
         </div>
@@ -692,23 +692,23 @@
 
     <!-- Establecer nueva contraseña (aparece al entrar desde el link de "Olvidé mi contraseña") -->
     <div id="reset-password-modal" class="fixed inset-0 bg-slate-950/95 hidden items-center justify-center p-4 z-50">
-        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-orange-500/30">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30">
             <div class="text-center space-y-1">
-                <i class="fa-solid fa-key text-orange-400 text-2xl"></i>
+                <i class="fa-solid fa-key text-cyan-400 text-2xl"></i>
                 <h3 class="font-bold text-white text-base">Elegí tu nueva contraseña</h3>
-                <p class="text-xs sm:text-sm text-slate-400">Escribí una contraseña nueva para tu cuenta de Finzia.</p>
+                <p class="text-xs sm:text-sm text-slate-400">Escribí una contraseña nueva para tu cuenta de Ressetia.</p>
             </div>
             <div class="relative">
                 <input type="password" id="reset-new-password" placeholder="Nueva contraseña (mínimo 6 caracteres)"
-                    class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                    class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
                 <button type="button" id="btn-toggle-reset-password" tabindex="-1" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-sm">
                     <i id="toggle-reset-password-icon" class="fa-solid fa-eye"></i>
                 </button>
             </div>
             <input type="password" id="reset-confirm-password" placeholder="Repetí la nueva contraseña"
-                class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500 text-white placeholder-slate-500">
+                class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
             <p id="reset-password-message" class="text-xs min-h-[16px] text-rose-400"></p>
-            <button id="btn-confirm-reset-password" class="w-full bg-orange-500 hover:bg-orange-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
+            <button id="btn-confirm-reset-password" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
                 Guardar nueva contraseña
             </button>
         </div>
@@ -717,29 +717,29 @@
     <!-- Aviso de que la prueba gratis está por terminar -->
     <div id="trial-ending-toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold shadow-2xl z-40 max-w-[92%] text-center"></div>
 
-    <!-- Botón flotante del Asistente Finzia (visible en cualquier pestaña) -->
+    <!-- Botón flotante del Asistente Ressetia (visible en cualquier pestaña) -->
     <div class="fixed bottom-6 right-5 z-30 flex flex-col items-end gap-2">
         <div id="assistant-hint-bubble" class="hidden bg-slate-900 border border-sky-400/40 text-sky-200 text-xs font-semibold px-3 py-2 rounded-2xl rounded-br-sm shadow-xl max-w-[180px] text-center">
             ¿Tenés dudas? Preguntame acá 👋
         </div>
         <div class="relative">
             <span class="absolute inset-0 rounded-full bg-sky-400/40 animate-ping"></span>
-            <button id="btn-open-assistant" title="Preguntale a Finzia" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
+            <button id="btn-open-assistant" title="Preguntale a Ressetia" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
                 <i class="fa-solid fa-comment-dots"></i>
             </button>
         </div>
     </div>
 
-    <!-- Modal del Asistente Finzia -->
+    <!-- Modal del Asistente Ressetia -->
     <div id="assistant-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
-        <div class="glass-panel w-full sm:max-w-lg h-[100dvh] sm:h-[80vh] sm:max-h-[700px] rounded-none sm:rounded-3xl flex flex-col border border-orange-500/30 overflow-hidden">
+        <div class="glass-panel w-full sm:max-w-lg h-[100dvh] sm:h-[80vh] sm:max-h-[700px] rounded-none sm:rounded-3xl flex flex-col border border-cyan-500/30 overflow-hidden">
             <div class="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 flex-shrink-0">
                 <div class="flex items-center gap-2">
-                    <div class="w-9 h-9 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0">
-                        <i class="fa-solid fa-fire"></i>
+                    <div class="w-9 h-9 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0">
+                        <i class="fa-solid fa-arrow-rotate-right"></i>
                     </div>
                     <div>
-                        <p class="font-bold text-white text-base">Finzia</p>
+                        <p class="font-bold text-white text-base">Ressetia</p>
                         <p class="text-xs text-slate-400">Tu guía dentro de la app</p>
                     </div>
                 </div>
@@ -752,7 +752,7 @@
 
             <div id="assistant-messages" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
                 <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]" id="assistant-welcome-bubble">
-                    Hola, soy Finzia 🔥. Puedo mirar tus gastos, ingresos, deudas e inversiones y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿en qué estoy gastando más?"</em> o <em>"¿cómo salgo de esta deuda?"</em>
+                    Hola, soy Ressetia 🔥. Puedo mirar tus gastos, ingresos, deudas e inversiones y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿en qué estoy gastando más?"</em> o <em>"¿cómo salgo de esta deuda?"</em>
                 </div>
             </div>
 
@@ -761,8 +761,8 @@
                     <button type="button" id="btn-assistant-voice" title="Preguntar por voz" class="bg-sky-400 hover:bg-sky-300 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
                         <i id="assistant-voice-icon" class="fa-solid fa-microphone"></i>
                     </button>
-                    <input type="text" id="assistant-input" placeholder="Escribí o hablá tu consulta..." class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-3 text-base text-white focus:outline-none focus:border-orange-500">
-                    <button id="btn-send-assistant" class="bg-orange-500 hover:bg-orange-400 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <input type="text" id="assistant-input" placeholder="Escribí o hablá tu consulta..." class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-3 text-base text-white focus:outline-none focus:border-cyan-500">
+                    <button id="btn-send-assistant" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </div>
@@ -772,18 +772,18 @@
 
     <!-- Configurar medio de pago (aparece en el primer ingreso real, sin importar si hubo confirmación de mail en el medio) -->
     <div id="payment-setup-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-orange-500/30">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30">
             <div class="text-center space-y-1">
-                <i class="fa-solid fa-credit-card text-orange-400 text-2xl"></i>
+                <i class="fa-solid fa-credit-card text-cyan-400 text-2xl"></i>
                 <h3 class="font-bold text-white text-base">Activá tu prueba gratis de 14 días</h3>
                 <p class="text-xs sm:text-sm text-slate-400">Elegí tu plan y autorizá tu medio de pago ahora. No te cobramos nada hasta que termine tu prueba, y podés cancelar antes sin costo.</p>
             </div>
             <div class="grid grid-cols-2 gap-2">
-                <button data-plan="mensual" data-price="6999" class="payment-setup-plan-btn bg-slate-800 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/40 rounded-xl p-3 text-center transition-all">
+                <button data-plan="mensual" data-price="6999" class="payment-setup-plan-btn bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 rounded-xl p-3 text-center transition-all">
                     <div class="text-[10px] text-slate-400">Mensual</div>
                     <div class="text-sm font-bold text-white">$6.999</div>
                 </button>
-                <button data-plan="anual" data-price="69990" class="payment-setup-plan-btn bg-slate-800 hover:bg-orange-500/20 border border-white/10 hover:border-orange-500/40 rounded-xl p-3 text-center transition-all">
+                <button data-plan="anual" data-price="69990" class="payment-setup-plan-btn bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 rounded-xl p-3 text-center transition-all">
                     <div class="text-[10px] text-slate-400">Anual</div>
                     <div class="text-sm font-bold text-white">$69.990</div>
                 </button>
@@ -792,13 +792,13 @@
             <div>
                 <label class="block text-[11px] font-medium text-slate-400 mb-1">¿Tenés un código de descuento? (opcional)</label>
                 <div class="flex gap-2">
-                    <input type="text" id="discount-code-input" placeholder="Ej. FINZIA" class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-orange-500">
-                    <button type="button" id="btn-apply-discount" class="bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 text-orange-300 text-xs font-bold px-3 rounded-xl">Aplicar</button>
+                    <input type="text" id="discount-code-input" placeholder="Ej. FINZIA" class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-cyan-500">
+                    <button type="button" id="btn-apply-discount" class="bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 text-xs font-bold px-3 rounded-xl">Aplicar</button>
                 </div>
                 <p id="discount-code-status" class="text-[11px] mt-1 hidden"></p>
             </div>
 
-            <p class="text-[11px] text-slate-500 text-center">Para usar Finzia es necesario autorizar un medio de pago (no se cobra nada hasta el fin de la prueba gratis).</p>
+            <p class="text-[11px] text-slate-500 text-center">Para usar Ressetia es necesario autorizar un medio de pago (no se cobra nada hasta el fin de la prueba gratis).</p>
         </div>
     </div>
 
@@ -808,8 +808,8 @@
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900/90 border border-orange-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-orange-400 text-base"></i>
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900/90 border border-cyan-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-cyan-400 text-base"></i>
         <span id="toast-message" class="text-xs sm:text-sm font-medium"></span>
     </div>
 
@@ -879,7 +879,7 @@
             'Otros': '🛒'
         };
 
-        const CHART_COLORS = ['#f97316', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#14b8a6', '#84cc16', '#6366f1', '#d946ef', '#22d3ee', '#a3e635', '#fb7185', '#c084fc'];
+        const CHART_COLORS = ['#22d3ee', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#14b8a6', '#84cc16', '#6366f1', '#d946ef', '#22d3ee', '#a3e635', '#fb7185', '#c084fc'];
 
         function getCategoryEmoji(catName) {
             if (!catName) return '🛒';
@@ -943,7 +943,7 @@
             const toastMessage = document.getElementById('toast-message');
             const toastIcon = document.getElementById('toast-icon');
             toastMessage.textContent = message;
-            toastIcon.className = type === 'success' ? 'fa-solid fa-circle-check text-orange-400 text-base' : 'fa-solid fa-circle-exclamation text-rose-400 text-base';
+            toastIcon.className = type === 'success' ? 'fa-solid fa-circle-check text-cyan-400 text-base' : 'fa-solid fa-circle-exclamation text-rose-400 text-base';
             toast.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
@@ -963,7 +963,7 @@
         function setAuthMessage(msg, ok = false) {
             const el = document.getElementById('auth-message');
             el.textContent = msg;
-            el.className = ok ? 'text-orange-400 text-xs min-h-[16px]' : 'text-rose-400 text-xs min-h-[16px]';
+            el.className = ok ? 'text-cyan-400 text-xs min-h-[16px]' : 'text-rose-400 text-xs min-h-[16px]';
         }
 
         let isPasswordRecoveryFlow = false;
@@ -1297,7 +1297,7 @@
                 const isSelected = mStr === selectedMonthFilter;
                 const mProducts = products.filter(p => p.month === mStr);
                 const mExpenses = mProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (p.price || 0) : acc, 0);
-                btn.className = `p-2.5 rounded-2xl border text-left transition-all ${isSelected ? 'bg-orange-500/20 border-orange-500 text-orange-300 font-bold shadow-md' : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-300'}`;
+                btn.className = `p-2.5 rounded-2xl border text-left transition-all ${isSelected ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold shadow-md' : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-300'}`;
                 btn.innerHTML = `<div class="text-xs font-semibold">${formatMonthName(mStr).split(' ')[0]}</div><div class="text-[10px] text-slate-400 mt-0.5">${formatMoney(mExpenses)}</div>`;
                 btn.onclick = () => { selectedMonthFilter = mStr; headerMonthSelect.value = mStr; renderApp(); };
                 annualMonthsGrid.appendChild(btn);
@@ -1327,7 +1327,7 @@
 
                 const card = document.createElement('button');
                 card.type = 'button';
-                card.className = `category-card-btn flex flex-col items-center justify-center gap-1.5 rounded-2xl p-3 text-center transition-all border-2 ${isSelected ? 'bg-orange-500/20 border-orange-500' : 'bg-slate-900/60 border-white/10 hover:border-orange-500/40'}`;
+                card.className = `category-card-btn flex flex-col items-center justify-center gap-1.5 rounded-2xl p-3 text-center transition-all border-2 ${isSelected ? 'bg-cyan-500/20 border-cyan-500' : 'bg-slate-900/60 border-white/10 hover:border-cyan-500/40'}`;
                 card.innerHTML = `
                     <span class="text-3xl leading-none">${emoji}</span>
                     <span class="text-[11px] sm:text-xs font-bold text-white leading-tight">${label}</span>
@@ -1588,7 +1588,7 @@
                     const emoji = getCategoryEmoji(cat);
                     const item = document.createElement('div');
                     item.className = 'flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-white/5';
-                    item.innerHTML = `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-400"></span><span class="font-semibold text-slate-200 text-xs sm:text-sm">${emoji} ${cat}</span></div><div class="text-right"><span class="font-bold text-slate-100 text-xs sm:text-sm">${formatMoney(val)}</span><span class="text-[10px] text-slate-400 block">${pct}%</span></div>`;
+                    item.innerHTML = `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-cyan-400"></span><span class="font-semibold text-slate-200 text-xs sm:text-sm">${emoji} ${cat}</span></div><div class="text-right"><span class="font-bold text-slate-100 text-xs sm:text-sm">${formatMoney(val)}</span><span class="text-[10px] text-slate-400 block">${pct}%</span></div>`;
                     legendGridIngresos.appendChild(item);
                 });
             }
@@ -1630,7 +1630,7 @@
         function applyMovementDateFilter(kind) {
             const listEl = document.getElementById(`movimientos-${kind}-list`);
             const dateFilterVal = document.getElementById(`filter-date-${kind}`).value;
-            const colorClass = kind === 'ingresos' ? 'border-l-orange-500' : 'border-l-rose-500';
+            const colorClass = kind === 'ingresos' ? 'border-l-cyan-500' : 'border-l-rose-500';
 
             let items = lastMonthProducts.filter(p => (kind === 'ingresos' ? p.type === 'ingreso' : p.type === 'egreso'));
             if (dateFilterVal) items = items.filter(p => p.date === dateFilterVal);
@@ -1722,7 +1722,7 @@
                     msg += `\n`;
                 });
             }
-            msg += `\n📱 *Generado con Finzia*`;
+            msg += `\n📱 *Generado con Ressetia*`;
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
@@ -1771,7 +1771,7 @@
             }
 
             return `
-                <div style="border-bottom:3px solid #f97316; padding-bottom:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="border-bottom:3px solid #22d3ee; padding-bottom:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <h1 style="font-size:20px; font-weight:bold; margin:0; color:#111;">Comprobante Financiero</h1>
                         <p style="font-size:12px; color:#666; margin:4px 0 0 0;">${monthLabel} · Emitido el ${today}</p>
@@ -1781,8 +1781,8 @@
 
                 <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
                     <tr>
-                        <td style="padding:8px; background:#fff7ed; border-radius:6px 0 0 6px;">
-                            <div style="font-size:11px; color:#ea580c; font-weight:bold;">INGRESOS TOTALES</div>
+                        <td style="padding:8px; background:#ecfeff; border-radius:6px 0 0 6px;">
+                            <div style="font-size:11px; color:#0891b2; font-weight:bold;">INGRESOS TOTALES</div>
                             <div style="font-size:16px; font-weight:bold; color:#111;">${formatMoney(totalIncome)}</div>
                         </td>
                         <td style="padding:8px; background:#fef2f2;">
@@ -1801,7 +1801,7 @@
                     ${rowsHTML}
                 </table>
 
-                <p style="margin-top:24px; font-size:10px; color:#999; text-align:center;">Generado con Finzia</p>
+                <p style="margin-top:24px; font-size:10px; color:#999; text-align:center;">Generado con Ressetia</p>
             `;
         }
 
@@ -1878,7 +1878,7 @@
             if (netWorth >= 0) {
                 statNetworth.className = 'text-2xl sm:text-3xl font-bold text-teal-300';
                 networthBadge.textContent = 'A Favor';
-                networthBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-semibold text-orange-300 bg-orange-500/20';
+                networthBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-semibold text-cyan-300 bg-cyan-500/20';
             } else {
                 statNetworth.className = 'text-2xl sm:text-3xl font-bold text-rose-400';
                 networthBadge.textContent = 'En Déficit';
@@ -1907,7 +1907,7 @@
                 const btn = document.createElement('button');
                 const isSelected = currentFilter === cat;
                 const label = cat === 'all' ? 'Todos' : `${getCategoryEmoji(cat)} ${cat}`;
-                btn.className = `px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${isSelected ? 'bg-orange-500 text-slate-950 shadow-md shadow-orange-500/20' : 'bg-slate-900/60 border border-white/10 text-slate-300 hover:bg-slate-800'}`;
+                btn.className = `px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${isSelected ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20' : 'bg-slate-900/60 border border-white/10 text-slate-300 hover:bg-slate-800'}`;
                 btn.textContent = label;
                 btn.onclick = () => { currentFilter = cat; renderApp(); };
                 filterContainer.appendChild(btn);
@@ -1936,7 +1936,7 @@
                 let itemsHTML = '';
                 catItems.forEach(item => {
                     const isIncome = item.type === 'ingreso';
-                    const borderColor = isIncome ? 'border-l-4 border-l-orange-500' : 'border-l-4 border-l-rose-500';
+                    const borderColor = isIncome ? 'border-l-4 border-l-cyan-500' : 'border-l-4 border-l-rose-500';
                     itemsHTML += `
                         <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 border border-white/5 ${borderColor} hover:border-white/10 transition-all ${item.completed ? 'opacity-60' : ''}">
                             <div class="flex items-center gap-2.5 min-w-0">
@@ -1946,13 +1946,13 @@
                                         <span class="text-base">${getEmoji(item.name, item.category, item.fuelType)}</span>
                                         <span class="text-sm font-semibold text-slate-100 ${item.completed ? 'line-through text-slate-400' : ''} truncate">${item.name}</span>
                                         ${item.fuelType ? `<span class="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-bold">${item.fuelType}</span>` : ''}
-                                        <span class="text-[9px] ${isIncome ? 'bg-orange-500/20 text-orange-300' : 'bg-rose-500/20 text-rose-300'} px-1.5 py-0.2 rounded-full font-bold">${isIncome ? 'INGRESO' : 'EGRESO'}</span>
+                                        <span class="text-[9px] ${isIncome ? 'bg-cyan-500/20 text-cyan-300' : 'bg-rose-500/20 text-rose-300'} px-1.5 py-0.2 rounded-full font-bold">${isIncome ? 'INGRESO' : 'EGRESO'}</span>
                                     </div>
                                     <div class="text-xs text-slate-400 mt-0.5">📅 ${formatDateDisplay(item.date)}</div>
                                 </div>
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0 pl-2">
-                                <span class="text-sm font-bold ${isIncome ? 'text-orange-400' : 'text-slate-100'}">${isIncome ? '+' : ''}${formatMoney(item.price)}</span>
+                                <span class="text-sm font-bold ${isIncome ? 'text-cyan-400' : 'text-slate-100'}">${isIncome ? '+' : ''}${formatMoney(item.price)}</span>
                                 <button onclick="deleteProduct('${item.id}')" title="Eliminar" class="text-slate-500 hover:text-rose-400 text-sm p-1 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
                             </div>
                         </div>`;
@@ -1966,7 +1966,7 @@
                                 <h3 class="font-bold text-sm sm:text-base text-white tracking-wide">${cat}</h3>
                                 <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full font-semibold">${catItems.length} items</span>
                             </div>
-                            <span class="font-bold text-xs sm:text-sm text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-xl border border-orange-500/20">Total: ${formatMoney(catTotal)}</span>
+                            <span class="font-bold text-xs sm:text-sm text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-xl border border-cyan-500/20">Total: ${formatMoney(catTotal)}</span>
                         </div>
                         <div class="space-y-2">${itemsHTML}</div>
                     </div>`;
@@ -2124,10 +2124,10 @@
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 if (btn.dataset.tab === tabName) {
-                    btn.classList.add('bg-orange-500', 'text-slate-950', 'shadow-md');
+                    btn.classList.add('bg-cyan-500', 'text-slate-950', 'shadow-md');
                     btn.classList.remove('text-slate-400');
                 } else {
-                    btn.classList.remove('bg-orange-500', 'text-slate-950', 'shadow-md');
+                    btn.classList.remove('bg-cyan-500', 'text-slate-950', 'shadow-md');
                     btn.classList.add('text-slate-400');
                 }
             });
@@ -2521,11 +2521,11 @@
             btn.addEventListener('click', () => {
                 const q = QUADRANT_INFO[btn.dataset.quadrant];
                 const infoBox = document.getElementById('quadrant-info');
-                infoBox.innerHTML = `<p class="font-bold text-orange-300 mb-1">${q.title}</p><p>${q.text}</p>`;
+                infoBox.innerHTML = `<p class="font-bold text-cyan-300 mb-1">${q.title}</p><p>${q.text}</p>`;
                 infoBox.classList.remove('hidden');
 
-                document.querySelectorAll('.quadrant-btn').forEach(b => b.classList.remove('border-orange-500/40'));
-                btn.classList.add('border-orange-500/40');
+                document.querySelectorAll('.quadrant-btn').forEach(b => b.classList.remove('border-cyan-500/40'));
+                btn.classList.add('border-cyan-500/40');
             });
         });
 
@@ -2533,7 +2533,7 @@
         // REGLA DE REPARTO (Diezmo, Babilonia, Dave Ramsey, 50/30/20, o personalizada)
         // ============================================
         const ALLOCATION_RULES = {
-            diezmo: [{ name: 'Ofrenda / Diezmo', pct: 10, color: '#f97316' }, { name: 'Vivir', pct: 90, color: '#38bdf8' }],
+            diezmo: [{ name: 'Ofrenda / Diezmo', pct: 10, color: '#22d3ee' }, { name: 'Vivir', pct: 90, color: '#38bdf8' }],
             babilonia: [{ name: 'Invertir', pct: 10, color: '#a855f7' }, { name: 'Vivir', pct: 90, color: '#38bdf8' }],
             ramsey: [{ name: 'Invertir', pct: 65, color: '#a855f7' }, { name: 'Vivir', pct: 35, color: '#38bdf8' }],
             '503020': [{ name: 'Necesidades', pct: 50, color: '#38bdf8' }, { name: 'Deseos', pct: 30, color: '#f472b6' }, { name: 'Ahorro', pct: 20, color: '#a855f7' }]
@@ -2554,7 +2554,7 @@
                 return `
                     <div class="flex items-center justify-between bg-slate-900/60 rounded-xl p-2.5">
                         <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full" style="background-color:${b.color || '#f97316'}"></span>
+                            <span class="w-2.5 h-2.5 rounded-full" style="background-color:${b.color || '#22d3ee'}"></span>
                             <span class="text-xs sm:text-sm text-slate-200 font-semibold">${b.name}</span>
                         </div>
                         <div class="text-right">
@@ -2581,7 +2581,7 @@
         document.getElementById('btn-save-allocation-custom').addEventListener('click', () => {
             const rows = document.querySelectorAll('.allocation-custom-row');
             const buckets = [];
-            const colors = ['#f97316', '#38bdf8', '#a855f7', '#f472b6', '#22d3ee', '#84cc16'];
+            const colors = ['#22d3ee', '#38bdf8', '#a855f7', '#f472b6', '#22d3ee', '#84cc16'];
             let total = 0;
             rows.forEach((row, i) => {
                 const name = row.querySelector('.alloc-name').value.trim();
@@ -2686,14 +2686,14 @@
         }
 
         document.getElementById('btn-clear-assistant').addEventListener('click', () => {
-            if (!confirm('¿Borrar toda esta conversación con Finzia? No se puede deshacer.')) return;
+            if (!confirm('¿Borrar toda esta conversación con Ressetia? No se puede deshacer.')) return;
             assistantConversation = [];
             localStorage.removeItem(getAssistantStorageKey());
             document.getElementById('assistant-messages').innerHTML = '';
             const welcomeBubble = document.createElement('div');
             welcomeBubble.id = 'assistant-welcome-bubble';
             welcomeBubble.className = 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]';
-            welcomeBubble.innerHTML = 'Hola, soy Finzia 🔥. Puedo mirar tus gastos, ingresos, deudas e inversiones y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿en qué estoy gastando más?"</em> o <em>"¿cómo salgo de esta deuda?"</em>';
+            welcomeBubble.innerHTML = 'Hola, soy Ressetia 🔥. Puedo mirar tus gastos, ingresos, deudas e inversiones y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿en qué estoy gastando más?"</em> o <em>"¿cómo salgo de esta deuda?"</em>';
             document.getElementById('assistant-messages').appendChild(welcomeBubble);
         });
 
@@ -2833,7 +2833,7 @@
             const container = document.getElementById('assistant-messages');
             const bubble = document.createElement('div');
             bubble.className = isUser
-                ? 'bg-orange-500/20 border border-orange-500/30 rounded-2xl rounded-tr-sm p-3 text-base text-white max-w-[90%] sm:max-w-[85%] ml-auto'
+                ? 'bg-cyan-500/20 border border-cyan-500/30 rounded-2xl rounded-tr-sm p-3 text-base text-white max-w-[90%] sm:max-w-[85%] ml-auto'
                 : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%] space-y-2';
 
             if (isUser) {
@@ -2851,7 +2851,7 @@
                 // Botón para escuchar (y repetir tantas veces como quieras)
                 const speakBtn = document.createElement('button');
                 speakBtn.type = 'button';
-                speakBtn.className = 'text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5';
+                speakBtn.className = 'text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5';
                 speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
                 speakBtn.addEventListener('click', () => speakAssistantText(text));
                 actionsRow.appendChild(speakBtn);
