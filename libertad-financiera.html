@@ -660,6 +660,34 @@
         userSalary = parseFloat(settings?.salary) || 0;
         await fetchExternalPatrimonioNeto();
         await loadLibertadData();
+        await runAutoPayFromPatrimonioIfNeeded();
+    }
+
+    // Si venimos de Control Financiero con un pago pendiente de confirmar, lo aplicamos
+    // acá mismo con el código que ya sabemos que funciona bien (mismo que "Ingresos Extras"),
+    // y volvemos avisando que ya se puede descontar del Patrimonio Neto.
+    async function runAutoPayFromPatrimonioIfNeeded() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('auto_pay_patrimonio') !== '1') return;
+
+        const pendingRaw = localStorage.getItem(`finzia_pending_patrimonio_payment_${currentUser.id}`);
+        if (!pendingRaw) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        let pending;
+        try { pending = JSON.parse(pendingRaw); } catch (e) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        showLibertadToast('Aplicando tu pago desde Control Financiero...');
+        await applyPaymentAcrossDebts(pending.amount, 'Patrimonio Neto', 'Pago desde Control Financiero');
+
+        // Volvemos avisando que el pago ya se confirmó, para que recién ahí se descuente
+        // la plata del Patrimonio Neto (nunca antes de estar seguros).
+        window.location.href = 'index.html?patrimonio_payment_done=1';
     }
 
     // Trae el Patrimonio Neto de este mes desde Control Financiero (index.html),
