@@ -2352,7 +2352,14 @@
         // el PDF completo, que a veces pesa mucho y puede agotar la memoria del celular)
         // Convierte TODAS las páginas de un PDF (hasta un límite) en imágenes livianas,
         // para que la IA pueda encontrar el monto sin importar en qué página esté.
-        async function pdfAllPagesToBase64(file, maxDimension = 1400, quality = 0.7, maxPages = 6) {
+        async function pdfAllPagesToBase64(file, maxDimension, quality, maxPages) {
+            // Detectamos celular para ser más livianos ahí (menos resolución, menos páginas),
+            // ya que es donde más ajustada anda la memoria disponible.
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            maxDimension = maxDimension ?? (isMobile ? 900 : 1400);
+            quality = quality ?? (isMobile ? 0.55 : 0.7);
+            maxPages = maxPages ?? (isMobile ? 3 : 6);
+
             // La librería carga como módulo moderno, puede tardar un instante en estar
             // lista justo después de abrir la página — esperamos un poco antes de fallar.
             let waited = 0;
@@ -2373,23 +2380,33 @@
             const images = [];
 
             for (let i = 1; i <= totalPages; i++) {
-                const page = await pdf.getPage(i);
-                const baseViewport = page.getViewport({ scale: 1 });
-                const scale = maxDimension / Math.max(baseViewport.width, baseViewport.height);
-                const viewport = page.getViewport({ scale });
+                try {
+                    const page = await pdf.getPage(i);
+                    const baseViewport = page.getViewport({ scale: 1 });
+                    const scale = maxDimension / Math.max(baseViewport.width, baseViewport.height);
+                    const viewport = page.getViewport({ scale });
 
-                const canvas = document.createElement('canvas');
-                canvas.width = viewport.width;
-                canvas.height = viewport.height;
-                const ctx = canvas.getContext('2d');
-                await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    const ctx = canvas.getContext('2d');
+                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
-                const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                images.push(dataUrl.split(',')[1]);
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    images.push(dataUrl.split(',')[1]);
 
-                // Liberamos el canvas de la memoria antes de pasar a la próxima página
-                canvas.width = 0;
-                canvas.height = 0;
+                    // Liberamos el canvas de la memoria antes de pasar a la próxima página
+                    canvas.width = 0;
+                    canvas.height = 0;
+                } catch (pageErr) {
+                    // Si una página puntual falla por memoria, seguimos con las demás en
+                    // vez de cortar todo el proceso — mejor analizar 2 de 3 páginas que nada.
+                    console.warn(`No se pudo procesar la página ${i} del PDF:`, pageErr);
+                }
+            }
+
+            if (images.length === 0) {
+                throw new Error('No se pudo procesar ninguna página del PDF en este dispositivo.');
             }
 
             return images;
