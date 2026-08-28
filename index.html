@@ -665,15 +665,37 @@
     <div id="salary-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30">
             <div class="flex items-center justify-between">
-                <h3 class="font-bold text-white text-base">Ingresar Sueldo Mensual</h3>
+                <h3 class="font-bold text-white text-base">Ingresar Sueldo</h3>
                 <button onclick="closeSalaryModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-xs sm:text-sm text-slate-400">Configura tu ingreso base habitual.</p>
-            <div>
-                <label class="block text-xs font-medium text-slate-400 mb-1">Monto del Sueldo ($)</label>
+            <p class="text-xs sm:text-sm text-slate-400">¿Cómo cobrás habitualmente?</p>
+
+            <div class="grid grid-cols-3 gap-2">
+                <button type="button" onclick="selectIncomeFrequency('mensual')" id="freq-btn-mensual" class="income-freq-btn glass-card rounded-xl p-2.5 text-center border-2 border-cyan-500 bg-cyan-500/10">
+                    <div class="text-lg mb-0.5">📅</div>
+                    <div class="text-[11px] font-bold text-white">Mensual</div>
+                </button>
+                <button type="button" onclick="selectIncomeFrequency('quincenal')" id="freq-btn-quincenal" class="income-freq-btn glass-card rounded-xl p-2.5 text-center border-2 border-transparent">
+                    <div class="text-lg mb-0.5">🗓️</div>
+                    <div class="text-[11px] font-bold text-white">Quincenal</div>
+                </button>
+                <button type="button" onclick="selectIncomeFrequency('diario')" id="freq-btn-diario" class="income-freq-btn glass-card rounded-xl p-2.5 text-center border-2 border-transparent">
+                    <div class="text-lg mb-0.5">☀️</div>
+                    <div class="text-[11px] font-bold text-white">Por Día</div>
+                </button>
+            </div>
+
+            <div id="salary-amount-section">
+                <label id="salary-amount-label" class="block text-xs font-medium text-slate-400 mb-1">Monto del Sueldo Mensual ($)</label>
                 <input type="number" id="modal-salary-input" placeholder="Ej. 500000"
                     class="w-full bg-slate-900 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white font-bold">
+                <p id="salary-amount-hint" class="text-[11px] text-slate-500 mt-1"></p>
             </div>
+
+            <div id="salary-daily-section" class="hidden bg-slate-900/60 rounded-2xl p-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Como cobrás distinto cada día (comerciante, taxi, app de viajes, etc.), no cargues un monto fijo acá. Simplemente anotá lo que ganás <strong class="text-cyan-300">cada día</strong> en "Ingresos y Egresos" (por voz o a mano) — ahí se va sumando solo, día a día, para armar tu ingreso real del mes.
+            </div>
+
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeSalaryModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800">Cancelar</button>
                 <button onclick="saveSalaryModal()" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs">Guardar</button>
@@ -1224,6 +1246,7 @@
             const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
             if (settings) {
                 salary = parseFloat(settings.salary) || 500000;
+                incomeFrequency = settings.income_frequency || 'mensual';
                 const subscriptionActive = settings.is_premium === true &&
                     (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
                 applyPremiumUI(subscriptionActive, settings.current_plan);
@@ -1254,7 +1277,7 @@
 
         async function saveSalaryToDB() {
             if (!currentUser) return;
-            await sb.from('user_settings').upsert({ user_id: currentUser.id, salary });
+            await sb.from('user_settings').upsert({ user_id: currentUser.id, salary, income_frequency: incomeFrequency });
         }
 
         function toggleMonthDrawer() {
@@ -1268,8 +1291,45 @@
             }
         }
 
+        let incomeFrequency = 'mensual'; // 'mensual' | 'quincenal' | 'diario'
+
+        function selectIncomeFrequency(freq) {
+            incomeFrequency = freq;
+            document.querySelectorAll('.income-freq-btn').forEach(btn => {
+                btn.classList.remove('border-cyan-500', 'bg-cyan-500/10');
+                btn.classList.add('border-transparent');
+            });
+            const activeBtn = document.getElementById(`freq-btn-${freq}`);
+            activeBtn.classList.remove('border-transparent');
+            activeBtn.classList.add('border-cyan-500', 'bg-cyan-500/10');
+
+            const amountSection = document.getElementById('salary-amount-section');
+            const dailySection = document.getElementById('salary-daily-section');
+            const label = document.getElementById('salary-amount-label');
+            const hint = document.getElementById('salary-amount-hint');
+            const input = document.getElementById('modal-salary-input');
+
+            if (freq === 'diario') {
+                amountSection.classList.add('hidden');
+                dailySection.classList.remove('hidden');
+            } else {
+                amountSection.classList.remove('hidden');
+                dailySection.classList.add('hidden');
+                if (freq === 'mensual') {
+                    label.textContent = 'Monto del Sueldo Mensual ($)';
+                    hint.textContent = '';
+                    input.value = salary || '';
+                } else if (freq === 'quincenal') {
+                    label.textContent = 'Monto por Quincena ($)';
+                    hint.textContent = 'Se calcula tu sueldo mensual como el doble de este monto (2 quincenas).';
+                    input.value = salary ? (salary / 2) : '';
+                }
+            }
+        }
+
         function openSalaryModal() {
-            document.getElementById('modal-salary-input').value = salary;
+            selectIncomeFrequency(incomeFrequency || 'mensual');
+            document.getElementById('modal-salary-input').value = incomeFrequency === 'quincenal' ? (salary / 2) : salary;
             const modal = document.getElementById('salary-modal');
             modal.classList.remove('hidden'); modal.classList.add('flex');
         }
@@ -1278,13 +1338,24 @@
             modal.classList.add('hidden'); modal.classList.remove('flex');
         }
         async function saveSalaryModal() {
-            const val = parseFloat(document.getElementById('modal-salary-input').value);
-            if (!isNaN(val) && val >= 0) {
-                salary = val;
+            if (incomeFrequency === 'diario') {
+                salary = 0;
                 await saveSalaryToDB();
                 renderApp();
                 closeSalaryModal();
-                showToast('Sueldo actualizado con éxito');
+                showToast('Listo — anotá tus ingresos día a día en "Ingresos y Egresos"');
+                return;
+            }
+
+            const val = parseFloat(document.getElementById('modal-salary-input').value);
+            if (!isNaN(val) && val >= 0) {
+                salary = incomeFrequency === 'quincenal' ? val * 2 : val;
+                await saveSalaryToDB();
+                renderApp();
+                closeSalaryModal();
+                showToast(incomeFrequency === 'quincenal'
+                    ? `Sueldo actualizado (2 quincenas de $${val.toLocaleString()} = $${salary.toLocaleString()} por mes)`
+                    : 'Sueldo actualizado con éxito');
             }
         }
 
