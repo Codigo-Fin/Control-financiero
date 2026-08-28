@@ -152,17 +152,66 @@
 
     <div class="max-w-6xl mx-auto w-full z-10 space-y-5" id="printable-area">
 
+        <!-- Menú lateral (propio de Ressetia: fondo oscuro, celeste neón, sin calcar ningún otro estilo) -->
+        <div id="side-menu-overlay" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40"></div>
+        <div id="side-menu" class="fixed top-0 left-0 h-full w-[280px] max-w-[80vw] bg-slate-950 border-r border-cyan-500/20 z-50 -translate-x-full transition-transform duration-300 overflow-y-auto">
+            <div class="p-5 border-b border-white/10 flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 text-cyan-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-arrow-rotate-right text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-base">Ressetia</p>
+                    <p class="text-[11px] text-slate-500">Menú principal</p>
+                </div>
+                <button id="btn-close-menu" class="ml-auto text-slate-500 hover:text-white text-lg px-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <nav class="p-3 space-y-1">
+                <button data-menu-tab="cuadrante" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-house w-5 text-center"></i> Inicio
+                </button>
+                <button data-menu-tab="gastos" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-cart-shopping w-5 text-center"></i> Ingresos y Egresos
+                </button>
+                <button data-menu-tab="resumen" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
+                </button>
+
+                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
+                <a href="libertad-financiera.html?goto=saldo" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Saldos
+                </a>
+                <a href="libertad-financiera.html?goto=deudas" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Registrar Deudas
+                </a>
+                <a href="libertad-financiera.html?goto=emergencia" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-hand-holding-dollar w-5 text-center"></i> Pagar Deudas
+                </a>
+                <a href="libertad-financiera.html?goto=inversiones" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
+                </a>
+
+                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
+                <button data-menu-tab="suscripcion" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-amber-500/10 hover:text-amber-300 transition-all">
+                    <i class="fa-solid fa-star w-5 text-center"></i> Suscripción
+                </button>
+            </nav>
+        </div>
+
         <!-- Barra superior fija: identidad + logout -->
         <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <button id="btn-open-menu" title="Menú" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
                 <div class="p-3 bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 rounded-2xl text-cyan-400">
                     <i class="fa-solid fa-arrow-rotate-right text-xl"></i>
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent">
                         Ressetia
                     </h1>
-                    <p class="text-slate-400 text-xs sm:text-sm">Control Financiero — Gastos, Deudas, Ahorro, Inversiones</p>
+                    <p class="text-slate-400 text-xs sm:text-sm truncate">Control Financiero — Gastos, Deudas, Ahorro, Inversiones</p>
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
@@ -185,58 +234,6 @@
 
         <!-- ==================== TAB: CUADRANTE DE FLUJO ==================== -->
         <div id="tab-panel-cuadrante" class="tab-panel hidden space-y-5">
-
-        <!-- SUSCRIPCIÓN -->
-        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                    <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                        <i class="fa-solid fa-star text-fuchsia-400"></i> Suscripción Premium
-                    </h3>
-                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <a href="libertad-financiera.html" target="_blank"
-                        class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-arrow-rotate-right"></i> Libertad Financiera
-                    </a>
-                    <button id="btn-subscribe"
-                        class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-credit-card"></i> Suscribirme
-                    </button>
-                    <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
-                        <i class="fa-solid fa-circle-check"></i> Ya sos Premium
-                    </span>
-                </div>
-            </div>
-
-            <!-- Mejorar de plan (solo visible si sos premium y estás en el plan Mensual) -->
-            <div id="upgrade-plan-box" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p class="text-sm text-purple-200">¿Querés pasarte al plan Anual y ahorrar?</p>
-                <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
-                    Cambiar a plan Anual ($69.990)
-                </button>
-            </div>
-
-            <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
-            <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
-                <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button data-plan="mensual" data-price="6999" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
-                        <div class="text-xs text-slate-400">Mensual</div>
-                        <div class="text-lg font-bold text-white">$6.999</div>
-                    </button>
-                    <button data-plan="anual" data-price="69990" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
-                        <div class="text-xs text-slate-400">Anual</div>
-                        <div class="text-lg font-bold text-white">$69.990</div>
-                    </button>
-                </div>
-            </div>
-
-            <button id="btn-unsubscribe" class="hidden text-xs text-slate-500 hover:text-rose-400 underline underline-offset-2">
-                Dar de baja mi suscripción
-            </button>
-        </section>
 
         <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-4">
             <p class="text-sm text-slate-300 leading-relaxed">
@@ -642,6 +639,61 @@
         </section>
 
         </div> <!-- fin tab-panel-gastos -->
+
+        <!-- ==================== TAB: SUSCRIPCIÓN (exclusivo, solo desde el menú) ==================== -->
+        <div id="tab-panel-suscripcion" class="tab-panel hidden space-y-5">
+        <!-- SUSCRIPCIÓN -->
+        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
+                        <i class="fa-solid fa-star text-fuchsia-400"></i> Suscripción Premium
+                    </h3>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="libertad-financiera.html" target="_blank"
+                        class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-rotate-right"></i> Libertad Financiera
+                    </a>
+                    <button id="btn-subscribe"
+                        class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-credit-card"></i> Suscribirme
+                    </button>
+                    <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Ya sos Premium
+                    </span>
+                </div>
+            </div>
+
+            <!-- Mejorar de plan (solo visible si sos premium y estás en el plan Mensual) -->
+            <div id="upgrade-plan-box" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-sm text-purple-200">¿Querés pasarte al plan Anual y ahorrar?</p>
+                <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
+                    Cambiar a plan Anual ($69.990)
+                </button>
+            </div>
+
+            <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
+            <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
+                <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button data-plan="mensual" data-price="6999" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <div class="text-xs text-slate-400">Mensual</div>
+                        <div class="text-lg font-bold text-white">$6.999</div>
+                    </button>
+                    <button data-plan="anual" data-price="69990" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <div class="text-xs text-slate-400">Anual</div>
+                        <div class="text-lg font-bold text-white">$69.990</div>
+                    </button>
+                </div>
+            </div>
+
+            <button id="btn-unsubscribe" class="hidden text-xs text-slate-500 hover:text-rose-400 underline underline-offset-2">
+                Dar de baja mi suscripción
+            </button>
+        </section>
+        </div> <!-- fin tab-panel-suscripcion -->
     </div>
 
     <footer class="max-w-6xl mx-auto w-full mt-6 z-10">
@@ -2215,6 +2267,39 @@
         });
 
         // ============================================
+        // MENÚ LATERAL (navegación completa: esta página + Libertad Financiera)
+        // ============================================
+        function openSideMenu() {
+            document.getElementById('side-menu').classList.remove('-translate-x-full');
+            document.getElementById('side-menu-overlay').classList.remove('hidden');
+        }
+        function closeSideMenu() {
+            document.getElementById('side-menu').classList.add('-translate-x-full');
+            document.getElementById('side-menu-overlay').classList.add('hidden');
+        }
+        document.getElementById('btn-open-menu').addEventListener('click', openSideMenu);
+        document.getElementById('btn-close-menu').addEventListener('click', closeSideMenu);
+        document.getElementById('side-menu-overlay').addEventListener('click', closeSideMenu);
+
+        document.querySelectorAll('.menu-item-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchTab(btn.dataset.menuTab);
+                closeSideMenu();
+            });
+        });
+
+        // Si venimos de un link externo (ej. desde el menú de Libertad Financiera)
+        // con ?goto=xxx, abrimos esa pestaña directo al cargar.
+        function checkGotoParam() {
+            const params = new URLSearchParams(window.location.search);
+            const goto = params.get('goto');
+            if (goto && document.getElementById('tab-panel-' + goto)) {
+                switchTab(goto);
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        }
+
+        // ============================================
         // CARGA POR VOZ (para quien esté apurado, o no pueda escribir)
         // ============================================
         const VOICE_CATEGORY_KEYWORDS = {
@@ -3095,6 +3180,7 @@
             applyLargeTextMode(localStorage.getItem('large_text_mode') === '1');
             updateFormSubtypes();
             switchTab('cuadrante');
+            checkGotoParam();
             restoreAllocationRule();
             checkSession().then(() => { checkReturnFromPayment(); checkPatrimonioPaymentConfirmation(); });
 
