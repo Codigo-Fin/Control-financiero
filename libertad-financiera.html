@@ -92,9 +92,60 @@
 
         <div id="trial-banner" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm text-center py-2 px-3 rounded-xl"></div>
 
-        <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 text-sm transition-colors">
-            <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
-        </a>
+        <!-- Menú lateral (mismo componente que Control Financiero) -->
+        <div id="side-menu-overlay" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40"></div>
+        <div id="side-menu" class="fixed top-0 left-0 h-full w-[280px] max-w-[80vw] bg-slate-950 border-r border-cyan-500/20 z-50 -translate-x-full transition-transform duration-300 overflow-y-auto">
+            <div class="p-5 border-b border-white/10 flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 text-cyan-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-arrow-rotate-right text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-base">Ressetia</p>
+                    <p class="text-[11px] text-slate-500">Menú principal</p>
+                </div>
+                <button id="btn-close-menu" class="ml-auto text-slate-500 hover:text-white text-lg px-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <nav class="p-3 space-y-1">
+                <a href="index.html?goto=cuadrante" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-house w-5 text-center"></i> Inicio
+                </a>
+                <a href="index.html?goto=gastos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-cart-shopping w-5 text-center"></i> Ingresos y Egresos
+                </a>
+                <a href="index.html?goto=resumen" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
+                </a>
+
+                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
+                <button data-menu-lf-tab="saldo" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Saldos
+                </button>
+                <button data-menu-lf-tab="deudas" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Registrar Deudas
+                </button>
+                <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-hand-holding-dollar w-5 text-center"></i> Pagar Deudas
+                </button>
+                <button data-menu-lf-tab="inversiones" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
+                </button>
+
+                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
+                <a href="index.html?goto=suscripcion" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-amber-500/10 hover:text-amber-300 transition-all">
+                    <i class="fa-solid fa-star w-5 text-center"></i> Suscripción
+                </a>
+            </nav>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <button id="btn-open-menu" title="Menú" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 text-sm transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
+            </a>
+        </div>
 
         <header class="glass-panel rounded-3xl p-5 sm:p-7 text-center space-y-1">
             <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-2">
@@ -1777,7 +1828,40 @@
         btn.addEventListener('click', () => switchLfTab(btn.dataset.tab));
     });
 
+    // ============================================
+    // MENÚ LATERAL
+    // ============================================
+    function openSideMenu() {
+        document.getElementById('side-menu').classList.remove('-translate-x-full');
+        document.getElementById('side-menu-overlay').classList.remove('hidden');
+    }
+    function closeSideMenu() {
+        document.getElementById('side-menu').classList.add('-translate-x-full');
+        document.getElementById('side-menu-overlay').classList.add('hidden');
+    }
+    document.getElementById('btn-open-menu').addEventListener('click', openSideMenu);
+    document.getElementById('btn-close-menu').addEventListener('click', closeSideMenu);
+    document.getElementById('side-menu-overlay').addEventListener('click', closeSideMenu);
+
+    document.querySelectorAll('.menu-item-btn-lf').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchLfTab(btn.dataset.menuLfTab);
+            closeSideMenu();
+        });
+    });
+
+    // Si venimos con ?goto=xxx (desde el menú de Control Financiero), abrimos esa pestaña directo
+    function checkGotoParamLF() {
+        const params = new URLSearchParams(window.location.search);
+        const goto = params.get('goto');
+        if (goto && document.getElementById('lf-tab-' + goto)) {
+            switchLfTab(goto);
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }
+
     switchLfTab('saldo');
+    checkGotoParamLF();
 
     checkAccess();
 
