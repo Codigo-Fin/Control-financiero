@@ -821,7 +821,7 @@
 
     <script>
         const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
+        const SUPABASE_ANON_KEY = 'yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
 
@@ -2412,15 +2412,28 @@
             return images;
         }
 
+        // Convierte un archivo a base64 de forma liviana (solo lectura, sin dibujar nada
+        // en pantalla) — mucho más liviano en memoria que renderizar páginas con pdf.js.
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
         async function processReceiptFile(file, kind, statusEl) {
             statusEl.textContent = 'Leyendo y analizando con IA...';
             try {
                 let body;
                 if (kind === 'pdf') {
-                    // Convertimos TODAS las páginas a imágenes livianas, en vez de mandar el PDF entero
-                    statusEl.textContent = 'Leyendo las páginas del PDF...';
-                    const images = await pdfAllPagesToBase64(file);
-                    body = { images, mediaType: 'image/jpeg', kind: 'multi-image' };
+                    // Mandamos el PDF directo a la IA, que lo puede leer ella misma —
+                    // así el celular solo tiene que leer el archivo, no "dibujarlo" en
+                    // imágenes primero (que era lo que le pesaba a los celulares con poca memoria).
+                    statusEl.textContent = 'Leyendo el PDF...';
+                    const base64Data = await fileToBase64(file);
+                    body = { base64Data, mediaType: 'application/pdf', kind: 'pdf-document' };
                     statusEl.textContent = 'Analizando con IA...';
                 } else {
                     const compressed = await compressImageToBase64(file);
