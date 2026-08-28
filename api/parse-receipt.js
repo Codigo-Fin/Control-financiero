@@ -28,6 +28,7 @@ export default async function handler(req, res) {
 
   const { base64Data, images, mediaType, kind } = req.body || {};
   const isMultiImage = kind === 'multi-image' && Array.isArray(images) && images.length > 0;
+  const isPdfDocument = kind === 'pdf-document';
 
   if (!isMultiImage && !base64Data) {
     return res.status(400).json({ error: 'Falta el archivo' });
@@ -79,10 +80,13 @@ Reglas:
 - Si las imágenes no se pueden leer bien, devolvé amount: null.
 - Devolvé SOLO el JSON, nada de explicaciones ni texto extra.`;
 
-  // Armamos los bloques de imagen: uno solo, o varios si son las páginas de un PDF
-  const imageBlocks = isMultiImage
-    ? images.map(img => ({ type: 'image', source: { type: 'base64', media_type: mediaType, data: img } }))
-    : [{ type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } }];
+  // Armamos el bloque de contenido: PDF completo (la IA lo lee directo, sin necesitar
+  // que el celular lo convierta antes en imágenes), varias imágenes, o una sola imagen.
+  const contentBlocks = isPdfDocument
+    ? [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }]
+    : isMultiImage
+      ? images.map(img => ({ type: 'image', source: { type: 'base64', media_type: mediaType, data: img } }))
+      : [{ type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } }];
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -90,7 +94,8 @@ Reglas:
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'pdfs-2024-09-25'
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
@@ -99,8 +104,8 @@ Reglas:
         messages: [{
           role: 'user',
           content: [
-            ...imageBlocks,
-            { type: 'text', text: isMultiImage ? 'Estas son las páginas de un mismo comprobante/factura. Analizalas todas y devolveme el JSON pedido.' : 'Analizá este comprobante y devolveme el JSON pedido.' }
+            ...contentBlocks,
+            { type: 'text', text: (isMultiImage || isPdfDocument) ? 'Estas son las páginas de un mismo comprobante/factura. Analizalas todas y devolveme el JSON pedido.' : 'Analizá este comprobante y devolveme el JSON pedido.' }
           ]
         }]
       })
