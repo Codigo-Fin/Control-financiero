@@ -69,10 +69,11 @@ Guía de categorías (con ejemplos, usá tu criterio para casos parecidos):
 - Otros: SOLO si de verdad no encaja en ninguna.
 
 Reglas:
-- El monto tiene que ser el TOTAL final a pagar del ticket/factura — buscá específicamente la línea que dice "TOTAL" (no "Efectivo", no "Vuelto", no "Cambio", esos son otra cosa).
-- Los tickets argentinos usan el punto como separador de miles y la coma como separador decimal: "$5.890,00" significa cinco mil ochocientos noventa pesos (5890), NO 5,89 ni 589000. Prestá mucha atención a esto para no leer mal el monto.
+- El monto tiene que ser el TOTAL final a pagar del ticket/factura — buscá específicamente la línea que dice "TOTAL" (no "Efectivo", no "Vuelto", no "Cambio", esos son otra cosa). En un recibo de sueldo, el monto es el "TOTAL NETO".
+- Los tickets argentinos usan el punto como separador de miles y la coma como separador decimal: "$5.890,00" significa cinco mil ochocientos noventa pesos (5890), NO 5,89 ni 589000. IMPORTANTE: si hay MÁS DE UN PUNTO o el número es largo, seguís usando la MISMA regla — por ejemplo "707.104,16" significa setecientos siete mil ciento cuatro con dieciséis centavos (707104.16), NUNCA lo recortes a "707" ni tomes solo la primera parte antes del primer punto. Leé el número completo de punta a punta antes de convertirlo.
 - Si te llegan VARIAS imágenes (varias páginas de un mismo PDF), es UN SOLO comprobante — el monto total puede estar en cualquiera de las páginas (a veces en la primera, a veces en la última, a veces en un comprobante de pago que viene en una página aparte). Revisá TODAS las páginas antes de decidir el monto.
-- Casi siempre es un "egreso" (es un comprobante de algo que se pagó). Solo poné "ingreso" si es evidente que es un recibo de cobro a favor de la persona.
+- Si el documento es un RECIBO DE SUELDO, LIQUIDACIÓN DE HABERES, o similar (tiene campos como "LEGAJO", "REM. ASIGNADA", "TOTAL NETO", nombre de un empleado y un empleador) — es un "ingreso" (es plata que la persona cobró, no que gastó), el monto es el "TOTAL NETO", category es "Otros", y concept es "Sueldo" (o "Sueldo" + el nombre de la empresa si se lee, ej. "Sueldo Gulma SRL").
+- Para cualquier otro caso, casi siempre es un "egreso" (es un comprobante de algo que se pagó). Solo poné "ingreso" si es evidente que es un recibo de cobro a favor de la persona (recibo de sueldo, transferencia recibida, etc.).
 - "concept" tiene que ser el nombre del comercio o servicio si se lee (ej. "Factura de Edesur", "VEP AFIP", "Boleta de patentes"), o si no es legible, un resumen corto de lo comprado, nunca una lista larga de todos los ítems.
 - category tiene que ser EXACTAMENTE una de la lista.
 - Si las imágenes no se pueden leer bien, devolvé amount: null.
