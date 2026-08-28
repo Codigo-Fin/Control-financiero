@@ -17,7 +17,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
+    <script type="module">
+        // pdf.js 4.x en cdnjs solo distribuye el formato moderno (.mjs) — lo importamos
+        // como módulo y lo colgamos de "window" para que el resto del código (que no
+        // usa módulos) pueda seguir usando "pdfjsLib" normalmente.
+        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
+        window.pdfjsLib = pdfjsLib;
+    </script>
 
     <style>
         body {
@@ -2347,8 +2353,19 @@
         // Convierte TODAS las páginas de un PDF (hasta un límite) en imágenes livianas,
         // para que la IA pueda encontrar el monto sin importar en qué página esté.
         async function pdfAllPagesToBase64(file, maxDimension = 1400, quality = 0.7, maxPages = 6) {
+            // La librería carga como módulo moderno, puede tardar un instante en estar
+            // lista justo después de abrir la página — esperamos un poco antes de fallar.
+            let waited = 0;
+            while (!window.pdfjsLib && waited < 4000) {
+                await new Promise(r => setTimeout(r, 200));
+                waited += 200;
+            }
+            if (!window.pdfjsLib) {
+                throw new Error('No se pudo cargar el lector de PDF. Recargá la página y probá de nuevo.');
+            }
+
             if (window.pdfjsLib && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js';
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
             }
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
