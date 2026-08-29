@@ -17,13 +17,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module">
-        // pdf.js 4.x en cdnjs solo distribuye el formato moderno (.mjs) — lo importamos
-        // como módulo y lo colgamos de "window" para que el resto del código (que no
-        // usa módulos) pueda seguir usando "pdfjsLib" normalmente.
-        import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.mjs';
-        window.pdfjsLib = pdfjsLib;
-    </script>
 
     <style>
         body {
@@ -1403,6 +1396,7 @@
             if (!isNaN(val) && val >= 0) {
                 salary = incomeFrequency === 'quincenal' ? val * 2 : val;
                 await saveSalaryToDB();
+                await applyAutoAllocationToSalary();
                 renderApp();
                 closeSalaryModal();
                 showToast(incomeFrequency === 'quincenal'
@@ -1557,6 +1551,62 @@
             showToast(`✅ Pagaste ${formatMoney(pending.amount)} de tu deuda con tu Patrimonio Neto.`);
         }
 
+        // Devuelve qué parte de la regla de reparto elegida se "aparta" automáticamente
+        // (la porción que sale de circulación: diezmo, inversión, ahorro). El resto
+        // ("Vivir", "Necesidades", "Deseos") se sigue gastando con normalidad, sin tocar.
+        function getAutoDeductBucket(ruleCode) {
+            const map = {
+                diezmo: { name: 'Ofrenda / Diezmo', pct: 10 },
+                babilonia: { name: 'Invertir', pct: 10 },
+                ramsey: { name: 'Invertir', pct: 65 },
+                '503020': { name: 'Ahorro', pct: 20 }
+            };
+            return map[ruleCode] || null; // la regla "custom" queda solo informativa, no se automatiza
+        }
+
+        // Se llama cada vez que se guarda el sueldo fijo (mensual/quincenal). Crea o
+        // actualiza UN solo egreso automático por mes con la porción correspondiente.
+        async function applyAutoAllocationToSalary() {
+            const rule = localStorage.getItem('allocation_rule');
+            const bucket = getAutoDeductBucket(rule);
+            if (!bucket || incomeFrequency === 'diario' || !salary) return;
+
+            const amount = Math.round(salary * bucket.pct / 100);
+            const entryName = `${bucket.name} (${bucket.pct}% automático)`;
+            const monthProducts = products.filter(p => p.month === currentM);
+            const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
+
+            if (existing) {
+                if (existing.price !== amount) {
+                    try {
+                        await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
+                    } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
+                    existing.price = amount; existing.unitPrice = amount;
+                    renderApp();
+                }
+            } else {
+                await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: 'Otros', fuelTypeVal: null, typeVal: 'egreso' });
+            }
+        }
+
+        // Se llama cada vez que se agrega un ingreso nuevo (voz, foto, manual) — aplica
+        // la misma porción automática sobre ESE monto puntual (cubre a quien cobra por día).
+        async function applyAutoAllocationToIncome(amount, dateVal) {
+            const rule = localStorage.getItem('allocation_rule');
+            const bucket = getAutoDeductBucket(rule);
+            if (!bucket) return;
+            const deductAmount = Math.round(amount * bucket.pct / 100);
+            if (deductAmount <= 0) return;
+            await addTransactionRecord({
+                name: `${bucket.name} (${bucket.pct}% automático)`,
+                dateVal,
+                amount: deductAmount,
+                categoryVal: 'Otros',
+                fuelTypeVal: null,
+                typeVal: 'egreso'
+            });
+        }
+
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
             const monthVal = dateVal.substring(0, 7);
             const iconVal = getEmoji(name, categoryVal, fuelTypeVal);
@@ -1569,7 +1619,9 @@
             // Sin conexión (o Supabase no responde): lo guardamos local y lo mostramos igual,
             // marcado como "pendiente de sincronizar" — no se pierde nada.
             if (!navigator.onLine) {
-                return addTransactionOffline(payload, monthVal, name, amount, categoryVal, fuelTypeVal, typeVal, iconVal);
+                const item = addTransactionOffline(payload, monthVal, name, amount, categoryVal, fuelTypeVal, typeVal, iconVal);
+                if (typeVal === 'ingreso') await applyAutoAllocationToIncome(amount, dateVal);
+                return item;
             }
 
             try {
@@ -1580,10 +1632,13 @@
                 products.unshift(newItem);
                 selectedMonthFilter = monthVal;
                 renderApp();
+                if (typeVal === 'ingreso') await applyAutoAllocationToIncome(amount, dateVal);
                 return newItem;
             } catch (err) {
                 console.warn('Falló el guardado en la nube (probablemente sin señal), se guarda localmente:', err);
-                return addTransactionOffline(payload, monthVal, name, amount, categoryVal, fuelTypeVal, typeVal, iconVal);
+                const item = addTransactionOffline(payload, monthVal, name, amount, categoryVal, fuelTypeVal, typeVal, iconVal);
+                if (typeVal === 'ingreso') await applyAutoAllocationToIncome(amount, dateVal);
+                return item;
             }
         }
 
@@ -2504,86 +2559,19 @@
             });
         }
 
-        // Convierte la primera página de un PDF en una imagen liviana (en vez de mandar
-        // el PDF completo, que a veces pesa mucho y puede agotar la memoria del celular)
-        // Convierte TODAS las páginas de un PDF (hasta un límite) en imágenes livianas,
-        // para que la IA pueda encontrar el monto sin importar en qué página esté.
-        async function pdfAllPagesToBase64(file, maxDimension, quality, maxPages) {
-            // Detectamos celular para ser más livianos ahí (menos resolución, menos páginas),
-            // ya que es donde más ajustada anda la memoria disponible.
-            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-            maxDimension = maxDimension ?? (isMobile ? 900 : 1400);
-            quality = quality ?? (isMobile ? 0.55 : 0.7);
-            maxPages = maxPages ?? (isMobile ? 3 : 6);
-
-            // La librería carga como módulo moderno, puede tardar un instante en estar
-            // lista justo después de abrir la página — esperamos un poco antes de fallar.
-            let waited = 0;
-            while (!window.pdfjsLib && waited < 4000) {
-                await new Promise(r => setTimeout(r, 200));
-                waited += 200;
-            }
-            if (!window.pdfjsLib) {
-                throw new Error('No se pudo cargar el lector de PDF. Recargá la página y probá de nuevo.');
-            }
-
-            if (window.pdfjsLib && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.mjs';
-            }
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            const totalPages = Math.min(pdf.numPages, maxPages);
-            const images = [];
-
-            for (let i = 1; i <= totalPages; i++) {
-                try {
-                    const page = await pdf.getPage(i);
-                    const baseViewport = page.getViewport({ scale: 1 });
-                    const scale = maxDimension / Math.max(baseViewport.width, baseViewport.height);
-                    const viewport = page.getViewport({ scale });
-
-                    const canvas = document.createElement('canvas');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    const ctx = canvas.getContext('2d');
-                    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
-                    images.push(dataUrl.split(',')[1]);
-
-                    // Liberamos el canvas de la memoria antes de pasar a la próxima página
-                    canvas.width = 0;
-                    canvas.height = 0;
-                } catch (pageErr) {
-                    // Si una página puntual falla por memoria, seguimos con las demás en
-                    // vez de cortar todo el proceso — mejor analizar 2 de 3 páginas que nada.
-                    console.warn(`No se pudo procesar la página ${i} del PDF:`, pageErr);
-                }
-            }
-
-            if (images.length === 0) {
-                throw new Error('No se pudo procesar ninguna página del PDF en este dispositivo.');
-            }
-
-            return images;
-        }
-
-        // Convierte un archivo a base64 de forma liviana (solo lectura, sin dibujar nada
-        // en pantalla) — mucho más liviano en memoria que renderizar páginas con pdf.js.
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-
         async function processReceiptFile(file, kind, statusEl) {
             statusEl.textContent = 'Leyendo y analizando con IA...';
             try {
                 let body;
                 if (kind === 'pdf') {
+                    // Los servidores tienen un límite de tamaño para recibir archivos —
+                    // avisamos claro en vez de fallar en silencio si el PDF es muy pesado.
+                    if (file.size > 3.5 * 1024 * 1024) {
+                        showToast('Ese PDF pesa demasiado (más de 3,5 MB). Probá sacándole una foto a la hoja en vez de subir el PDF.', 'warning');
+                        statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
+                        return;
+                    }
+
                     // Mandamos el PDF directo a la IA, que lo puede leer ella misma —
                     // así el celular solo tiene que leer el archivo, no "dibujarlo" en
                     // imágenes primero (que era lo que le pesaba a los celulares con poca memoria).
