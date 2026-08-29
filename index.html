@@ -293,6 +293,83 @@
 
 
 
+
+
+        <section class="space-y-3">
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-cyan-400"></i> RESULTADOS DEL MES
+            </h2>
+
+            <div class="glass-panel p-5 rounded-3xl space-y-3">
+                <p class="text-sm font-bold text-white">Tu mayor gasto y mayor ingreso del mes</p>
+                <div class="h-40">
+                    <canvas id="topMovementsChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div>
+                        <p class="text-[10px] text-rose-300 uppercase tracking-wide">Mayor Gasto</p>
+                        <p id="top-expense-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Mayor Ingreso</p>
+                        <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-income-amount" class="text-base font-bold text-cyan-400">$0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
+                <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0" id="filter-container"></div>
+                <div class="relative w-full sm:w-56">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="search-input" placeholder="Buscar concepto o día..." 
+                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors text-white placeholder-slate-500">
+                </div>
+            </div>
+        </section>
+
+        <main>
+            <div id="category-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"></div>
+            <div id="empty-state" class="hidden glass-panel rounded-3xl p-8 text-center my-4">
+                <i class="fa-solid fa-receipt text-3xl text-slate-600 mb-2 block"></i>
+                <h3 class="text-sm sm:text-base font-medium text-slate-300">No hay registros para el mes o filtro seleccionado</h3>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1">Agrega gastos o selecciona un mes diferente en el navegador superior.</p>
+            </div>
+        </main>
+
+        <section class="space-y-3">
+            <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-cyan-400 text-sm"></i>
+                        <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Ingresos y Egresos del Mes</h3>
+                    </div>
+                    <span id="chart-month-badge" class="text-[10px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div class="h-48 md:h-56 relative flex items-center justify-center">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div class="md:col-span-2 space-y-3">
+                        <div>
+                            <p class="text-[11px] font-bold text-rose-300 uppercase tracking-wide mb-1.5">Egresos por Categoría</p>
+                            <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                        </div>
+                        <div class="border-t border-white/10 pt-3">
+                            <p class="text-[11px] font-bold text-cyan-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
+                            <div id="chart-legend-grid-ingresos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        </div> <!-- fin tab-panel-resumen (Saldos y Movimientos, unificado) -->
+
+        <!-- ==================== TAB: GASTOS DEL MES ==================== -->
+        <div id="tab-panel-gastos" class="tab-panel hidden space-y-5">
+
         <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
             <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
                 <div class="flex flex-wrap items-center gap-2">
@@ -353,53 +430,6 @@
             </div>
         </header>
 
-        <section class="space-y-3">
-            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-cyan-400"></i> RESULTADOS DEL MES
-            </h2>
-
-            <div class="glass-panel p-5 rounded-3xl space-y-3">
-                <p class="text-sm font-bold text-white">Tu mayor gasto y mayor ingreso del mes</p>
-                <div class="h-40">
-                    <canvas id="topMovementsChart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-3 text-center">
-                    <div>
-                        <p class="text-[10px] text-rose-300 uppercase tracking-wide">Mayor Gasto</p>
-                        <p id="top-expense-label" class="text-xs text-slate-300 truncate">—</p>
-                        <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Mayor Ingreso</p>
-                        <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
-                        <p id="top-income-amount" class="text-base font-bold text-cyan-400">$0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-2 items-center justify-between">
-                <div class="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0" id="filter-container"></div>
-                <div class="relative w-full sm:w-56">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                    <input type="text" id="search-input" placeholder="Buscar concepto o día..." 
-                        class="w-full bg-slate-900/60 border border-white/10 rounded-xl pl-8 pr-3 py-2 text-sm focus:outline-none focus:border-cyan-500 transition-colors text-white placeholder-slate-500">
-                </div>
-            </div>
-        </section>
-
-        <main>
-            <div id="category-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4"></div>
-            <div id="empty-state" class="hidden glass-panel rounded-3xl p-8 text-center my-4">
-                <i class="fa-solid fa-receipt text-3xl text-slate-600 mb-2 block"></i>
-                <h3 class="text-sm sm:text-base font-medium text-slate-300">No hay registros para el mes o filtro seleccionado</h3>
-                <p class="text-xs sm:text-sm text-slate-500 mt-1">Agrega gastos o selecciona un mes diferente en el navegador superior.</p>
-            </div>
-        </main>
-
-        </div> <!-- fin tab-panel-resumen (Saldos y Movimientos, unificado) -->
-
-        <!-- ==================== TAB: GASTOS DEL MES ==================== -->
-        <div id="tab-panel-gastos" class="tab-panel hidden space-y-5">
 
         <div class="flex justify-end">
             <button onclick="openSalaryModal()" class="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
@@ -520,7 +550,7 @@
 
                 <div class="w-full sm:w-44">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Categoría</label>
-                    <select id="input-category" class="hidden">
+                    <select id="input-category" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white cursor-pointer">
                         <option value="Belleza y Cuidado Personal">💄 Belleza y Cuidado Personal</option>
                         <option value="Limpieza del Hogar">🧼 Limpieza del Hogar</option>
                         <option value="Mecánica y Mantenimiento">🔧 Mecánica y Mantenimiento</option>
@@ -537,12 +567,6 @@
                         <option value="Mascotas">🐾 Mascotas</option>
                         <option value="Otros">✍️ Otros (Escribir...)</option>
                     </select>
-                </div>
-
-                <!-- Tarjetas grandes de categoría, pensadas para que se vean bien clarito -->
-                <div class="w-full">
-                    <label class="block text-sm font-bold text-slate-300 mb-2">Categoría (tocá una)</label>
-                    <div id="category-cards-picker" class="grid grid-cols-3 sm:grid-cols-4 gap-2.5"></div>
                 </div>
 
                 <div id="fuel-subtype-wrapper" class="w-full sm:w-28">
@@ -563,14 +587,11 @@
                         class="w-full bg-slate-900 border border-cyan-500/50 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-cyan-400 text-white placeholder-slate-500">
                 </div>
 
-                <div class="w-full sm:w-32">
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Tipo</label>
-                    <select id="input-type" 
-                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-2.5 py-2 text-sm focus:outline-none focus:border-cyan-500 text-white cursor-pointer">
-                        <option value="egreso">🔴 Egreso</option>
-                        <option value="ingreso">🟢 Ingreso Extra</option>
-                    </select>
-                </div>
+                <!-- El tipo (ingreso/egreso) ya lo definió la persona al tocar "Ingresos" o "Egresos" arriba -->
+                <select id="input-type" class="hidden">
+                    <option value="egreso">Egreso</option>
+                    <option value="ingreso">Ingreso</option>
+                </select>
 
                 <div class="w-full sm:w-auto flex items-center justify-end gap-2">
                     <button type="submit" 
@@ -611,30 +632,7 @@
                 </div>
             </div>
 
-            <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
-                <div class="flex items-center justify-between border-b border-white/10 pb-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-cyan-400 text-sm"></i>
-                        <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Ingresos y Egresos del Mes</h3>
-                    </div>
-                    <span id="chart-month-badge" class="text-[10px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div class="h-48 md:h-56 relative flex items-center justify-center">
-                        <canvas id="categoryPieChart"></canvas>
-                    </div>
-                    <div class="md:col-span-2 space-y-3">
-                        <div>
-                            <p class="text-[11px] font-bold text-rose-300 uppercase tracking-wide mb-1.5">Egresos por Categoría</p>
-                            <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
-                        </div>
-                        <div class="border-t border-white/10 pt-3">
-                            <p class="text-[11px] font-bold text-cyan-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
-                            <div id="chart-legend-grid-ingresos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
         </section>
 
         </div> <!-- fin tab-panel-gastos -->
@@ -1347,7 +1345,7 @@
 
         async function saveSalaryToDB() {
             if (!currentUser) return;
-            await sb.from('user_settings').upsert({ user_id: currentUser.id, salary, income_frequency: incomeFrequency });
+            await sb.from('user_settings').upsert({ user_id: currentUser.id, salary, income_frequency: incomeFrequency }, { onConflict: 'user_id' });
         }
 
         function toggleMonthDrawer() {
@@ -1457,37 +1455,8 @@
             if (cat === 'Transporte') { fuelSubtypeWrapper.classList.remove('hidden'); customCatWrapper.classList.add('hidden'); }
             else if (cat === 'Otros') { customCatWrapper.classList.remove('hidden'); fuelSubtypeWrapper.classList.add('hidden'); }
             else { fuelSubtypeWrapper.classList.add('hidden'); customCatWrapper.classList.add('hidden'); }
-            renderCategoryCardsPicker();
         }
         inputCategory.addEventListener('change', updateFormSubtypes);
-
-        // Tarjetas grandes de categoría (más fáciles de ver y tocar que un menú desplegable chico)
-        function renderCategoryCardsPicker() {
-            const picker = document.getElementById('category-cards-picker');
-            const selectedValue = inputCategory.value;
-            picker.innerHTML = '';
-
-            Array.from(inputCategory.options).forEach(opt => {
-                const parts = opt.textContent.trim().split(' ');
-                const emoji = parts[0];
-                const label = parts.slice(1).join(' ');
-                const isSelected = opt.value === selectedValue;
-
-                const card = document.createElement('button');
-                card.type = 'button';
-                card.className = `category-card-btn flex flex-col items-center justify-center gap-1.5 rounded-2xl p-3 text-center transition-all border-2 ${isSelected ? 'bg-cyan-500/20 border-cyan-500' : 'bg-slate-900/60 border-white/10 hover:border-cyan-500/40'}`;
-                card.innerHTML = `
-                    <span class="text-3xl leading-none">${emoji}</span>
-                    <span class="text-[11px] sm:text-xs font-bold text-white leading-tight">${label}</span>
-                `;
-                card.addEventListener('click', () => {
-                    inputCategory.value = opt.value;
-                    updateFormSubtypes();
-                });
-                picker.appendChild(card);
-            });
-        }
-        renderCategoryCardsPicker();
 
         // Función compartida: agrega una transacción directo a la base, sin pasar por el formulario visual
         // Cola local de movimientos hechos sin internet, pendientes de subir a Supabase
@@ -2226,8 +2195,16 @@
             if (!step1) return;
             const step2 = confirm('Confirmá de nuevo: esta acción no se puede deshacer. ¿Reiniciar todo ahora?');
             if (!step2) return;
-            await sb.from('transactions').delete().eq('user_id', currentUser.id);
+
+            const { error: deleteError } = await sb.from('transactions').delete().eq('user_id', currentUser.id);
+            if (deleteError) {
+                console.error('Error al borrar los registros:', deleteError);
+                showToast('No se pudo borrar todo. Probá de nuevo en un momento.', 'warning');
+                return;
+            }
+
             salary = 500000;
+            incomeFrequency = 'mensual';
             await saveSalaryToDB();
             products = [];
             renderApp();
@@ -2599,6 +2576,13 @@
             });
         }
 
+        // ============================================================
+        // 🔒 ZONA PROTEGIDA — LECTURA DE PDF Y FOTOS (NO TOCAR)
+        // Esta función ya quedó funcionando bien después de varias vueltas.
+        // Cualquier cambio futuro en la app NO debe modificar processReceiptFile,
+        // fileToBase64, ni compressImageToBase64 salvo pedido explícito y puntual
+        // sobre esto mismo. Si se toca por error, avisar antes de guardar.
+        // ============================================================
         async function processReceiptFile(file, kind, statusEl) {
             statusEl.textContent = 'Leyendo y analizando con IA...';
             try {
