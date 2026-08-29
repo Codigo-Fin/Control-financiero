@@ -291,9 +291,83 @@
         <!-- ==================== TAB: SALDOS DEL MES ==================== -->
         <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
 
+        <!-- Mismo navegador de mes que en Ingresos y Egresos, duplicado acá para no tener
+             que saltar de pestaña para cambiar de mes. -->
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-1 gap-1 shadow-inner">
+                        <button id="prev-month-btn-2" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <div class="flex items-center gap-1.5 px-2">
+                            <i class="fa-regular fa-calendar-days text-cyan-400 text-xs"></i>
+                            <select id="header-month-select-2" class="bg-transparent text-cyan-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
+                        </div>
+                        <button id="next-month-btn-2" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
 
+                    <button onclick="toggleMonthDrawer(2)" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i>
+                        <span id="drawer-toggle-text-2">Ver Calendario Anual</span>
+                        <i id="drawer-arrow-2" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                    </button>
+                </div>
+            </div>
 
+            <div id="month-drawer-2" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Patrimonio Neto por Mes</span>
+                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
+                </div>
+                <div id="annual-months-grid-2" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
+            </div>
 
+            <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
+                <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-share-nodes text-cyan-400"></i>
+                    <span>Comprobante Mensual:</span>
+                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-invoice text-rose-300"></i>
+                        <span>Comprobante PDF a WhatsApp</span>
+                    </button>
+                    <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
+                        <span>Compartir Resumen (texto)</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Estilo "Didi": tus ganancias por Día / Semana / Mes -->
+        <section class="glass-panel rounded-3xl p-5 space-y-3">
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-coins text-cyan-400"></i> TUS GANANCIAS
+            </h2>
+            <div class="flex bg-slate-900/80 rounded-2xl p-1 gap-1">
+                <button data-period="diario" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-cyan-500 text-slate-950">Diario</button>
+                <button data-period="semanal" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400">Semanal</button>
+                <button data-period="mensual" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400">Mensual</button>
+            </div>
+            <div class="text-center py-2">
+                <p id="period-total-label" class="text-[11px] text-slate-500 uppercase tracking-wide">Patrimonio Neto de hoy</p>
+                <p id="period-total-amount" class="text-3xl sm:text-4xl font-bold text-teal-300">$0</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-center border-t border-white/10 pt-3">
+                <div>
+                    <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Ingresos</p>
+                    <p id="period-income-amount" class="text-base font-bold text-cyan-400">$0</p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-rose-300 uppercase tracking-wide">Egresos</p>
+                    <p id="period-expense-amount" class="text-base font-bold text-rose-400">$0</p>
+                </div>
+            </div>
+        </section>
 
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
@@ -386,7 +460,7 @@
                         </button>
                     </div>
 
-                    <button onclick="toggleMonthDrawer()" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                    <button onclick="toggleMonthDrawer(1)" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
                         <i class="fa-solid fa-layer-group text-cyan-400"></i>
                         <span id="drawer-toggle-text">Ver Calendario Anual</span>
                         <i id="drawer-arrow" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
@@ -1352,10 +1426,11 @@
             }
         }
 
-        function toggleMonthDrawer() {
-            const drawer = document.getElementById('month-drawer');
-            const arrow = document.getElementById('drawer-arrow');
-            const toggleText = document.getElementById('drawer-toggle-text');
+        function toggleMonthDrawer(instance) {
+            const suffix = instance === 2 ? '-2' : '';
+            const drawer = document.getElementById('month-drawer' + suffix);
+            const arrow = document.getElementById('drawer-arrow' + suffix);
+            const toggleText = document.getElementById('drawer-toggle-text' + suffix);
             if (drawer.classList.contains('hidden')) {
                 drawer.classList.remove('hidden'); arrow.classList.add('rotate-180'); toggleText.textContent = 'Ocultar Calendario';
             } else {
@@ -1434,23 +1509,42 @@
 
         function populateMonthSelectors() {
             const yearMonths = generateFullYearMonths(activeYear);
-            headerMonthSelect.innerHTML = '';
-            yearMonths.forEach(mStr => {
-                const opt = document.createElement('option');
-                opt.value = mStr; opt.textContent = formatMonthName(mStr); opt.className = 'bg-slate-900 text-white';
-                if (mStr === selectedMonthFilter) opt.selected = true;
-                headerMonthSelect.appendChild(opt);
+            const selectsToFill = [headerMonthSelect, document.getElementById('header-month-select-2')].filter(Boolean);
+            const gridsToFill = [annualMonthsGrid, document.getElementById('annual-months-grid-2')].filter(Boolean);
+
+            selectsToFill.forEach(sel => {
+                sel.innerHTML = '';
+                yearMonths.forEach(mStr => {
+                    const opt = document.createElement('option');
+                    opt.value = mStr; opt.textContent = formatMonthName(mStr); opt.className = 'bg-slate-900 text-white';
+                    if (mStr === selectedMonthFilter) opt.selected = true;
+                    sel.appendChild(opt);
+                });
             });
-            annualMonthsGrid.innerHTML = '';
-            yearMonths.forEach(mStr => {
-                const btn = document.createElement('button');
-                const isSelected = mStr === selectedMonthFilter;
-                const mProducts = products.filter(p => p.month === mStr);
-                const mExpenses = mProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (p.price || 0) : acc, 0);
-                btn.className = `p-2.5 rounded-2xl border text-left transition-all ${isSelected ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold shadow-md' : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-300'}`;
-                btn.innerHTML = `<div class="text-xs font-semibold">${formatMonthName(mStr).split(' ')[0]}</div><div class="text-[10px] text-slate-400 mt-0.5">${formatMoney(mExpenses)}</div>`;
-                btn.onclick = () => { selectedMonthFilter = mStr; headerMonthSelect.value = mStr; syncInputDateToSelectedMonth(); renderApp(); };
-                annualMonthsGrid.appendChild(btn);
+
+            gridsToFill.forEach(grid => {
+                grid.innerHTML = '';
+                yearMonths.forEach(mStr => {
+                    const btn = document.createElement('button');
+                    const isSelected = mStr === selectedMonthFilter;
+                    const mProducts = products.filter(p => p.month === mStr);
+                    const mExpenses = mProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (p.price || 0) : acc, 0);
+                    const mIncomeExtra = mProducts.reduce((acc, p) => p.type === 'ingreso' ? acc + (p.price || 0) : acc, 0);
+                    // Patrimonio Neto de ese mes (ingresos totales - egresos). Si es el mes real
+                    // vigente sumamos el sueldo fijo; para meses pasados/futuros solo lo cargado ahí.
+                    const mSalary = (mStr === currentM) ? salary : 0;
+                    const mNetWorth = (mSalary + mIncomeExtra) - mExpenses;
+                    const isPositive = mNetWorth >= 0;
+                    btn.className = `p-2.5 rounded-2xl border text-left transition-all ${isSelected ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold shadow-md' : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-300'}`;
+                    btn.innerHTML = `<div class="text-xs font-semibold">${formatMonthName(mStr).split(' ')[0]}</div><div class="text-[10px] ${isPositive ? 'text-teal-400' : 'text-rose-400'} mt-0.5">${formatMoney(mNetWorth)}</div>`;
+                    btn.onclick = () => {
+                        selectedMonthFilter = mStr;
+                        selectsToFill.forEach(sel => sel.value = mStr);
+                        syncInputDateToSelectedMonth();
+                        renderApp();
+                    };
+                    grid.appendChild(btn);
+                });
             });
         }
 
@@ -2042,8 +2136,72 @@
             showToast('Registro eliminado', 'warning');
         }
 
+        // ============================================
+        // "TUS GANANCIAS" estilo Didi: Diario / Semanal / Mensual
+        // ============================================
+        let selectedEarningsPeriod = 'diario';
+
+        function getDateRangeForPeriod(period) {
+            const today = new Date();
+            const todayStr = todayDate;
+            if (period === 'diario') {
+                return { start: todayStr, end: todayStr, label: 'Patrimonio Neto de hoy' };
+            }
+            if (period === 'semanal') {
+                const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay(); // Lunes = 1 ... Domingo = 7
+                const monday = new Date(today);
+                monday.setDate(today.getDate() - (dayOfWeek - 1));
+                const mondayStr = monday.toISOString().slice(0, 10);
+                return { start: mondayStr, end: todayStr, label: 'Patrimonio Neto de esta semana' };
+            }
+            // mensual: usa el mes que esté seleccionado arriba en el navegador
+            const [y, m] = selectedMonthFilter.split('-').map(Number);
+            const lastDay = new Date(y, m, 0).getDate();
+            return { start: `${selectedMonthFilter}-01`, end: `${selectedMonthFilter}-${String(lastDay).padStart(2, '0')}`, label: `Patrimonio Neto de ${formatMonthName(selectedMonthFilter)}` };
+        }
+
+        function renderPeriodEarnings() {
+            const { start, end, label } = getDateRangeForPeriod(selectedEarningsPeriod);
+            const periodProducts = products.filter(p => p.date >= start && p.date <= end);
+
+            let income = periodProducts.reduce((acc, p) => p.type === 'ingreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
+            const expenses = periodProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
+
+            // Si el período incluye el mes real vigente y cobrás sueldo fijo (no "por día"),
+            // prorateamos el sueldo del mes proporcional a los días del período.
+            if (incomeFrequency !== 'diario' && selectedEarningsPeriod !== 'mensual') {
+                const daysInMonth = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).getDate();
+                const dailySalary = salary / daysInMonth;
+                const daysInPeriod = selectedEarningsPeriod === 'diario' ? 1 : 7;
+                income += dailySalary * daysInPeriod;
+            } else if (selectedEarningsPeriod === 'mensual') {
+                income += salary;
+            }
+
+            const netWorth = income - expenses;
+            document.getElementById('period-total-label').textContent = label;
+            document.getElementById('period-total-amount').textContent = formatMoney(netWorth);
+            document.getElementById('period-total-amount').className = `text-3xl sm:text-4xl font-bold ${netWorth >= 0 ? 'text-teal-300' : 'text-rose-400'}`;
+            document.getElementById('period-income-amount').textContent = formatMoney(income);
+            document.getElementById('period-expense-amount').textContent = formatMoney(expenses);
+        }
+
+        document.querySelectorAll('.period-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedEarningsPeriod = btn.dataset.period;
+                document.querySelectorAll('.period-btn').forEach(b => {
+                    b.classList.remove('bg-cyan-500', 'text-slate-950');
+                    b.classList.add('text-slate-400');
+                });
+                btn.classList.add('bg-cyan-500', 'text-slate-950');
+                btn.classList.remove('text-slate-400');
+                renderPeriodEarnings();
+            });
+        });
+
         function renderApp() {
             populateMonthSelectors();
+            renderPeriodEarnings();
             const monthProducts = products.filter(p => p.month === selectedMonthFilter);
 
             const totalExpenses = monthProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
@@ -2191,6 +2349,21 @@
             const idx = yearMonths.indexOf(selectedMonthFilter);
             if (idx < yearMonths.length - 1) { selectedMonthFilter = yearMonths[idx + 1]; syncInputDateToSelectedMonth(); renderApp(); }
         });
+
+        // Mismos eventos, para el navegador duplicado en "Mis Movimientos"
+        const headerMonthSelect2 = document.getElementById('header-month-select-2');
+        headerMonthSelect2.addEventListener('change', (e) => { selectedMonthFilter = e.target.value; syncInputDateToSelectedMonth(); renderApp(); });
+        document.getElementById('prev-month-btn-2').addEventListener('click', () => {
+            const yearMonths = generateFullYearMonths(activeYear);
+            const idx = yearMonths.indexOf(selectedMonthFilter);
+            if (idx > 0) { selectedMonthFilter = yearMonths[idx - 1]; syncInputDateToSelectedMonth(); renderApp(); }
+        });
+        document.getElementById('next-month-btn-2').addEventListener('click', () => {
+            const yearMonths = generateFullYearMonths(activeYear);
+            const idx = yearMonths.indexOf(selectedMonthFilter);
+            if (idx < yearMonths.length - 1) { selectedMonthFilter = yearMonths[idx + 1]; syncInputDateToSelectedMonth(); renderApp(); }
+        });
+
         searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; renderApp(); });
 
         document.getElementById('reset-btn').addEventListener('click', async () => {
