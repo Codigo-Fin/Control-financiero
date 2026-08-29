@@ -1,12 +1,12 @@
 {
-  "name": "Finzia - Control Financiero & Mercado",
-  "short_name": "Finzia",
+  "name": "Ressetia - Control Financiero & Mercado",
+  "short_name": "Ressetia",
   "description": "Control financiero, ahorro, deudas e inversiones en un solo lugar.",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#f97316",
+  "background_color": "#0b0f1a",
+  "theme_color": "#22d3ee",
   "orientation": "portrait",
   "icons": [
     {
