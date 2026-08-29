@@ -746,13 +746,26 @@
     async function fetchExternalPatrimonioNeto() {
         try {
             const currentMonth = new Date().toISOString().slice(0, 7);
-            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id).eq('month', currentMonth);
-            let egresosDelMes = 0, ingresosExtraDelMes = 0;
+            // Traemos TODOS los movimientos (no solo el mes actual), para sumar el
+            // Patrimonio Neto acumulado de cada mes, no solo el de hoy.
+            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id);
+
+            const byMonth = {};
             (txs || []).forEach(t => {
-                if (t.type === 'egreso') egresosDelMes += parseFloat(t.price) || 0;
-                if (t.type === 'ingreso') ingresosExtraDelMes += parseFloat(t.price) || 0;
+                if (!byMonth[t.month]) byMonth[t.month] = { egresos: 0, ingresos: 0 };
+                if (t.type === 'egreso') byMonth[t.month].egresos += parseFloat(t.price) || 0;
+                if (t.type === 'ingreso') byMonth[t.month].ingresos += parseFloat(t.price) || 0;
             });
-            externalPatrimonioNeto = (userSalary + ingresosExtraDelMes) - egresosDelMes;
+
+            let totalAcumulado = 0;
+            Object.keys(byMonth).forEach(mes => {
+                const mesSalary = (mes === currentMonth) ? userSalary : 0; // el sueldo fijo solo aplica al mes vigente
+                totalAcumulado += (mesSalary + byMonth[mes].ingresos) - byMonth[mes].egresos;
+            });
+            // Si el mes actual todavía no tiene ningún movimiento cargado, igual sumamos el sueldo fijo
+            if (!byMonth[currentMonth]) totalAcumulado += userSalary;
+
+            externalPatrimonioNeto = totalAcumulado;
         } catch (err) {
             console.warn('No se pudo traer el Patrimonio Neto de Control Financiero:', err);
             externalPatrimonioNeto = 0;
@@ -1436,9 +1449,9 @@
         const balanceDetailEl = document.getElementById('creditBalanceDetail');
         if (balanceDetailEl) {
             if (totalRemainingForBalance > 0) {
-                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible (saldo + patrimonio) contra $${totalRemainingForBalance.toLocaleString()} de deuda pendiente.`;
+                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible (saldo + Patrimonio Neto acumulado de todos los meses) contra $${totalRemainingForBalance.toLocaleString()} de deuda pendiente.`;
             } else {
-                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible y no tenés deuda pendiente.`;
+                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible (saldo + Patrimonio Neto acumulado de todos los meses) y no tenés deuda pendiente.`;
             }
         }
 
