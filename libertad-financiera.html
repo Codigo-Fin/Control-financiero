@@ -589,13 +589,13 @@
     </div>
 
 <!-- Botón flotante del Asistente Ressetia -->
-<div class="fixed bottom-6 right-5 z-30 flex flex-col items-end gap-2">
+<div id="assistant-float-container-lf" class="fixed bottom-6 right-5 z-30 flex flex-col items-end gap-2" style="touch-action: none;">
     <div id="assistant-hint-bubble-lf" class="hidden bg-slate-900 border border-sky-400/40 text-sky-200 text-xs font-semibold px-3 py-2 rounded-2xl rounded-br-sm shadow-xl max-w-[180px] text-center">
         ¿Tenés dudas? Preguntame acá 👋
     </div>
     <div class="relative">
         <span class="absolute inset-0 rounded-full bg-sky-400/40 animate-ping"></span>
-        <button id="btn-open-assistant-lf" title="Preguntale a Ressetia" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
+        <button id="btn-open-assistant-lf" title="Preguntale a Ressetia (mantené presionado para moverlo)" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
             <i class="fa-solid fa-comment-dots"></i>
         </button>
     </div>
@@ -905,12 +905,16 @@
                 if (retryCount < 2) {
                     // Reintentamos en silencio antes de resignarnos (suele resolver cortes breves de conexión)
                     setTimeout(() => saveStorage(retryCount + 1), 1500);
+                } else {
+                    showLibertadToast('⚠️ No se pudo guardar en la nube después de varios intentos. Avisá si esto se repite.');
                 }
             }
         } catch (err) {
             console.error('Error de conexión al guardar:', err);
             if (retryCount < 2) {
                 setTimeout(() => saveStorage(retryCount + 1), 1500);
+            } else {
+                showLibertadToast('⚠️ No se pudo guardar en la nube después de varios intentos. Avisá si esto se repite.');
             }
         }
     }
@@ -2170,6 +2174,61 @@
     }
 
     let assistantConversationRestoredLF = false;
+
+    // Hacemos que el botón flotante se pueda arrastrar y mover a cualquier parte de la pantalla
+    (function makeAssistantButtonDraggableLF() {
+        const container = document.getElementById('assistant-float-container-lf');
+        const btn = document.getElementById('btn-open-assistant-lf');
+        let isDragging = false, moved = false, startX, startY, startLeft, startTop;
+
+        container.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            moved = false;
+            const rect = container.getBoundingClientRect();
+            startX = e.clientX; startY = e.clientY;
+            startLeft = rect.left; startTop = rect.top;
+            container.style.left = startLeft + 'px';
+            container.style.top = startTop + 'px';
+            container.style.right = 'auto';
+            container.style.bottom = 'auto';
+            container.setPointerCapture(e.pointerId);
+        });
+
+        container.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+            if (moved) {
+                let newLeft = Math.max(4, Math.min(window.innerWidth - container.offsetWidth - 4, startLeft + dx));
+                let newTop = Math.max(4, Math.min(window.innerHeight - container.offsetHeight - 4, startTop + dy));
+                container.style.left = newLeft + 'px';
+                container.style.top = newTop + 'px';
+            }
+        });
+
+        container.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            if (moved) {
+                localStorage.setItem('assistant_btn_position', JSON.stringify({ left: container.style.left, top: container.style.top }));
+            }
+            container.releasePointerCapture(e.pointerId);
+        });
+
+        btn.addEventListener('click', (e) => {
+            if (moved) { e.stopImmediatePropagation(); e.preventDefault(); moved = false; }
+        }, true);
+
+        const saved = localStorage.getItem('assistant_btn_position');
+        if (saved) {
+            try {
+                const pos = JSON.parse(saved);
+                container.style.left = pos.left; container.style.top = pos.top;
+                container.style.right = 'auto'; container.style.bottom = 'auto';
+            } catch (e) { /* ignoramos si está corrupto */ }
+        }
+    })();
+
     document.getElementById('btn-open-assistant-lf').addEventListener('click', () => {
         const modal = document.getElementById('assistant-modal-lf');
         modal.classList.remove('hidden');
