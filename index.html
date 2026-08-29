@@ -410,7 +410,7 @@
 
         <!-- Ingresos vs Egresos claramente separados (destacado en verde neón, como se pidió) -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" style="box-shadow: 0 0 24px rgba(74,222,128,0.25); border-radius: 1.5rem; padding: 4px;">
-            <div class="bg-cyan-950/40 p-4 rounded-2xl border-2 border-cyan-500/30 flex flex-col justify-between">
+            <button type="button" onclick="openMovementsPanel('ingreso')" class="bg-cyan-950/40 p-4 rounded-2xl border-2 border-cyan-500/30 flex flex-col justify-between text-left hover:border-cyan-400/60 transition-all active:scale-[0.98]">
                 <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">💰 Ingresos Totales</span>
                 <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">
@@ -421,9 +421,10 @@
                 <span id="stat-salary" class="text-2xl sm:text-3xl font-bold text-cyan-400">$0</span>
                 <span class="text-[10px] text-cyan-300 bg-cyan-500/15 px-2 py-0.5 rounded-full">Sueldo + Extra</span>
                 </div>
-            </div>
+                <p class="text-[10px] text-cyan-400/70 mt-1.5"><i class="fa-solid fa-plus"></i> Tocá para agregar un ingreso</p>
+            </button>
 
-            <div class="bg-rose-950/40 p-4 rounded-2xl border-2 border-rose-500/30 flex flex-col justify-between">
+            <button type="button" onclick="openMovementsPanel('egreso')" class="bg-rose-950/40 p-4 rounded-2xl border-2 border-rose-500/30 flex flex-col justify-between text-left hover:border-rose-400/60 transition-all active:scale-[0.98]">
                 <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-rose-300 uppercase tracking-wider">💸 Egresos del Mes</span>
                 <div class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs">
@@ -434,7 +435,8 @@
                 <span id="stat-expenses" class="text-2xl sm:text-3xl font-bold text-rose-400">$0</span>
                 <span class="text-[10px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full">Gastos</span>
                 </div>
-            </div>
+                <p class="text-[10px] text-rose-400/70 mt-1.5"><i class="fa-solid fa-plus"></i> Tocá para agregar un gasto</p>
+            </button>
 
             <div class="bg-slate-900/50 p-4 rounded-2xl border-2 border-teal-500/30 flex flex-col justify-between">
                 <div class="flex items-center justify-between">
@@ -453,10 +455,14 @@
             </div>
         </div>
 
-        <section class="space-y-3">
-            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-cart-shopping text-cyan-400"></i> MOVIMIENTOS
-            </h2>
+        <!-- Panel de carga (oculto hasta que se toque Ingresos o Egresos arriba) -->
+        <section id="movements-input-panel" class="hidden space-y-3">
+            <div class="flex items-center justify-between">
+                <h2 id="movements-panel-title" class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                    <i class="fa-solid fa-cart-shopping text-cyan-400"></i> AGREGAR MOVIMIENTO
+                </h2>
+                <button type="button" onclick="closeMovementsPanel()" class="text-slate-400 hover:text-white text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
             <div class="glass-panel p-3 rounded-2xl flex items-center gap-3">
                 <button type="button" id="btn-voice-input" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-bold w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
                     <i id="voice-input-icon" class="fa-solid fa-microphone text-lg"></i>
@@ -1011,6 +1017,25 @@
 
         inputDate.value = todayDate;
 
+        // Abre/cierra el panel de carga de movimientos, preseleccionando el tipo
+        // (ingreso o egreso) según qué tarjeta se haya tocado.
+        function openMovementsPanel(type) {
+            const panel = document.getElementById('movements-input-panel');
+            const title = document.getElementById('movements-panel-title');
+            panel.classList.remove('hidden');
+            if (type === 'ingreso') {
+                title.innerHTML = '<i class="fa-solid fa-arrow-down-left text-cyan-400"></i> AGREGAR INGRESO';
+                inputType.value = 'ingreso';
+            } else {
+                title.innerHTML = '<i class="fa-solid fa-arrow-up-right text-rose-400"></i> AGREGAR EGRESO';
+                inputType.value = 'egreso';
+            }
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        function closeMovementsPanel() {
+            document.getElementById('movements-input-panel').classList.add('hidden');
+        }
+
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
@@ -1422,7 +1447,7 @@
                 const mExpenses = mProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (p.price || 0) : acc, 0);
                 btn.className = `p-2.5 rounded-2xl border text-left transition-all ${isSelected ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold shadow-md' : 'bg-slate-900/60 border-white/5 hover:border-white/20 text-slate-300'}`;
                 btn.innerHTML = `<div class="text-xs font-semibold">${formatMonthName(mStr).split(' ')[0]}</div><div class="text-[10px] text-slate-400 mt-0.5">${formatMoney(mExpenses)}</div>`;
-                btn.onclick = () => { selectedMonthFilter = mStr; headerMonthSelect.value = mStr; renderApp(); };
+                btn.onclick = () => { selectedMonthFilter = mStr; headerMonthSelect.value = mStr; syncInputDateToSelectedMonth(); renderApp(); };
                 annualMonthsGrid.appendChild(btn);
             });
         }
@@ -2167,16 +2192,31 @@
             }
         }
 
-        headerMonthSelect.addEventListener('change', (e) => { selectedMonthFilter = e.target.value; renderApp(); });
+        // Cuando cambiás de mes en el navegador de arriba, actualizamos también la fecha
+        // del formulario para que coincida — así lo que anotes cae en el mes que estás mirando.
+        function syncInputDateToSelectedMonth() {
+            const [year, month] = selectedMonthFilter.split('-').map(Number);
+            const today = new Date();
+            const isCurrentRealMonth = (year === today.getFullYear() && month === (today.getMonth() + 1));
+            if (isCurrentRealMonth) {
+                inputDate.value = todayDate; // si es el mes real de hoy, usamos el día de hoy
+            } else {
+                const lastDay = new Date(year, month, 0).getDate();
+                const day = Math.min(today.getDate(), lastDay);
+                inputDate.value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            }
+        }
+
+        headerMonthSelect.addEventListener('change', (e) => { selectedMonthFilter = e.target.value; syncInputDateToSelectedMonth(); renderApp(); });
         document.getElementById('prev-month-btn').addEventListener('click', () => {
             const yearMonths = generateFullYearMonths(activeYear);
             const idx = yearMonths.indexOf(selectedMonthFilter);
-            if (idx > 0) { selectedMonthFilter = yearMonths[idx - 1]; renderApp(); }
+            if (idx > 0) { selectedMonthFilter = yearMonths[idx - 1]; syncInputDateToSelectedMonth(); renderApp(); }
         });
         document.getElementById('next-month-btn').addEventListener('click', () => {
             const yearMonths = generateFullYearMonths(activeYear);
             const idx = yearMonths.indexOf(selectedMonthFilter);
-            if (idx < yearMonths.length - 1) { selectedMonthFilter = yearMonths[idx + 1]; renderApp(); }
+            if (idx < yearMonths.length - 1) { selectedMonthFilter = yearMonths[idx + 1]; syncInputDateToSelectedMonth(); renderApp(); }
         });
         searchInput.addEventListener('input', (e) => { searchQuery = e.target.value; renderApp(); });
 
