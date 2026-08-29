@@ -778,8 +778,29 @@
                     <i class="fa-solid fa-rotate-left"></i>
                     <span>Borrar Todos Mis Registros</span>
                 </button>
+                <button id="hard-reset-btn" class="hover:text-rose-300 bg-rose-950/40 border border-rose-500/30 px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 text-xs text-rose-400">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Reinicio Total Forzado</span>
+                </button>
             </div>
         </div>
+
+        <!-- Modal de confirmación propio (reemplaza el feo confirm() nativo del navegador) -->
+        <div id="confirm-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4 z-[60]">
+            <div class="bg-slate-900 border-2 border-cyan-500/50 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-[0_0_40px_rgba(34,211,238,0.25)]">
+                <div class="flex items-start gap-3">
+                    <div id="confirm-modal-icon" class="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0 text-lg">
+                        <i class="fa-solid fa-circle-question"></i>
+                    </div>
+                    <p id="confirm-modal-message" class="text-sm text-slate-200 leading-relaxed pt-1"></p>
+                </div>
+                <div class="flex gap-2 justify-end pt-2">
+                    <button id="confirm-modal-cancel" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition-colors">Cancelar</button>
+                    <button id="confirm-modal-accept" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition-all">Confirmar</button>
+                </div>
+            </div>
+        </div>
+
     </footer>
 
     </div> <!-- fin app-content -->
@@ -1387,7 +1408,7 @@
         async function loadAllUserData() {
             const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
             if (settings) {
-                salary = parseFloat(settings.salary) || 500000;
+                salary = (settings.salary !== null && settings.salary !== undefined) ? parseFloat(settings.salary) : 500000;
                 incomeFrequency = settings.income_frequency || 'mensual';
                 const subscriptionActive = settings.is_premium === true &&
                     (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
@@ -1415,6 +1436,44 @@
 
             // Por si quedó algo pendiente de sincronizar de una sesión anterior sin internet
             if (navigator.onLine) syncPendingTransactions();
+        }
+
+        // Reemplaza el feo confirm() nativo del navegador por un cuadro propio, con
+        // el estilo de la app — devuelve una Promesa (true si confirmó, false si canceló).
+        function showConfirmModal(message, danger = false) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const icon = document.getElementById('confirm-modal-icon');
+                const msgEl = document.getElementById('confirm-modal-message');
+                const acceptBtn = document.getElementById('confirm-modal-accept');
+
+                msgEl.textContent = message;
+                if (danger) {
+                    icon.className = 'w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0 text-lg';
+                    icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    acceptBtn.className = 'bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition-all';
+                } else {
+                    icon.className = 'w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0 text-lg';
+                    icon.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+                    acceptBtn.className = 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition-all';
+                }
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                function cleanup(result) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    document.getElementById('confirm-modal-accept').removeEventListener('click', onAccept);
+                    document.getElementById('confirm-modal-cancel').removeEventListener('click', onCancel);
+                    resolve(result);
+                }
+                function onAccept() { cleanup(true); }
+                function onCancel() { cleanup(false); }
+
+                document.getElementById('confirm-modal-accept').addEventListener('click', onAccept);
+                document.getElementById('confirm-modal-cancel').addEventListener('click', onCancel);
+            });
         }
 
         async function saveSalaryToDB() {
@@ -1606,7 +1665,7 @@
             const remainingAfter = totalDebt - amountToApply;
 
             const confirmMsg = `¿Aplicar ${formatMoney(amountToApply)} de tu Patrimonio Neto a tu deuda?\n\nTe vamos a llevar a Libertad Financiera para confirmar el pago ahí mismo (es más confiable), y cuando vuelvas acá se descuenta de tu Patrimonio Neto. ${remainingAfter > 0 ? `Te quedaría pendiente ${formatMoney(remainingAfter)}.` : '¡Quedarías sin deuda!'}`;
-            if (!confirm(confirmMsg)) return;
+            if (!(await showConfirmModal(confirmMsg))) return;
 
             // Guardamos el monto pendiente de aplicar, y mandamos a Libertad Financiera a
             // confirmarlo ahí — usando el mismo código que YA sabemos que funciona bien para
@@ -2368,9 +2427,9 @@
 
         document.getElementById('reset-btn').addEventListener('click', async () => {
             if (!currentUser) return;
-            const step1 = confirm('Esto borra TODOS tus gastos e ingresos registrados, para empezar de cero. ¿Continuar?');
+            const step1 = await showConfirmModal('Esto borra TODOS tus gastos e ingresos registrados, para empezar de cero. ¿Continuar?', true);
             if (!step1) return;
-            const step2 = confirm('Confirmá de nuevo: esta acción no se puede deshacer. ¿Reiniciar todo ahora?');
+            const step2 = await showConfirmModal('Confirmá de nuevo: esta acción no se puede deshacer. ¿Reiniciar todo ahora?', true);
             if (!step2) return;
 
             const { error: deleteError } = await sb.from('transactions').delete().eq('user_id', currentUser.id);
@@ -2386,6 +2445,53 @@
             products = [];
             renderApp();
             showToast('Lista restablecida correctamente');
+        });
+
+        // "Reinicio Total Forzado": borra TODO de las dos tablas (Control Financiero
+        // y Libertad Financiera) sin dejar nada pegado, incluido el sueldo (a $0, no
+        // al valor por defecto), y limpia las copias locales guardadas en el celular.
+        document.getElementById('hard-reset-btn').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const step1 = await showConfirmModal('⚠️ REINICIO TOTAL FORZADO: esto borra absolutamente todo — gastos, ingresos, sueldo, deudas, saldo a favor e inversiones — en las dos secciones de la app. No se puede deshacer. ¿Continuar?', true);
+            if (!step1) return;
+            const step2 = await showConfirmModal('Última confirmación: se va a borrar TODO desde cero, sin dejar ningún dato pegado de antes. ¿Reiniciar ahora?', true);
+            if (!step2) return;
+
+            let hadError = false;
+
+            const { error: txError } = await sb.from('transactions').delete().eq('user_id', currentUser.id);
+            if (txError) { console.error('Error al borrar transacciones:', txError); hadError = true; }
+
+            const { error: settingsError } = await sb.from('user_settings').upsert(
+                { user_id: currentUser.id, salary: 0, income_frequency: 'mensual' },
+                { onConflict: 'user_id' }
+            );
+            if (settingsError) { console.error('Error al reiniciar la configuración:', settingsError); hadError = true; }
+
+            const { error: lfError } = await sb.from('libertad_financiera_data').upsert(
+                { user_id: currentUser.id, debts: [], investments: [], history: [], credit_balance: 0, emergency_basic_target: 0, emergency_basic_current: 0, emergency_full_target: 0, emergency_full_current: 0, fire_monthly_expense: 0 },
+                { onConflict: 'user_id' }
+            );
+            if (lfError) { console.error('Error al reiniciar Libertad Financiera:', lfError); hadError = true; }
+
+            // Limpiamos toda copia local guardada en este dispositivo
+            localStorage.removeItem(`finzia_lf_snapshot_${currentUser.id}`);
+            localStorage.removeItem(`finzia_lf_rawdata_${currentUser.id}`);
+            localStorage.removeItem(`pending_sync_${currentUser.id}`);
+            localStorage.removeItem(`finzia_chat_${currentUser.id}`);
+            localStorage.removeItem('allocation_rule');
+            localStorage.removeItem('allocation_custom_buckets');
+
+            if (hadError) {
+                showToast('⚠️ Hubo un problema al reiniciar algo. Revisá la consola o probá de nuevo.', 'warning');
+                return;
+            }
+
+            salary = 0;
+            incomeFrequency = 'mensual';
+            products = [];
+            renderApp();
+            showToast('✅ Reinicio total completado. Todo quedó en cero, de verdad.');
         });
 
         document.getElementById('btn-subscribe').addEventListener('click', () => {
@@ -2423,7 +2529,7 @@
 
         document.getElementById('btn-unsubscribe').addEventListener('click', async () => {
             if (!currentUser) return;
-            if (!confirm('¿Estás seguro que querés darte de baja de la suscripción? Se cancela el cobro automático.')) return;
+            if (!(await showConfirmModal('¿Estás seguro que querés darte de baja de la suscripción? Se cancela el cobro automático.', true))) return;
             const btnUnsub = document.getElementById('btn-unsubscribe');
             btnUnsub.textContent = 'Procesando...';
             try {
@@ -2443,7 +2549,7 @@
 
         document.getElementById('btn-upgrade-plan').addEventListener('click', async () => {
             if (!currentUser) return;
-            if (!confirm('Vas a pasar al plan Anual ($69.990). Te vamos a pedir que autorices el nuevo cobro. ¿Continuar?')) return;
+            if (!(await showConfirmModal('Vas a pasar al plan Anual ($69.990). Te vamos a pedir que autorices el nuevo cobro. ¿Continuar?'))) return;
             const btn = document.getElementById('btn-upgrade-plan');
             const originalText = btn.textContent;
             btn.textContent = 'Procesando...';
@@ -3077,8 +3183,8 @@
             } catch (e) { /* ignoramos si está corrupto */ }
         }
 
-        document.getElementById('btn-clear-assistant').addEventListener('click', () => {
-            if (!confirm('¿Borrar toda esta conversación con Ressetia? No se puede deshacer.')) return;
+        document.getElementById('btn-clear-assistant').addEventListener('click', async () => {
+            if (!(await showConfirmModal('¿Borrar toda esta conversación con Ressetia? No se puede deshacer.', true))) return;
             assistantConversation = [];
             localStorage.removeItem(getAssistantStorageKey());
             document.getElementById('assistant-messages').innerHTML = '';
