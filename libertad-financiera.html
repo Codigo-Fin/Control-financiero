@@ -899,7 +899,7 @@
         }
 
         try {
-            const { error } = await sb.from('libertad_financiera_data').upsert(payload);
+            const { error } = await sb.from('libertad_financiera_data').upsert(payload, { onConflict: 'user_id' });
             if (error) {
                 console.error('Error al guardar en Supabase:', error);
                 if (retryCount < 2) {
