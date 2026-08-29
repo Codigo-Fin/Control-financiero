@@ -794,14 +794,14 @@
     <!-- Aviso de que la prueba gratis está por terminar -->
     <div id="trial-ending-toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold shadow-2xl z-40 max-w-[92%] text-center"></div>
 
-    <!-- Botón flotante del Asistente Ressetia (visible en cualquier pestaña) -->
-    <div class="fixed bottom-6 right-5 z-30 flex flex-col items-end gap-2">
+    <!-- Botón flotante del Asistente Ressetia (visible en cualquier pestaña, se puede arrastrar) -->
+    <div id="assistant-float-container" class="fixed bottom-6 right-5 z-30 flex flex-col items-end gap-2" style="touch-action: none;">
         <div id="assistant-hint-bubble" class="hidden bg-slate-900 border border-sky-400/40 text-sky-200 text-xs font-semibold px-3 py-2 rounded-2xl rounded-br-sm shadow-xl max-w-[180px] text-center">
             ¿Tenés dudas? Preguntame acá 👋
         </div>
         <div class="relative">
             <span class="absolute inset-0 rounded-full bg-sky-400/40 animate-ping"></span>
-            <button id="btn-open-assistant" title="Preguntale a Ressetia" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
+            <button id="btn-open-assistant" title="Preguntale a Ressetia (mantené presionado para moverlo)" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
                 <i class="fa-solid fa-comment-dots"></i>
             </button>
         </div>
@@ -1345,7 +1345,11 @@
 
         async function saveSalaryToDB() {
             if (!currentUser) return;
-            await sb.from('user_settings').upsert({ user_id: currentUser.id, salary, income_frequency: incomeFrequency }, { onConflict: 'user_id' });
+            const { error } = await sb.from('user_settings').upsert({ user_id: currentUser.id, salary, income_frequency: incomeFrequency }, { onConflict: 'user_id' });
+            if (error) {
+                console.error('Error al guardar el sueldo:', error);
+                showToast('⚠️ No se pudo guardar el sueldo en la nube. Avisá si esto se repite.', 'warning');
+            }
         }
 
         function toggleMonthDrawer() {
@@ -3089,6 +3093,64 @@
         }
 
         let assistantConversationRestored = false;
+
+        // Hacemos que el botón flotante se pueda arrastrar y mover a cualquier parte
+        // de la pantalla (para que no estorbe encima de otros botones).
+        (function makeAssistantButtonDraggable() {
+            const container = document.getElementById('assistant-float-container');
+            const btn = document.getElementById('btn-open-assistant');
+            let isDragging = false, moved = false, startX, startY, startLeft, startTop;
+
+            container.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                moved = false;
+                const rect = container.getBoundingClientRect();
+                startX = e.clientX; startY = e.clientY;
+                startLeft = rect.left; startTop = rect.top;
+                container.style.left = startLeft + 'px';
+                container.style.top = startTop + 'px';
+                container.style.right = 'auto';
+                container.style.bottom = 'auto';
+                container.setPointerCapture(e.pointerId);
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+                if (moved) {
+                    let newLeft = Math.max(4, Math.min(window.innerWidth - container.offsetWidth - 4, startLeft + dx));
+                    let newTop = Math.max(4, Math.min(window.innerHeight - container.offsetHeight - 4, startTop + dy));
+                    container.style.left = newLeft + 'px';
+                    container.style.top = newTop + 'px';
+                }
+            });
+
+            container.addEventListener('pointerup', (e) => {
+                isDragging = false;
+                if (moved) {
+                    localStorage.setItem('assistant_btn_position', JSON.stringify({ left: container.style.left, top: container.style.top }));
+                }
+                container.releasePointerCapture(e.pointerId);
+            });
+
+            // Si se arrastró, no dejamos que se dispare el click de abrir el chat
+            btn.addEventListener('click', (e) => {
+                if (moved) { e.stopImmediatePropagation(); e.preventDefault(); moved = false; }
+            }, true);
+
+            // Restauramos la posición guardada de la última vez
+            const saved = localStorage.getItem('assistant_btn_position');
+            if (saved) {
+                try {
+                    const pos = JSON.parse(saved);
+                    container.style.left = pos.left; container.style.top = pos.top;
+                    container.style.right = 'auto'; container.style.bottom = 'auto';
+                } catch (e) { /* ignoramos si está corrupto */ }
+            }
+        })();
+
         document.getElementById('btn-open-assistant').addEventListener('click', () => {
             const modal = document.getElementById('assistant-modal');
             modal.classList.remove('hidden');
