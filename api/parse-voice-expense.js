@@ -8,6 +8,8 @@ const CATEGORIES = [
   'Limpieza del Hogar',
   'Mecánica y Mantenimiento',
   'Transporte',
+  'Delivery',
+  'Apps',
   'Servicios',
   'Almacén, Súper y Mayoristas',
   'Panadería',
@@ -51,6 +53,8 @@ Guía de qué va en cada categoría (con ejemplos, pero usá tu criterio para ca
 - Limpieza del Hogar: detergente, cepillo, trapo de piso, escoba, lavandina, desengrasante, bote de basura, papel higiénico.
 - Mecánica y Mantenimiento: parche de rueda, repuestos del auto (rulemán, correa), mano de obra del mecánico, lavadero, cambio de aceite y filtro, service, instalación de GNC, rueda de auxilio/bici/moto, luces de auto o moto.
 - Transporte: carga de SUBE, nafta, GNC, diesel.
+- Delivery: pedidos de comida o compras entregadas a domicilio (Rappi, PedidosYa, etc.).
+- Apps: viajes en aplicaciones como Uber, Didi, Cabify.
 - Servicios: recarga de celular, Netflix, Spotify, YouTube Premium, Disney, MELI, cualquier streaming o suscripción (incluidas IAs), luz, gas, internet, wifi, y honorarios de profesionales (abogado, freelancer, editor de videos, contador, asesor de imagen, psicólogo, etc).
 - Almacén, Súper y Mayoristas: carne, arroz, fideos, gaseosas, aguas, jugos en polvo, servilletas, papel de cocina, lácteos, yogures, verduras, dulces, chocolates.
 - Panadería: tortas, pan dulce, pre pizzas, facturas, bizcochos de grasa, pan, sándwiches de jamón y queso.
