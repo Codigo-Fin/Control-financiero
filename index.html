@@ -723,10 +723,6 @@
                     <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
-                    <a href="libertad-financiera.html" target="_blank"
-                        class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-arrow-rotate-right"></i> Libertad Financiera
-                    </a>
                     <button id="btn-subscribe"
                         class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
                         <i class="fa-solid fa-credit-card"></i> Suscribirme
@@ -737,11 +733,11 @@
                 </div>
             </div>
 
-            <!-- Mejorar de plan (solo visible si sos premium y estás en el plan Mensual) -->
+            <!-- Cambiar de plan (solo visible si sos premium y estás en el plan Mensual) -->
             <div id="upgrade-plan-box" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p class="text-sm text-purple-200">¿Querés pasarte al plan Anual y ahorrar?</p>
                 <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
-                    Cambiar a plan Anual ($69.990)
+                    <i class="fa-solid fa-arrows-rotate"></i> Cambiar a Plan Anual ($69.990)
                 </button>
             </div>
 
@@ -760,8 +756,8 @@
                 </div>
             </div>
 
-            <button id="btn-unsubscribe" class="hidden text-xs text-slate-500 hover:text-rose-400 underline underline-offset-2">
-                Dar de baja mi suscripción
+            <button id="btn-unsubscribe" class="hidden w-full sm:w-auto bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all items-center justify-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation"></i> Dar de baja mi suscripción
             </button>
         </section>
         </div> <!-- fin tab-panel-suscripcion -->
@@ -1736,7 +1732,7 @@
                     renderApp();
                 }
             } else {
-                await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: 'Otros', fuelTypeVal: null, typeVal: 'egreso' });
+                await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
             }
         }
 
@@ -1752,7 +1748,7 @@
                 name: `${bucket.name} (${bucket.pct}% automático)`,
                 dateVal,
                 amount: deductAmount,
-                categoryVal: 'Otros',
+                categoryVal: bucket.name,
                 fuelTypeVal: null,
                 typeVal: 'egreso'
             });
@@ -2740,7 +2736,7 @@
                 return;
             }
 
-            const result = await addTransactionRecord({ name, dateVal: todayDate, amount, categoryVal, fuelTypeVal, typeVal });
+            const result = await addTransactionRecord({ name, dateVal: inputDate.value || todayDate, amount, categoryVal, fuelTypeVal, typeVal });
             if (result) {
                 showToast(`✅ "${name}" — ${typeVal === 'ingreso' ? '+' : ''}${formatMoney(amount)} en ${categoryVal}, agregado`);
             }
