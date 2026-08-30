@@ -3412,16 +3412,41 @@
             getBestSpanishVoice();
         }
 
-        function speakAssistantText(text) {
+        let currentSpeakingBtn = null; // referencia al botón que disparó la lectura actual
+
+        function speakAssistantText(text, btnEl) {
             if (!window.speechSynthesis) return;
             window.speechSynthesis.cancel();
+
+            // Si ya había un botón mostrando "Detener" de una lectura anterior, lo
+            // volvemos a dejar como "Escuchar" antes de empezar esta nueva.
+            resetSpeakButton(currentSpeakingBtn);
+
             const utterance = new SpeechSynthesisUtterance(text);
             const voice = getBestSpanishVoice();
             if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
             else { utterance.lang = 'es-AR'; }
             utterance.rate = 1.15;
             utterance.pitch = 1;
+
+            if (btnEl) {
+                currentSpeakingBtn = btnEl;
+                btnEl.innerHTML = '<i class="fa-solid fa-stop"></i> Detener';
+                btnEl.classList.add('text-rose-400');
+                btnEl.classList.remove('text-cyan-400');
+            }
+            utterance.onend = () => resetSpeakButton(btnEl);
+            utterance.onerror = () => resetSpeakButton(btnEl);
+
             window.speechSynthesis.speak(utterance);
+        }
+
+        function resetSpeakButton(btnEl) {
+            if (!btnEl) return;
+            btnEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
+            btnEl.classList.remove('text-rose-400');
+            btnEl.classList.add('text-cyan-400');
+            if (currentSpeakingBtn === btnEl) currentSpeakingBtn = null;
         }
 
         // Traduce el código de sección que devuelve la IA a un texto de botón + acción de navegación
@@ -3460,7 +3485,15 @@
                 speakBtn.type = 'button';
                 speakBtn.className = 'text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5';
                 speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
-                speakBtn.addEventListener('click', () => speakAssistantText(text));
+                speakBtn.addEventListener('click', () => {
+                    // Si ya está hablando ESTE mensaje, tocarlo de nuevo lo detiene.
+                    if (currentSpeakingBtn === speakBtn && window.speechSynthesis.speaking) {
+                        window.speechSynthesis.cancel();
+                        resetSpeakButton(speakBtn);
+                        return;
+                    }
+                    speakAssistantText(text, speakBtn);
+                });
                 actionsRow.appendChild(speakBtn);
 
                 // Link directo a la sección sugerida (si la IA indicó una)
