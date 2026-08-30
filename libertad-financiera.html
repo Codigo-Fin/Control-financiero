@@ -872,13 +872,16 @@
             const activeDebts = debtsData.filter(d => !d.cleared && d.amount > 0);
             const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
             const totalInvest = investmentsData.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
+            const fondoEmergenciaActual = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
 
             const snapshot = {
                 deudas: activeDebts.map(d => ({ nombre: d.name, monto: d.amount })),
                 deuda_total: totalDebt,
                 inversiones: investmentsData.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
                 inversiones_total: totalInvest,
-                saldo_favor_o_contra: creditBalanceData - totalDebt,
+                // Sumamos el Patrimonio Neto acumulado, igual que en la caja "Saldo Favor/Contra"
+                saldo_favor_o_contra: (creditBalanceData + Math.max(externalPatrimonioNeto, 0)) - totalDebt,
+                fondo_emergencia_actual: fondoEmergenciaActual,
                 updated_at: Date.now()
             };
             localStorage.setItem(`finzia_lf_snapshot_${currentUser.id}`, JSON.stringify(snapshot));
@@ -2211,6 +2214,10 @@
         const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
         const totalInvest = investments.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
 
+        // El Fondo de Emergencia vive solo en este dispositivo (localStorage), no en
+        // Supabase — lo agregamos acá para que la IA sepa que existe esa plata.
+        const fondoEmergenciaActual = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
+
         return {
             sueldo: salaryVal,
             ingresos_extra_del_mes: ingresosExtraDelMes,
@@ -2222,7 +2229,11 @@
             deuda_total: totalDebt,
             inversiones: investments.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
             inversiones_total: totalInvest,
-            saldo_favor_o_contra: creditBalance - totalDebt
+            // Usamos el MISMO cálculo combinado que se ve en pantalla en "Saldo Favor/Contra"
+            // (saldo guardado + Patrimonio Neto acumulado), para que la IA vea exactamente
+            // lo mismo que la persona ve en la caja.
+            saldo_favor_o_contra: (creditBalance + Math.max(externalPatrimonioNeto, 0)) - totalDebt,
+            fondo_emergencia_actual: fondoEmergenciaActual
         };
     }
 
