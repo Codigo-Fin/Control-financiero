@@ -8,6 +8,8 @@ const CATEGORIES = [
   'Limpieza del Hogar',
   'Mecánica y Mantenimiento',
   'Transporte',
+  'Delivery',
+  'Apps',
   'Servicios',
   'Almacén, Súper y Mayoristas',
   'Panadería',
@@ -57,6 +59,8 @@ Guía de categorías (con ejemplos, usá tu criterio para casos parecidos):
 - Limpieza del Hogar: artículos de limpieza.
 - Mecánica y Mantenimiento: talleres, repuestos, service.
 - Transporte: nafta, GNC, diesel, SUBE.
+- Delivery: pedidos de comida o compras entregadas a domicilio (Rappi, PedidosYa, etc.).
+- Apps: viajes en aplicaciones como Uber, Didi, Cabify.
 - Servicios: luz, gas, agua, internet, streaming, suscripciones, honorarios profesionales.
 - Almacén, Súper y Mayoristas: SOLO cuando el ticket muestra compra de mercadería en volumen para el hogar (varios productos de almacén, verdulería, carnicería, limpieza, etc. en una misma compra).
 - Panadería: panaderías, confiterías.
