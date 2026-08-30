@@ -3321,7 +3321,8 @@
                 egresos_por_categoria: expensesByCategory,
                 deudas: null,
                 inversiones: null,
-                saldo_favor_o_contra: null
+                saldo_favor_o_contra: null,
+                fondo_emergencia_actual: null
             };
 
             // 1) Primero probamos con la copia local que guarda Libertad Financiera —
@@ -3335,6 +3336,7 @@
                     snapshot.inversiones = local.inversiones || [];
                     snapshot.inversiones_total = local.inversiones_total || 0;
                     snapshot.saldo_favor_o_contra = local.saldo_favor_o_contra ?? null;
+                    snapshot.fondo_emergencia_actual = local.fondo_emergencia_actual ?? null;
                     return snapshot;
                 } catch (err) {
                     console.warn('No se pudo leer la copia local de Libertad Financiera:', err);
