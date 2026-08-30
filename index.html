@@ -126,6 +126,21 @@
                 </div>
                 <p id="auth-message" class="text-xs min-h-[16px]"></p>
 
+                <!-- Código de descuento (opcional) — si viene por link (?promo=CODIGO) se completa solo -->
+                <div id="promo-code-box" class="space-y-1.5">
+                    <button type="button" id="btn-toggle-promo" class="text-[11px] text-slate-500 hover:text-cyan-400 underline underline-offset-2">
+                        ¿Tenés un código de descuento?
+                    </button>
+                    <div id="promo-code-fields" class="hidden flex gap-2">
+                        <input type="text" id="promo-code-input" placeholder="Ej. CONTROL"
+                            class="flex-1 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs uppercase focus:outline-none focus:border-fuchsia-500 text-white placeholder-slate-500">
+                        <button type="button" id="btn-apply-promo" class="bg-fuchsia-500/20 hover:bg-fuchsia-500/30 border border-fuchsia-500/40 text-fuchsia-300 font-bold px-3 py-2 rounded-xl text-xs whitespace-nowrap">Aplicar</button>
+                    </div>
+                    <div id="promo-code-success" class="hidden bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 text-xs font-semibold px-3 py-2 rounded-xl text-center">
+                        🎉 ¡Tu registro tiene <span id="promo-code-pct">30</span>% OFF! Se va a aplicar automáticamente cuando actives tu plan.
+                    </div>
+                </div>
+
                 <p class="text-[10px] text-slate-500 text-center">Al crear cuenta, en el siguiente paso vas a poder elegir tu plan y autorizar tu medio de pago (14 días gratis, sin cargo hasta entonces).</p>
 
                 <div class="flex flex-col gap-2 pt-1">
@@ -1294,6 +1309,47 @@
         }
 
         // ============================================
+        // CÓDIGO DE DESCUENTO EN EL REGISTRO (opcional)
+        // Se valida ya en esta pantalla y se guarda para auto-completarse
+        // solo cuando la persona llegue al paso de autorizar el pago.
+        // ============================================
+        async function checkAndShowPromoCode(code) {
+            if (!code) return;
+            try {
+                const resp = await fetch(`/api/check-discount-code?code=${encodeURIComponent(code)}`);
+                const result = await resp.json();
+                if (result.valid) {
+                    localStorage.setItem('pending_promo_code', code.toUpperCase());
+                    document.getElementById('promo-code-pct').textContent = result.discountPct;
+                    document.getElementById('promo-code-fields').classList.add('hidden');
+                    document.getElementById('promo-code-success').classList.remove('hidden');
+                } else {
+                    setAuthMessage('Ese código de descuento no es válido o ya no está disponible.');
+                }
+            } catch (err) {
+                console.warn('No se pudo validar el código de descuento:', err);
+            }
+        }
+
+        document.getElementById('btn-toggle-promo').addEventListener('click', () => {
+            document.getElementById('promo-code-fields').classList.toggle('hidden');
+        });
+        document.getElementById('btn-apply-promo').addEventListener('click', () => {
+            checkAndShowPromoCode(document.getElementById('promo-code-input').value.trim());
+        });
+
+        // Si la persona llegó con un link tipo ressetia.com?promo=CONTROL, lo detectamos solo
+        (function checkPromoFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const promo = params.get('promo');
+            if (promo) {
+                document.getElementById('promo-code-input').value = promo;
+                checkAndShowPromoCode(promo);
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        })();
+
+        // ============================================
         // AUTORIZACIÓN DE PAGO EN EL PRIMER INGRESO REAL
         // (funciona igual si el registro tuvo sesión inmediata, o si la persona
         // tuvo que confirmar el email antes y recién ahora inicia sesión)
@@ -1307,6 +1363,13 @@
             // reaparece siempre hasta que autorice un medio de pago.
             document.getElementById('payment-setup-modal').classList.remove('hidden');
             document.getElementById('payment-setup-modal').classList.add('flex');
+
+            // Si venía con un código de descuento aplicado desde el registro, se lo
+            // completamos solo acá, para que no tenga que volver a escribirlo.
+            const savedPromo = localStorage.getItem('pending_promo_code');
+            if (savedPromo) {
+                document.getElementById('discount-code-input').value = savedPromo;
+            }
         }
 
         document.querySelectorAll('.payment-setup-plan-btn').forEach(btn => {
@@ -3448,6 +3511,23 @@
             btnEl.classList.add('text-cyan-400');
             if (currentSpeakingBtn === btnEl) currentSpeakingBtn = null;
         }
+
+        // Si se bloquea la pantalla (o se cambia de app) mientras está hablando,
+        // intentamos pausar en vez de dejar que se corte solo — y reanudar al volver.
+        // Aviso honesto: algunos celulares Android cortan la lectura igual al bloquear
+        // la pantalla, es una limitación del sistema operativo, no algo 100% controlable.
+        document.addEventListener('visibilitychange', () => {
+            if (!window.speechSynthesis) return;
+            if (document.hidden) {
+                if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+                    window.speechSynthesis.pause();
+                }
+            } else {
+                if (window.speechSynthesis.paused) {
+                    window.speechSynthesis.resume();
+                }
+            }
+        });
 
         // Traduce el código de sección que devuelve la IA a un texto de botón + acción de navegación
         const SECTION_LABELS = {
