@@ -573,6 +573,8 @@
                         <option value="Limpieza del Hogar">🧼 Limpieza del Hogar</option>
                         <option value="Mecánica y Mantenimiento">🔧 Mecánica y Mantenimiento</option>
                         <option value="Transporte">⛽ Transporte</option>
+                        <option value="Delivery">🛵 Delivery</option>
+                        <option value="Apps">📱 Apps (Uber, Didi, etc.)</option>
                         <option value="Servicios">💡 Servicios</option>
                         <option value="Almacén, Súper y Mayoristas">🌾 Almacén, Súper y Mayoristas</option>
                         <option value="Panadería">🥐 Panadería</option>
@@ -1409,7 +1411,7 @@
                 badge.classList.add('flex');
                 btnUnsub.classList.remove('hidden');
                 planBox.classList.add('hidden');
-                if (currentPlan === 'mensual') {
+                if (currentPlan !== 'anual') {
                     upgradeBox.classList.remove('hidden');
                 } else {
                     upgradeBox.classList.add('hidden');
@@ -2886,6 +2888,10 @@
             };
 
             document.getElementById('btn-voice-input').addEventListener('click', () => {
+                if (!navigator.onLine) {
+                    showToast('📴 Sin acceso a internet — cargar por voz necesita conexión. Podés anotarlo a mano mientras tanto.', 'warning');
+                    return;
+                }
                 voiceRecognition.start();
             });
         } else {
@@ -2955,6 +2961,12 @@
         // sobre esto mismo. Si se toca por error, avisar antes de guardar.
         // ============================================================
         async function processReceiptFile(file, kind, statusEl) {
+            // Este chequeo es nuevo y externo a la "zona protegida" — solo avisa antes
+            // de intentar nada, no toca la lógica de lectura del archivo en sí.
+            if (!navigator.onLine) {
+                showToast('📴 Sin acceso a internet — leer fotos y PDF con IA necesita conexión. Podés anotarlo a mano mientras tanto.', 'warning');
+                return;
+            }
             statusEl.textContent = 'Leyendo y analizando con IA...';
             try {
                 let body;
@@ -3032,7 +3044,13 @@
             }
         }
 
-        document.getElementById('btn-open-camera').addEventListener('click', openCameraModal);
+        document.getElementById('btn-open-camera').addEventListener('click', () => {
+            if (!navigator.onLine) {
+                showToast('📴 Sin acceso a internet — la cámara con IA necesita conexión. Podés anotarlo a mano mientras tanto.', 'warning');
+                return;
+            }
+            openCameraModal();
+        });
         document.getElementById('btn-camera-cancel').addEventListener('click', closeCameraModal);
 
         document.getElementById('btn-camera-capture').addEventListener('click', async () => {
