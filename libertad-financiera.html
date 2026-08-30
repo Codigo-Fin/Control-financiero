@@ -717,6 +717,19 @@
     // ============================================
     // VERIFICACIÓN DE SESIÓN Y SUSCRIPCIÓN PREMIUM
     // ============================================
+    // Guarda/recupera el estado de acceso (premium/prueba) para poder seguir
+    // entrando aunque no haya internet en ese momento.
+    function saveAccessCache(settings) {
+        try { localStorage.setItem(`lf_access_cache_${currentUser.id}`, JSON.stringify(settings)); } catch (e) {}
+    }
+    function loadAccessCache() {
+        if (!currentUser) return null;
+        try {
+            const raw = localStorage.getItem(`lf_access_cache_${currentUser.id}`);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+
     async function checkAccess() {
         const { data: { session } } = await sb.auth.getSession();
         if (!session) {
@@ -726,19 +739,53 @@
         }
         currentUser = session.user;
 
-        const { data: settings } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary').eq('user_id', currentUser.id).maybeSingle();
+        let settings = null;
+        let usedCache = false;
+
+        if (!navigator.onLine) {
+            settings = loadAccessCache();
+            usedCache = true;
+        } else {
+            try {
+                const { data } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary').eq('user_id', currentUser.id).maybeSingle();
+                if (data) {
+                    settings = data;
+                    saveAccessCache(data);
+                } else {
+                    settings = loadAccessCache();
+                    usedCache = true;
+                }
+            } catch (err) {
+                console.warn('No se pudo verificar el acceso en la nube, usando lo guardado localmente:', err);
+                settings = loadAccessCache();
+                usedCache = true;
+            }
+        }
+
         const subscriptionActive = settings && settings.is_premium === true &&
             (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
         const trialActive = settings && settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
         const hasAccess = subscriptionActive || trialActive;
 
         if (!hasAccess) {
+            // Si esto pasó SIN internet y encima sin ninguna copia guardada, es mejor
+            // avisar que no se pudo verificar, en vez de decir directo "se te terminó".
+            if (usedCache && !settings) {
+                document.getElementById('gate-loading').classList.add('hidden');
+                document.getElementById('gate-not-premium').classList.remove('hidden');
+                const notPremiumEl = document.getElementById('gate-not-premium');
+                if (notPremiumEl) notPremiumEl.insertAdjacentHTML('afterbegin', '<p class="text-xs text-amber-300 mb-2">📴 No se pudo verificar tu acceso porque no hay internet, y todavía no había una copia guardada en este dispositivo.</p>');
+                return;
+            }
             document.getElementById('gate-loading').classList.add('hidden');
             document.getElementById('gate-not-premium').classList.remove('hidden');
             return;
         }
 
-        if (trialActive && !subscriptionActive) {
+        if (usedCache) {
+            document.getElementById('trial-banner').textContent = '📴 Sin conexión — mostrando tu último acceso guardado en este dispositivo.';
+            document.getElementById('trial-banner').classList.remove('hidden');
+        } else if (trialActive && !subscriptionActive) {
             const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
             document.getElementById('trial-banner').textContent = `Estás en tu prueba gratis — te quedan ${daysLeft} día(s).`;
             document.getElementById('trial-banner').classList.remove('hidden');
@@ -2267,16 +2314,38 @@
         window.speechSynthesis.onvoiceschanged = () => { cachedSpanishVoiceLF = null; getBestSpanishVoiceLF(); };
         getBestSpanishVoiceLF();
     }
-    function speakAssistantTextLF(text) {
+    let currentSpeakingBtnLF = null;
+
+    function speakAssistantTextLF(text, btnEl) {
         if (!window.speechSynthesis) return;
         window.speechSynthesis.cancel();
+        resetSpeakButtonLF(currentSpeakingBtnLF);
+
         const utterance = new SpeechSynthesisUtterance(text);
         const voice = getBestSpanishVoiceLF();
         if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
         else { utterance.lang = 'es-AR'; }
         utterance.rate = 1.15;
         utterance.pitch = 1;
+
+        if (btnEl) {
+            currentSpeakingBtnLF = btnEl;
+            btnEl.innerHTML = '<i class="fa-solid fa-stop"></i> Detener';
+            btnEl.classList.add('text-rose-400');
+            btnEl.classList.remove('text-cyan-400');
+        }
+        utterance.onend = () => resetSpeakButtonLF(btnEl);
+        utterance.onerror = () => resetSpeakButtonLF(btnEl);
+
         window.speechSynthesis.speak(utterance);
+    }
+
+    function resetSpeakButtonLF(btnEl) {
+        if (!btnEl) return;
+        btnEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
+        btnEl.classList.remove('text-rose-400');
+        btnEl.classList.add('text-cyan-400');
+        if (currentSpeakingBtnLF === btnEl) currentSpeakingBtnLF = null;
     }
 
     const SECTION_LABELS_LF = {
@@ -2323,7 +2392,14 @@
             speakBtn.type = 'button';
             speakBtn.className = 'text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5';
             speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
-            speakBtn.addEventListener('click', () => speakAssistantTextLF(text));
+            speakBtn.addEventListener('click', () => {
+                if (currentSpeakingBtnLF === speakBtn && window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                    resetSpeakButtonLF(speakBtn);
+                    return;
+                }
+                speakAssistantTextLF(text, speakBtn);
+            });
             actionsRow.appendChild(speakBtn);
 
             if (suggestedSection && SECTION_LABELS_LF[suggestedSection]) {
