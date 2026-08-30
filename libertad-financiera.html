@@ -202,7 +202,7 @@
 
         <!-- Navegación por pestañas -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
-            <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">SALDOS</button>
+            <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PATRIMONIO NETO</button>
             <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
             <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PAGAR DEUDAS</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
@@ -370,6 +370,9 @@
                 </div>
                 <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
                 <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+                <button id="btnUseEmergencyForDebt" class="btn bg-slate-800 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs">
+                    <i class="fa-solid fa-hand-holding-dollar"></i> Usar este fondo para pagar una deuda (opcional)
+                </button>
             </div>
 
             <!-- Ingresos Extras -->
@@ -1089,6 +1092,32 @@
         updateEmergencyFullLock();
         await saveStorage();
     });
+
+    // Usa el Fondo de Emergencia para pagar deuda (opcional) — reduce el fondo
+    // guardado, y reparte ese dinero entre las deudas de menor a mayor.
+    document.getElementById('btnUseEmergencyForDebt').addEventListener('click', async () => {
+        const currentAmount = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
+        if (currentAmount <= 0) {
+            await showAlertModal('Todavía no tenés nada guardado en este fondo.');
+            return;
+        }
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        if (pendingDebts.length === 0) {
+            await showAlertModal('No tenés deudas pendientes donde usarlo.');
+            return;
+        }
+        const ok = await showConfirmModal(`¿Usar $${currentAmount.toLocaleString()} de tu Fondo de Emergencia para pagar deuda? Te recomendamos volver a juntarlo después — funciona como tu banco personal, sin intereses.`, true);
+        if (!ok) return;
+
+        localStorage.setItem('emergencyBasic_current', 0);
+        document.getElementById('emergencyBasicCurrent').value = 0;
+        renderEmergencyBox('emergencyBasic');
+        updateEmergencyFullLock();
+
+        await applyPaymentAcrossDebts(currentAmount, 'Fondo de Emergencia', 'Uso del Fondo de Emergencia para pagar deuda');
+        await showAlertModal('Listo. No te olvides de volver a juntar tu Fondo de Emergencia apenas puedas — es tu propio respaldo ante imprevistos.');
+    });
+
     document.getElementById('btnSaveEmergencyFull').addEventListener('click', async () => {
         if (!document.getElementById('emergencyFullLock').classList.contains('hidden')) {
             await showAlertModal('Todavía no cumplís los requisitos para cargar este fondo.');
