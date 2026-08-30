@@ -2348,6 +2348,19 @@
         if (currentSpeakingBtnLF === btnEl) currentSpeakingBtnLF = null;
     }
 
+    document.addEventListener('visibilitychange', () => {
+        if (!window.speechSynthesis) return;
+        if (document.hidden) {
+            if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+                window.speechSynthesis.pause();
+            }
+        } else {
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+        }
+    });
+
     const SECTION_LABELS_LF = {
         cuadrante: 'Ir a Control Financiero → Cuadrante de Flujo',
         ingresos: 'Ir a Control Financiero → Ingresos',
