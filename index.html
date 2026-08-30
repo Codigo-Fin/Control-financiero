@@ -432,6 +432,56 @@
         <!-- ==================== TAB: GASTOS DEL MES ==================== -->
         <div id="tab-panel-ingresos" class="tab-panel hidden space-y-5">
 
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-1 gap-1 shadow-inner">
+                        <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <div class="flex items-center gap-1.5 px-2">
+                            <i class="fa-regular fa-calendar-days text-cyan-400 text-xs"></i>
+                            <select id="header-month-select" class="bg-transparent text-cyan-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
+                        </div>
+                        <button id="next-month-btn" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="toggleMonthDrawer(1)" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i>
+                        <span id="drawer-toggle-text">Ver Calendario Anual</span>
+                        <i id="drawer-arrow" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="month-drawer" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Patrimonio Neto por Mes</span>
+                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
+                </div>
+                <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
+            </div>
+
+            <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
+                <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-share-nodes text-cyan-400"></i>
+                    <span>Comprobante Mensual:</span>
+                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-invoice text-rose-300"></i>
+                        <span>Comprobante PDF a WhatsApp</span>
+                    </button>
+                    <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
+                        <span>Compartir Resumen (texto)</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
         <div class="flex justify-end">
             <button onclick="openSalaryModal()" class="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
                 <i class="fa-solid fa-pen-to-square"></i>
@@ -440,6 +490,7 @@
         </div>
 
         <div class="bg-cyan-950/40 p-4 rounded-2xl border-2 border-cyan-500/30" style="box-shadow: 0 0 24px rgba(34,211,238,0.2);">
+
             <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">🏦 Ingresos Totales</span>
             <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">
@@ -1129,24 +1180,96 @@
 
         async function checkSession() {
             if (isPasswordRecoveryFlow) return; // ya se está mostrando el modal de nueva contraseña
-            const { data: { session } } = await sb.auth.getSession();
-            if (session) {
-                currentUser = session.user;
-                showAppScreen();
-                await loadAllUserData();
-            } else {
-                showLoginScreen();
+
+            // Sin internet: la validación de sesión contra el servidor puede tardar
+            // mucho o fallar — si ya habías entrado antes en este dispositivo, te
+            // dejamos pasar directo con esa sesión guardada, sin obligarte a loguearte.
+            if (!navigator.onLine) {
+                const cachedUser = getCachedUser();
+                if (cachedUser) {
+                    currentUser = cachedUser;
+                    showAppScreen();
+                    await loadAllUserData();
+                    return;
+                }
             }
+
+            try {
+                // Le ponemos un límite de tiempo — si no hay respuesta en 6 segundos
+                // (típico cuando la señal es muy mala, no directamente "sin internet"),
+                // no dejamos a la persona esperando para siempre.
+                const sessionPromise = sb.auth.getSession();
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), 6000));
+                const result = await Promise.race([sessionPromise, timeoutPromise]);
+
+                if (result.timedOut) {
+                    const cachedUser = getCachedUser();
+                    if (cachedUser) {
+                        currentUser = cachedUser;
+                        showAppScreen();
+                        await loadAllUserData();
+                        return;
+                    }
+                    showLoginScreen();
+                    return;
+                }
+
+                const { data: { session } } = result;
+                if (session) {
+                    currentUser = session.user;
+                    saveCachedUser(session.user);
+                    showAppScreen();
+                    await loadAllUserData();
+                } else {
+                    showLoginScreen();
+                }
+            } catch (err) {
+                console.warn('Error al validar la sesión, probamos con la guardada localmente:', err);
+                const cachedUser = getCachedUser();
+                if (cachedUser) {
+                    currentUser = cachedUser;
+                    showAppScreen();
+                    await loadAllUserData();
+                } else {
+                    showLoginScreen();
+                }
+            }
+        }
+
+        // Guarda/recupera quién fue la última persona que entró con éxito en este
+        // dispositivo, para poder seguir usando la app sin conexión más adelante.
+        function saveCachedUser(user) {
+            try { localStorage.setItem('cached_user', JSON.stringify({ id: user.id, email: user.email })); } catch (e) {}
+        }
+        function getCachedUser() {
+            try {
+                const raw = localStorage.getItem('cached_user');
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
         }
 
         async function handleSignIn() {
             const email = document.getElementById('auth-email').value.trim();
             const password = document.getElementById('auth-password').value;
             if (!email || !password) { setAuthMessage('Completá email y contraseña'); return; }
+
+            if (!navigator.onLine) {
+                setAuthMessage('Necesitás conexión a internet para iniciar sesión por primera vez en este dispositivo. Conectate y probá de nuevo.');
+                return;
+            }
+
             setAuthMessage('Ingresando...', true);
             const { data, error } = await sb.auth.signInWithPassword({ email, password });
-            if (error) { setAuthMessage(error.message); return; }
+            if (error) {
+                if (!navigator.onLine) {
+                    setAuthMessage('Parece que se cortó la conexión justo ahora. Probá de nuevo cuando tengas internet.');
+                } else {
+                    setAuthMessage(error.message);
+                }
+                return;
+            }
             currentUser = data.user;
+            saveCachedUser(data.user);
             showAppScreen();
             await loadAllUserData();
         }
@@ -1313,31 +1436,76 @@
             }
         }
 
+        // Guarda una copia local de los datos esenciales, para poder seguir usando la
+        // app (al menos para ver lo que ya había) aunque no haya internet en ese momento.
+        function saveLocalDataCache() {
+            if (!currentUser) return;
+            try {
+                localStorage.setItem(`local_cache_${currentUser.id}`, JSON.stringify({ salary, incomeFrequency, products, cachedAt: Date.now() }));
+            } catch (e) { /* no es grave si esto falla */ }
+        }
+
+        function loadLocalDataCache() {
+            if (!currentUser) return null;
+            try {
+                const raw = localStorage.getItem(`local_cache_${currentUser.id}`);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+
         async function loadAllUserData() {
-            const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
-            if (settings) {
-                salary = (settings.salary !== null && settings.salary !== undefined) ? parseFloat(settings.salary) : 500000;
-                incomeFrequency = settings.income_frequency || 'mensual';
-                const subscriptionActive = settings.is_premium === true &&
-                    (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
-                applyPremiumUI(subscriptionActive, settings.current_plan);
-                await offerPaymentSetupIfNeeded(settings);
-                checkTrialEndingSoon(settings);
-            } else {
-                salary = 500000;
-                const trialEnd = new Date();
-                trialEnd.setDate(trialEnd.getDate() + 14);
-                await sb.from('user_settings').insert({ user_id: currentUser.id, salary, trial_ends_at: trialEnd.toISOString(), is_premium: false });
-                // Usuario recién creado: le ofrecemos autorizar el medio de pago ahora mismo.
-                await offerPaymentSetupIfNeeded({ mp_preapproval_id: null, is_premium: false });
+            // Sin internet: no perdemos tiempo esperando que la nube responda — usamos
+            // directo la última copia guardada en este dispositivo.
+            if (!navigator.onLine) {
+                const cache = loadLocalDataCache();
+                if (cache) {
+                    salary = cache.salary; incomeFrequency = cache.incomeFrequency; products = cache.products || [];
+                    selectedMonthFilter = currentM;
+                    renderApp();
+                    showToast('📴 Sin conexión — mostrando tus datos guardados en este dispositivo', 'warning');
+                } else {
+                    showToast('📴 Sin conexión y sin datos guardados todavía en este dispositivo', 'warning');
+                }
+                return;
             }
 
-            const { data: txs } = await sb.from('transactions').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
-            products = (txs || []).map(t => ({
-                id: t.id, name: t.name, date: t.date, month: t.month,
-                unitPrice: t.unit_price, price: t.price, category: t.category,
-                fuelType: t.fuel_type, type: t.type, icon: t.icon, completed: t.completed
-            }));
+            try {
+                const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
+                if (settings) {
+                    salary = (settings.salary !== null && settings.salary !== undefined) ? parseFloat(settings.salary) : 500000;
+                    incomeFrequency = settings.income_frequency || 'mensual';
+                    const subscriptionActive = settings.is_premium === true &&
+                        (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
+                    applyPremiumUI(subscriptionActive, settings.current_plan);
+                    await offerPaymentSetupIfNeeded(settings);
+                    checkTrialEndingSoon(settings);
+                } else {
+                    salary = 500000;
+                    const trialEnd = new Date();
+                    trialEnd.setDate(trialEnd.getDate() + 14);
+                    await sb.from('user_settings').insert({ user_id: currentUser.id, salary, trial_ends_at: trialEnd.toISOString(), is_premium: false });
+                    // Usuario recién creado: le ofrecemos autorizar el medio de pago ahora mismo.
+                    await offerPaymentSetupIfNeeded({ mp_preapproval_id: null, is_premium: false });
+                }
+
+                const { data: txs } = await sb.from('transactions').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+                products = (txs || []).map(t => ({
+                    id: t.id, name: t.name, date: t.date, month: t.month,
+                    unitPrice: t.unit_price, price: t.price, category: t.category,
+                    fuelType: t.fuel_type, type: t.type, icon: t.icon, completed: t.completed
+                }));
+
+                saveLocalDataCache();
+            } catch (err) {
+                // Si algo falla en el medio (se cortó la conexión justo ahora), usamos
+                // la copia guardada en vez de dejar la pantalla rota o colgada.
+                console.warn('No se pudo conectar con la nube, usando copia local:', err);
+                const cache = loadLocalDataCache();
+                if (cache) {
+                    salary = cache.salary; incomeFrequency = cache.incomeFrequency; products = cache.products || [];
+                    showToast('📴 Se cortó la conexión — mostrando tus datos guardados', 'warning');
+                }
+            }
 
             selectedMonthFilter = currentM;
             renderApp();
