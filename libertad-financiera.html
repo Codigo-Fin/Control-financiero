@@ -154,7 +154,10 @@
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
                 <button data-menu-lf-tab="saldo" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Saldos
+                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
+                </button>
+                <button data-menu-lf-tab="fondos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
                 </button>
                 <button data-menu-lf-tab="deudas" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Registrar Deudas
@@ -203,6 +206,7 @@
         <!-- Navegación por pestañas -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PATRIMONIO NETO</button>
+            <button data-tab="fondos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">FONDOS DE EMERGENCIA</button>
             <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
             <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PAGAR DEUDAS</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
@@ -243,6 +247,62 @@
         </div>
 
         </div> <!-- fin lf-tab-saldo -->
+
+        <!-- ==================== TAB: FONDOS DE EMERGENCIA ==================== -->
+        <div id="lf-tab-fondos" class="lf-tab-panel hidden space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
+                    <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> 1- Crear Fondo Emergencias
+                    </h2>
+                    <p class="text-[11px] text-slate-500">El primer paso para salir de deudas es protegerte con un capital de 1000 dólares o su equivalente en pesos ante imprevistos.</p>
+                    <div>
+                        <label>Meta objetivo ($)</label>
+                        <input type="number" id="emergencyBasicTarget" step="any" placeholder="Ej: 1500000">
+                    </div>
+                    <div>
+                        <label>Ahorrado actualmente ($)</label>
+                        <input type="number" id="emergencyBasicCurrent" step="any" placeholder="Ej: 100000">
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="emergencyBasicBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                    <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
+                    <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+                    <button id="btnUseEmergencyForDebt" class="btn bg-slate-800 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs">
+                        <i class="fa-solid fa-hand-holding-dollar"></i> Usar este fondo para pagar una deuda (opcional)
+                    </button>
+                </div>
+
+                <!-- Emergencia 3 a 6 Sueldos (bloqueado) -->
+                <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5 relative">
+                    <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-life-ring"></i> 2- Emergencia 3 a 6 Sueldos
+                    </h2>
+                    <p class="text-[11px] text-slate-500">Meta ej: $9.000.000</p>
+                    <div>
+                        <label>Meta objetivo ($)</label>
+                        <input type="number" id="emergencyFullTarget" step="any" placeholder="Ej: 9000000">
+                    </div>
+                    <div>
+                        <label>Ahorrado actualmente ($)</label>
+                        <input type="number" id="emergencyFullCurrent" step="any" placeholder="Ej: 300000">
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="emergencyFullBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                    <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
+                    <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+
+                    <!-- Bloqueo hasta cumplir requisitos -->
+                    <div id="emergencyFullLock" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center text-center p-5 space-y-2">
+                        <i class="fa-solid fa-lock text-slate-500 text-xl"></i>
+                        <p class="text-xs text-slate-300 font-semibold">Todavía no podés cargar este fondo</p>
+                        <p id="emergencyFullLockReason" class="text-[11px] text-slate-500"></p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- fin lf-tab-fondos -->
 
         <!-- ==================== TAB: REGISTRAR DEUDAS ==================== -->
         <div id="lf-tab-deudas" class="lf-tab-panel hidden space-y-5">
@@ -325,15 +385,6 @@
             </div>
         </div>
 
-        <!-- Prioridad de Pago Sugerido -->
-        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
-            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
-                <i class="fa-solid fa-snowflake"></i> Prioridad de Pago Sugerido
-            </h2>
-            <p class="text-[11px] text-slate-500">Priorizamos tus deudas de menor a mayor, para que vayas cancelando rápido y ganando impulso.</p>
-            <div id="debtList" class="space-y-3"></div>
-        </div>
-
         </div> <!-- fin lf-tab-deudas -->
 
         <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
@@ -350,33 +401,18 @@
             </button>
         </div>
 
-        <!-- Fondos de Emergencia -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
-                <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-shield-halved"></i> 1- Crear Fondo Emergencias
-                </h2>
-                <p class="text-[11px] text-slate-500">El primer paso para salir de deudas es protegerte con un capital de 1000 dólares o su equivalente en pesos ante imprevistos.</p>
-                <div>
-                    <label>Meta objetivo ($)</label>
-                    <input type="number" id="emergencyBasicTarget" step="any" placeholder="Ej: 1500000">
-                </div>
-                <div>
-                    <label>Ahorrado actualmente ($)</label>
-                    <input type="number" id="emergencyBasicCurrent" step="any" placeholder="Ej: 100000">
-                </div>
-                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                    <div id="emergencyBasicBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
-                </div>
-                <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
-                <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
-                <button id="btnUseEmergencyForDebt" class="btn bg-slate-800 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs">
-                    <i class="fa-solid fa-hand-holding-dollar"></i> Usar este fondo para pagar una deuda (opcional)
-                </button>
-            </div>
+        <!-- Prioridad de Pago Sugerido -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-snowflake"></i> Prioridad de Pago Sugerido
+            </h2>
+            <p class="text-[11px] text-slate-500">Priorizamos tus deudas de menor a mayor, para que vayas cancelando rápido y ganando impulso.</p>
+            <div id="debtList" class="space-y-3"></div>
+        </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <!-- Ingresos Extras -->
-            <div class="glass-panel neon-card neon-amber rounded-3xl p-5 space-y-3">
+            <div class="glass-panel neon-card neon-amber rounded-3xl p-5 space-y-3 sm:col-span-2">
                 <h2 class="font-bold text-sm sm:text-base text-amber-300 flex items-center gap-2">
                     <i class="fa-solid fa-bolt"></i> 2- Ingresos Extras
                 </h2>
@@ -427,34 +463,6 @@
                 </form>
                 <div id="extraDebtStatus" class="hidden text-center text-xs font-bold rounded-xl p-2"></div>
                 <p class="text-[11px] text-slate-500 text-center pt-1">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
-            </div>
-
-            <!-- Emergencia 3 a 6 Sueldos (bloqueado) -->
-            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5 relative sm:col-span-2">
-                <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
-                    <i class="fa-solid fa-life-ring"></i> 3- Emergencia 3 a 6 Sueldos
-                </h2>
-                <p class="text-[11px] text-slate-500">Meta ej: $9.000.000</p>
-                <div>
-                    <label>Meta objetivo ($)</label>
-                    <input type="number" id="emergencyFullTarget" step="any" placeholder="Ej: 9000000">
-                </div>
-                <div>
-                    <label>Ahorrado actualmente ($)</label>
-                    <input type="number" id="emergencyFullCurrent" step="any" placeholder="Ej: 300000">
-                </div>
-                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                    <div id="emergencyFullBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
-                </div>
-                <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
-                <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
-
-                <!-- Bloqueo hasta cumplir requisitos -->
-                <div id="emergencyFullLock" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center text-center p-5 space-y-2">
-                    <i class="fa-solid fa-lock text-slate-500 text-xl"></i>
-                    <p class="text-xs text-slate-300 font-semibold">Todavía no podés cargar este fondo</p>
-                    <p id="emergencyFullLockReason" class="text-[11px] text-slate-500"></p>
-                </div>
             </div>
         </div>
 
@@ -1396,6 +1404,25 @@
 
         const payAmount = Math.min(debt.amount, debt.minPayment);
         const overflow = debt.minPayment - payAmount;
+
+        // Registramos el pago como egreso en Control Financiero PRIMERO — si falla,
+        // no tocamos nada de la deuda, para que nunca quede desincronizado.
+        try {
+            const { error } = await sb.from('transactions').insert({
+                user_id: currentUser.id,
+                name: `Pago de deuda - ${debt.name}`,
+                date: new Date().toISOString().slice(0, 10),
+                month: new Date().toISOString().slice(0, 7),
+                qty_num: 1, unit: '', unit_price: payAmount, price: payAmount,
+                category: 'Servicios', fuel_type: null, type: 'egreso', icon: '💳', completed: false
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error('No se pudo registrar el pago en Control Financiero:', err);
+            await showAlertModal('No se pudo confirmar el pago ahora mismo. No se descontó nada de tu deuda. Probá de nuevo en un momento.');
+            return;
+        }
+
         debt.amount -= payAmount;
         if (overflow > 0) creditBalance += overflow;
 
@@ -1415,6 +1442,7 @@
         }
 
         await saveStorage();
+        await fetchExternalPatrimonioNeto(); // se registró un egreso nuevo, refrescamos el Patrimonio Neto
         render();
     }
 
@@ -2367,6 +2395,7 @@
         egresos: 'Ir a Control Financiero → Egresos',
         resumen: 'Ir a Control Financiero → Mis Movimientos',
         lf_saldo: 'Ir a Patrimonio Neto',
+        lf_fondos: 'Ir a Fondos de Emergencia',
         lf_deudas: 'Ir a Registrar Deudas',
         lf_emergencia: 'Ir a Pagar Deudas',
         lf_inversiones: 'Ir a Inversiones'
