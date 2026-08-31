@@ -3365,7 +3365,38 @@
             renderAllocationResult(buckets);
         });
 
-        document.getElementById('allocation-rule-select').addEventListener('change', (e) => {
+        let isRestoringAllocationRule = false; // evita re-aplicar el descuento solo por recargar la página
+
+        // Aplica (o actualiza) el descuento automático sobre TODO el ingreso ya cargado
+        // este mes (sueldo + ingresos extra) — para cuando la persona elige la regla
+        // DESPUÉS de ya tener ingresos cargados, no solo hacia adelante.
+        async function applyAutoAllocationToWholeMonth() {
+            const rule = localStorage.getItem('allocation_rule');
+            const bucket = getAutoDeductBucket(rule);
+            if (!bucket) return;
+
+            const totalIncome = getCurrentMonthIncomeForAllocation();
+            if (totalIncome <= 0) return;
+
+            const amount = Math.round(totalIncome * bucket.pct / 100);
+            const entryName = `${bucket.name} (${bucket.pct}% automático)`;
+            const monthProducts = products.filter(p => p.month === currentM);
+            const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
+
+            if (existing) {
+                if (existing.price !== amount) {
+                    try {
+                        await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
+                    } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
+                    existing.price = amount; existing.unitPrice = amount;
+                    renderApp();
+                }
+            } else {
+                await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
+            }
+        }
+
+        document.getElementById('allocation-rule-select').addEventListener('change', async (e) => {
             const rule = e.target.value;
             const customBuilder = document.getElementById('allocation-custom-builder');
             const resultBox = document.getElementById('allocation-result');
@@ -3394,13 +3425,21 @@
 
             customBuilder.classList.add('hidden');
             renderAllocationResult(ALLOCATION_RULES[rule]);
+
+            // Solo aplicamos el descuento retroactivo si esto fue un cambio real de la
+            // persona (no la restauración automática al recargar la página).
+            if (!isRestoringAllocationRule) {
+                await applyAutoAllocationToWholeMonth();
+            }
         });
 
         function restoreAllocationRule() {
             const savedRule = localStorage.getItem('allocation_rule');
             if (!savedRule || savedRule === 'none') return;
+            isRestoringAllocationRule = true;
             document.getElementById('allocation-rule-select').value = savedRule;
             document.getElementById('allocation-rule-select').dispatchEvent(new Event('change'));
+            isRestoringAllocationRule = false;
         }
 
         // ============================================
