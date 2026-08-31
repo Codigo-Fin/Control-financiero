@@ -718,6 +718,10 @@
                         class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
                         <i class="fa-solid fa-credit-card"></i> Suscribirme
                     </button>
+                    <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');"
+                        class="bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-building-columns"></i> Pagar por Transferencia
+                    </button>
                     <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
                         <i class="fa-solid fa-circle-check"></i> Ya sos Premium
                     </span>
@@ -945,6 +949,62 @@
     </div>
 
     <!-- Configurar medio de pago (aparece en el primer ingreso real, sin importar si hubo confirmación de mail en el medio) -->
+    <!-- Primer paso: ¿con qué método prefiere pagar? -->
+    <div id="payment-method-choice-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-5 border border-cyan-500/30 text-center">
+            <div class="space-y-1">
+                <i class="fa-solid fa-credit-card text-cyan-400 text-2xl"></i>
+                <h3 class="font-bold text-white text-base">¿Abonás con Mercado Pago?</h3>
+                <p class="text-xs sm:text-sm text-slate-400">Tenés 14 días de prueba gratis sin cargo — solo necesitamos saber cómo vas a pagar cuando termine.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button id="btn-payment-choice-yes" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all">Sí</button>
+                <button id="btn-payment-choice-no" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold py-3 rounded-xl text-sm transition-all">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alternativa: pago por Alias/CBU (transferencia bancaria) -->
+    <div id="bank-transfer-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-fuchsia-500/30">
+            <div class="text-center space-y-1">
+                <i class="fa-solid fa-building-columns text-fuchsia-400 text-2xl"></i>
+                <h3 class="font-bold text-white text-base">Pago por Transferencia</h3>
+                <p class="text-xs sm:text-sm text-slate-400">Tenés 14 días de prueba gratis. Cuando quieras activar tu plan, transferí a estos datos:</p>
+            </div>
+
+            <div class="bg-slate-900/70 border border-fuchsia-500/20 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-wide">Alias</p>
+                        <p class="text-sm font-bold text-white" id="bank-alias-text">viajes.3</p>
+                    </div>
+                    <button onclick="copyBankData('bank-alias-text')" class="text-fuchsia-400 hover:text-fuchsia-300 text-xs px-2 py-1"><i class="fa-solid fa-copy"></i> Copiar</button>
+                </div>
+                <div class="flex items-center justify-between border-t border-white/10 pt-3">
+                    <div>
+                        <p class="text-[10px] text-slate-500 uppercase tracking-wide">CBU</p>
+                        <p class="text-sm font-bold text-white" id="bank-cbu-text">2850581740095632909878</p>
+                    </div>
+                    <button onclick="copyBankData('bank-cbu-text')" class="text-fuchsia-400 hover:text-fuchsia-300 text-xs px-2 py-1"><i class="fa-solid fa-copy"></i> Copiar</button>
+                </div>
+                <div class="border-t border-white/10 pt-3">
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wide">Titular</p>
+                    <p class="text-sm font-bold text-white">David Torrico Villarroel — Ressetia</p>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 text-center">Una vez que transfieras, mandanos el comprobante por WhatsApp para activarte el plan. Tocá el botón de abajo para ir directo.</p>
+
+            <div class="flex flex-col gap-2">
+                <a href="https://wa.me/5491162332122?text=Hola!%20Transfer%C3%AD%20para%20activar%20mi%20plan%20de%20Ressetia,%20te%20paso%20el%20comprobante" target="_blank" class="block text-center bg-fuchsia-500/20 hover:bg-fuchsia-500/30 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-sm transition-all">
+                    <i class="fa-brands fa-whatsapp"></i> Enviar comprobante por WhatsApp
+                </a>
+                <button onclick="closeBankTransferModal()" class="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">Cerrar y seguir usando mi prueba gratis</button>
+            </div>
+        </div>
+    </div>
+
     <div id="payment-setup-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30">
             <div class="text-center space-y-1">
@@ -1355,21 +1415,49 @@
         // tuvo que confirmar el email antes y recién ahora inicia sesión)
         // ============================================
         async function offerPaymentSetupIfNeeded(settings) {
-            // Si ya tiene una suscripción configurada (mp_preapproval_id) o ya es premium,
-            // no le mostramos esto de nuevo.
-            if (!settings || settings.mp_preapproval_id || settings.is_premium) return;
+            // Si ya tiene una suscripción configurada (mp_preapproval_id), ya es premium,
+            // o ya eligió cómo va a pagar (aunque haya sido "transferencia"), no repetimos esto.
+            if (!settings || settings.mp_preapproval_id || settings.is_premium || settings.payment_preference) return;
 
-            // Este paso ahora es obligatorio (como Netflix): no se puede "posponer",
-            // reaparece siempre hasta que autorice un medio de pago.
+            // Primer paso: preguntamos con qué método prefiere pagar.
+            document.getElementById('payment-method-choice-modal').classList.remove('hidden');
+            document.getElementById('payment-method-choice-modal').classList.add('flex');
+        }
+
+        document.getElementById('btn-payment-choice-yes').addEventListener('click', async () => {
+            document.getElementById('payment-method-choice-modal').classList.add('hidden');
+            document.getElementById('payment-method-choice-modal').classList.remove('flex');
+
+            await sb.from('user_settings').upsert({ user_id: currentUser.id, payment_preference: 'mercadopago' }, { onConflict: 'user_id' });
+
             document.getElementById('payment-setup-modal').classList.remove('hidden');
             document.getElementById('payment-setup-modal').classList.add('flex');
 
-            // Si venía con un código de descuento aplicado desde el registro, se lo
-            // completamos solo acá, para que no tenga que volver a escribirlo.
             const savedPromo = localStorage.getItem('pending_promo_code');
             if (savedPromo) {
                 document.getElementById('discount-code-input').value = savedPromo;
             }
+        });
+
+        document.getElementById('btn-payment-choice-no').addEventListener('click', async () => {
+            document.getElementById('payment-method-choice-modal').classList.add('hidden');
+            document.getElementById('payment-method-choice-modal').classList.remove('flex');
+
+            await sb.from('user_settings').upsert({ user_id: currentUser.id, payment_preference: 'transferencia' }, { onConflict: 'user_id' });
+
+            showToast('🎉 ¡Listo! Tenés 14 días de prueba gratis, sin cargo.');
+            document.getElementById('bank-transfer-modal').classList.remove('hidden');
+            document.getElementById('bank-transfer-modal').classList.add('flex');
+        });
+
+        function closeBankTransferModal() {
+            document.getElementById('bank-transfer-modal').classList.add('hidden');
+            document.getElementById('bank-transfer-modal').classList.remove('flex');
+        }
+
+        function copyBankData(elId) {
+            const text = document.getElementById(elId).textContent;
+            navigator.clipboard.writeText(text).then(() => showToast('Copiado ✅')).catch(() => {});
         }
 
         document.querySelectorAll('.payment-setup-plan-btn').forEach(btn => {
@@ -1494,9 +1582,14 @@
             if (daysLeft <= 2 && daysLeft >= 0) {
                 const toast = document.getElementById('trial-ending-toast');
                 const hasPayment = !!settings.mp_preapproval_id;
-                toast.textContent = hasPayment
-                    ? `⏰ Tu prueba gratis termina en ${daysLeft} día(s). Después de eso empieza el cobro automático de tu suscripción.`
-                    : `⚠️ Tu prueba gratis termina en ${daysLeft} día(s) y todavía no autorizaste tu medio de pago. Andá a "Suscribirme" para no perder el acceso.`;
+
+                if (settings.payment_preference === 'transferencia') {
+                    toast.innerHTML = `⚠️ Tu prueba gratis termina en ${daysLeft} día(s). Transferí para activar tu plan y no perder el acceso — <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');" class="underline font-bold">ver Alias/CBU</button>`;
+                } else {
+                    toast.textContent = hasPayment
+                        ? `⏰ Tu prueba gratis termina en ${daysLeft} día(s). Después de eso empieza el cobro automático de tu suscripción.`
+                        : `⚠️ Tu prueba gratis termina en ${daysLeft} día(s) y todavía no autorizaste tu medio de pago. Andá a "Suscribirme" para no perder el acceso.`;
+                }
                 toast.classList.remove('hidden');
             }
         }
