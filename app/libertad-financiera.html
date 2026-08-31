@@ -1,0 +1,2672 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ressetia - Libertad Financiera</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #090d16 0%, #111827 40%, #06201b 100%);
+            min-height: 100vh;
+        }
+
+        /* Botón del asistente: efecto de flotar suave, como rebotando despacio en el aire */
+        @keyframes float-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .float-bounce {
+            animation: float-bounce 2.4s ease-in-out infinite;
+        }
+        @keyframes floatSlow { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-6px) rotate(0.5deg); } }
+        @keyframes floatDelay { 0%, 100% { transform: translateY(-4px) rotate(-0.5deg); } 50% { transform: translateY(4px) rotate(0.5deg); } }
+        .floating-card-1 { animation: floatSlow 6s ease-in-out infinite; }
+        .floating-card-2 { animation: floatDelay 7s ease-in-out infinite; }
+        .glass-panel { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+
+        /* Efecto neón en cuadros */
+        .neon-cyan { box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 0 18px rgba(16,185,129,0.25), inset 0 0 20px rgba(16,185,129,0.04); }
+        .neon-rose { box-shadow: 0 0 0 1px rgba(244,63,94,0.35), 0 0 18px rgba(244,63,94,0.25), inset 0 0 20px rgba(244,63,94,0.04); }
+        .neon-purple { box-shadow: 0 0 0 1px rgba(168,85,247,0.35), 0 0 18px rgba(168,85,247,0.25), inset 0 0 20px rgba(168,85,247,0.04); }
+        .neon-teal { box-shadow: 0 0 0 1px rgba(45,212,191,0.35), 0 0 18px rgba(45,212,191,0.25), inset 0 0 20px rgba(45,212,191,0.04); }
+        .neon-amber { box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 0 18px rgba(251,191,36,0.25), inset 0 0 20px rgba(251,191,36,0.04); }
+        .neon-blue { box-shadow: 0 0 0 1px rgba(56,189,248,0.4), 0 0 18px rgba(56,189,248,0.3), inset 0 0 20px rgba(56,189,248,0.05); }
+        .neon-card { transition: box-shadow 0.25s ease, transform 0.2s ease; }
+        .neon-card:hover { transform: translateY(-2px); }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            background-color: #0b1220;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: #f8fafc;
+            font-size: 16px;
+            outline: none;
+        }
+        input:focus, select:focus { border-color: #22d3ee; }
+        label { display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.03em; }
+
+        .btn { width:100%; padding:13px; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; text-align:center; transition: all 0.2s ease; }
+        .btn:active { transform: scale(0.97); }
+    </style>
+</head>
+<body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen">
+
+    <div class="fixed top-10 left-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none floating-card-1"></div>
+    <div class="fixed bottom-10 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
+
+    <!-- Pantalla de carga / bloqueo -->
+    <div id="gate-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-[#090d16] via-[#111827] to-[#06201b]">
+        <div class="glass-panel rounded-3xl p-8 w-full max-w-sm space-y-4 text-center">
+            <div id="gate-loading">
+                <i class="fa-solid fa-spinner fa-spin text-cyan-400 text-2xl"></i>
+                <p class="text-slate-400 text-sm mt-3">Verificando tu acceso...</p>
+            </div>
+            <div id="gate-no-session" class="hidden space-y-3">
+                <i class="fa-solid fa-lock text-slate-500 text-2xl"></i>
+                <h2 class="text-white font-bold text-base">Necesitás iniciar sesión</h2>
+                <p class="text-slate-400 text-sm">Entrá primero al Control Financiero para acceder a tu cuenta.</p>
+                <a href="index.html" class="block bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">Ir al Control Financiero</a>
+            </div>
+            <div id="gate-not-premium" class="hidden space-y-3">
+                <i class="fa-solid fa-star text-amber-400 text-2xl"></i>
+                <h2 class="text-white font-bold text-base">Tu prueba gratis terminó</h2>
+                <p class="text-slate-400 text-sm">Libertad Financiera es parte de la suscripción premium. Suscribite para seguir usándola.</p>
+                <a href="index.html" class="block bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-sm">Ver Suscripción</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-content" class="hidden max-w-3xl mx-auto w-full z-10 space-y-5">
+
+        <!-- Modal de confirmación propio (mismo estilo que Control Financiero) -->
+        <div id="confirm-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4 z-[60]">
+            <div class="bg-slate-900 border-2 border-cyan-500/50 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-[0_0_40px_rgba(34,211,238,0.25)]">
+                <div class="flex items-start gap-3">
+                    <div id="confirm-modal-icon" class="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0 text-lg">
+                        <i class="fa-solid fa-circle-question"></i>
+                    </div>
+                    <p id="confirm-modal-message" class="text-sm text-slate-200 leading-relaxed pt-1"></p>
+                </div>
+                <div class="flex gap-2 justify-end pt-2">
+                    <button id="confirm-modal-cancel" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:bg-slate-800 transition-colors">Cancelar</button>
+                    <button id="confirm-modal-accept" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition-all">Confirmar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de aviso simple (reemplaza alert() nativo) -->
+        <div id="alert-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center p-4 z-[60]">
+            <div class="bg-slate-900 border-2 border-cyan-500/50 rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-[0_0_40px_rgba(34,211,238,0.25)]">
+                <div class="flex items-start gap-3">
+                    <div id="alert-modal-icon" class="w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0 text-lg">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <p id="alert-modal-message" class="text-sm text-slate-200 leading-relaxed pt-1"></p>
+                </div>
+                <div class="flex justify-end pt-2">
+                    <button id="alert-modal-ok" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition-all">Entendido</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="trial-banner" class="hidden bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs sm:text-sm text-center py-2 px-3 rounded-xl"></div>
+
+        <!-- Menú lateral (mismo componente que Control Financiero) -->
+        <div id="side-menu-overlay" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40"></div>
+        <div id="side-menu" class="fixed top-0 left-0 h-full w-[280px] max-w-[80vw] bg-slate-950 border-r border-cyan-500/20 z-50 -translate-x-full transition-transform duration-300 overflow-y-auto">
+            <div class="p-5 border-b border-white/10 flex items-center gap-3">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 text-cyan-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-arrow-rotate-right text-lg"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-base">Ressetia</p>
+                    <p class="text-[11px] text-slate-500">Menú principal</p>
+                </div>
+                <button id="btn-close-menu" class="ml-auto text-slate-500 hover:text-white text-lg px-1"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <nav class="p-3 space-y-1">
+                <a href="index.html?goto=cuadrante" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-house w-5 text-center"></i> Inicio
+                </a>
+                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-3 pb-1">Control de mis Finanzas</p>
+                <a href="index.html?goto=ingresos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-building-columns w-5 text-center"></i> Ingresos
+                </a>
+                <a href="index.html?goto=egresos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-bag-shopping w-5 text-center"></i> Egresos
+                </a>
+                <a href="index.html?goto=resumen" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
+                </a>
+
+                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
+                <button data-menu-lf-tab="saldo" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
+                </button>
+                <button data-menu-lf-tab="fondos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
+                </button>
+                <button data-menu-lf-tab="deudas" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Registrar Deudas
+                </button>
+                <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-hand-holding-dollar w-5 text-center"></i> Pagar Deudas
+                </button>
+                <button data-menu-lf-tab="inversiones" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
+                </button>
+
+                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
+                <a href="index.html?goto=suscripcion" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-amber-500/10 hover:text-amber-300 transition-all">
+                    <i class="fa-solid fa-star w-5 text-center"></i> Suscripción
+                </a>
+            </nav>
+        </div>
+
+        <div class="flex items-center justify-between">
+            <button id="btn-open-menu" title="Menú" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 text-sm transition-colors">
+                <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
+            </a>
+        </div>
+
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 text-center space-y-1">
+            <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-2">
+                <i class="fa-solid fa-arrow-rotate-right"></i>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent">
+                Ressetia
+            </h1>
+            <p class="text-slate-400 text-sm">Sistema de Liberación Financiera & Patrimonio</p>
+            <div class="flex flex-wrap items-center justify-center gap-2 mt-3">
+                <button id="btnFinancialReport" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-file-invoice"></i> Estado Financiero (PDF a WhatsApp)
+                </button>
+                <button id="btnResetAll" class="bg-slate-800/80 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-left"></i> Empezar de Nuevo
+                </button>
+            </div>
+        </header>
+
+        <!-- Navegación por pestañas -->
+        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
+            <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PATRIMONIO NETO</button>
+            <button data-tab="fondos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">FONDOS DE EMERGENCIA</button>
+            <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
+            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PAGAR DEUDAS</button>
+            <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
+        </div>
+
+        <!-- ==================== TAB: SALDO A FAVOR ==================== -->
+        <div id="lf-tab-saldo" class="lf-tab-panel space-y-5">
+
+        <!-- Métricas principales -->
+        <div class="grid grid-cols-2 gap-3">
+            <div class="glass-panel neon-card neon-rose rounded-2xl p-4 text-center">
+                <div class="text-xs font-bold text-rose-300 uppercase tracking-wider">Deuda Total</div>
+                <div class="text-2xl sm:text-3xl font-bold text-rose-400 mt-1" id="totalDebt">$0</div>
+            </div>
+            <div class="glass-panel neon-card neon-purple rounded-2xl p-4 text-center">
+                <div class="text-xs font-bold text-purple-300 uppercase tracking-wider">Inversiones</div>
+                <div class="text-2xl sm:text-3xl font-bold text-purple-400 mt-1" id="totalInvest">$0</div>
+            </div>
+        </div>
+
+        <!-- Saldo a favor / en contra -->
+        <div class="glass-panel neon-card neon-cyan rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 id="saldoBoxTitle" class="font-bold text-base sm:text-lg text-cyan-300 flex items-center gap-2">
+                <i class="fa-solid fa-circle-check"></i> Saldo Favor/Contra
+            </h2>
+            <div class="text-center">
+                <div id="saldoStatusLabel" class="text-xs font-bold text-cyan-300 uppercase tracking-wider">Saldo Favor</div>
+                <div class="text-3xl sm:text-4xl font-bold text-cyan-400 mt-1" id="creditBalanceDisplay">$0</div>
+                <p id="creditBalanceDetail" class="text-[11px] text-slate-400 mt-1"></p>
+            </div>
+            <div class="max-w-[240px] mx-auto">
+                <canvas id="progressPieChart"></canvas>
+            </div>
+            <button id="btnInjectCredit" class="btn bg-cyan-500 hover:bg-cyan-400 text-slate-950">
+                <i class="fa-solid fa-hand-holding-dollar"></i> Pagar Saldo a Favor a una Deuda (opcional)
+            </button>
+            <p class="text-[11px] text-slate-500 text-center">Es tu decisión usarlo o guardarlo — no se aplica solo.</p>
+        </div>
+
+        </div> <!-- fin lf-tab-saldo -->
+
+        <!-- ==================== TAB: FONDOS DE EMERGENCIA ==================== -->
+        <div id="lf-tab-fondos" class="lf-tab-panel hidden space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5">
+                    <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved"></i> 1- Crear Fondo Emergencias
+                    </h2>
+                    <p class="text-[11px] text-slate-500">El primer paso para salir de deudas es protegerte con un capital de 1000 dólares o su equivalente en pesos ante imprevistos.</p>
+                    <div>
+                        <label>Meta objetivo ($)</label>
+                        <input type="number" id="emergencyBasicTarget" step="any" placeholder="Ej: 1500000">
+                    </div>
+                    <div>
+                        <label>Ahorrado actualmente ($)</label>
+                        <input type="number" id="emergencyBasicCurrent" step="any" placeholder="Ej: 100000">
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="emergencyBasicBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                    <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
+                    <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+                    <button id="btnUseEmergencyForDebt" class="btn bg-slate-800 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs">
+                        <i class="fa-solid fa-hand-holding-dollar"></i> Usar este fondo para pagar una deuda (opcional)
+                    </button>
+                </div>
+
+                <!-- Emergencia 3 a 6 Sueldos (bloqueado) -->
+                <div class="glass-panel neon-card neon-teal rounded-3xl p-5 space-y-2.5 relative">
+                    <h2 class="font-bold text-sm sm:text-base text-teal-300 flex items-center gap-2">
+                        <i class="fa-solid fa-life-ring"></i> 2- Emergencia 3 a 6 Sueldos
+                    </h2>
+                    <p class="text-[11px] text-slate-500">Meta ej: $9.000.000</p>
+                    <div>
+                        <label>Meta objetivo ($)</label>
+                        <input type="number" id="emergencyFullTarget" step="any" placeholder="Ej: 9000000">
+                    </div>
+                    <div>
+                        <label>Ahorrado actualmente ($)</label>
+                        <input type="number" id="emergencyFullCurrent" step="any" placeholder="Ej: 300000">
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="emergencyFullBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                    <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
+                    <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
+
+                    <!-- Bloqueo hasta cumplir requisitos -->
+                    <div id="emergencyFullLock" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center text-center p-5 space-y-2">
+                        <i class="fa-solid fa-lock text-slate-500 text-xl"></i>
+                        <p class="text-xs text-slate-300 font-semibold">Todavía no podés cargar este fondo</p>
+                        <p id="emergencyFullLockReason" class="text-[11px] text-slate-500"></p>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- fin lf-tab-fondos -->
+
+        <!-- ==================== TAB: REGISTRAR DEUDAS ==================== -->
+        <div id="lf-tab-deudas" class="lf-tab-panel hidden space-y-5">
+
+        <!-- Registrar deuda -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 id="formTitle" class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda
+            </h2>
+            <div class="glass-panel p-3 rounded-2xl flex items-center gap-3 mb-3">
+                <button type="button" id="btn-voice-debt" class="bg-rose-500 hover:bg-rose-400 text-white font-bold w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
+                    <i id="voice-debt-icon" class="fa-solid fa-microphone text-lg"></i>
+                </button>
+                <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-semibold text-white">Cargar deuda por voz</p>
+                    <p id="voice-debt-status" class="text-[11px] text-slate-400 truncate">Ej: "Debo 400000 pesos a Yola, pago mínimo 50000"</p>
+                </div>
+            </div>
+            <form id="debtForm" class="space-y-3">
+                <input type="hidden" id="editingId" value="">
+                <div>
+                    <label>Acreedor / Nombre de Deuda</label>
+                    <input type="text" id="name" placeholder="Ej: Tarjeta de Crédito, Préstamo Juan" required>
+                </div>
+                <div>
+                    <label>Monto Total ($)</label>
+                    <input type="number" id="amount" step="any" placeholder="1300" required>
+                </div>
+                <div>
+                    <label>Pago Mínimo Mensual ($)</label>
+                    <input type="number" id="minPayment" step="any" placeholder="200" required>
+                </div>
+                <button type="submit" id="btnSaveDebt" class="btn bg-rose-500 hover:bg-rose-400 text-white">Agregar Deuda</button>
+                <button type="button" id="btnCancelEdit" class="btn bg-slate-800 hover:bg-slate-700 text-slate-200" style="display:none;">Cancelar Edición</button>
+            </form>
+        </div>
+
+        <!-- Distribución de Deudas -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie"></i> Distribución de Deudas
+            </h2>
+            <div class="max-w-[280px] mx-auto">
+                <canvas id="debtPieChart"></canvas>
+            </div>
+
+            <div id="debt-vs-salary-warning" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 text-center">
+                <p class="text-rose-300 font-bold text-sm">⚠️ PÉRDIDA</p>
+                <p class="text-[11px] text-rose-200">Tu deuda total supera tu sueldo + inversiones</p>
+            </div>
+
+            <div class="space-y-2">
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>💼 Sueldo</span>
+                        <span id="salaryBarValue">$0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="salaryBar" class="bg-sky-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>📈 Inversiones / Ingresos Extra</span>
+                        <span id="investBarValue">$0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="investBar" class="bg-purple-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1">
+                        <span>🔻 Deuda Total</span>
+                        <span id="debtBarValue">$0</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+                        <div id="debtBar" class="bg-rose-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div> <!-- fin lf-tab-deudas -->
+
+        <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
+        <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
+
+        <!-- Saldo a Favor visible acá también, para que no quede escondido en otra pestaña -->
+        <div id="saldo-favor-banner-pd" class="hidden glass-panel rounded-2xl p-4 flex items-center justify-between gap-3 border border-cyan-500/30">
+            <div>
+                <p class="text-[11px] text-slate-400 uppercase tracking-wide">Saldo a Favor disponible</p>
+                <p id="saldo-favor-banner-amount" class="text-xl font-bold text-cyan-400">$0</p>
+            </div>
+            <button onclick="switchLfTab('saldo'); document.getElementById('btnInjectCredit').scrollIntoView({behavior:'smooth'})" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs px-3 py-2 rounded-xl whitespace-nowrap">
+                Usar para pagar deuda →
+            </button>
+        </div>
+
+        <!-- Prioridad de Pago Sugerido -->
+        <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-3">
+            <h2 class="font-bold text-base sm:text-lg text-rose-300 flex items-center gap-2">
+                <i class="fa-solid fa-snowflake"></i> Prioridad de Pago Sugerido
+            </h2>
+            <p class="text-[11px] text-slate-500">Priorizamos tus deudas de menor a mayor, para que vayas cancelando rápido y ganando impulso.</p>
+            <div id="debtList" class="space-y-3"></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Ingresos Extras -->
+            <div class="glass-panel neon-card neon-amber rounded-3xl p-5 space-y-3 sm:col-span-2">
+                <h2 class="font-bold text-sm sm:text-base text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-bolt"></i> 2- Ingresos Extras
+                </h2>
+                <p class="text-[11px] text-slate-500">Este paso es importante porque agregar dinero extra en tu bolsillo acelera tu libertad financiera.</p>
+                <div class="glass-panel p-2.5 rounded-2xl flex items-center gap-2.5">
+                    <button type="button" id="btn-voice-extra" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
+                        <i id="voice-extra-icon" class="fa-solid fa-microphone text-sm"></i>
+                    </button>
+                    <p id="voice-extra-status" class="text-[10px] text-slate-400">Ej: "Vendí un curso por 50000 pesos"</p>
+                </div>
+                <form id="extraForm" class="space-y-3">
+                    <div>
+                        <label>Categoría del Ingreso</label>
+                        <select id="extraSourceCategory" required>
+                            <option value="E-commerce">E-commerce / Ventas Online</option>
+                            <option value="Venta de Activo">Venta de Activo / Vehículo</option>
+                            <option value="Cursos / Digital">Cursos / Libros / Digital</option>
+                            <option value="Servicios">Servicios / Trabajos</option>
+                            <option value="Otros">Otros Ingresos (Especificar)</option>
+                        </select>
+                    </div>
+                    <div id="otherCategoryGroup" style="display:none;">
+                        <label>Especificar Origen (Otros)</label>
+                        <input type="text" id="otherCategoryDetail" placeholder="Ej: Regalo, cobro de deuda vieja">
+                    </div>
+                    <div>
+                        <label>Detalle del Ingreso</label>
+                        <input type="text" id="extraDetail" placeholder="Ej: Venta de auto, venta de ebook" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label>Cantidad</label>
+                            <input type="number" id="extraQty" step="any" placeholder="1" value="1" required>
+                        </div>
+                        <div>
+                            <label>Monto Unitario ($)</label>
+                            <input type="number" id="extraAmount" step="any" placeholder="500" required>
+                        </div>
+                    </div>
+                    <div class="bg-slate-900/60 rounded-xl p-2.5 text-center">
+                        <span class="text-[10px] text-slate-400 uppercase">Total</span>
+                        <div id="extraTotalPreview" class="text-lg font-bold text-amber-300">$0</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="submit" id="btnPayDebtWithExtra" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm">Pagar a mis deudas</button>
+                        <button type="button" id="btnKeepExtra" class="btn bg-slate-800 hover:bg-slate-700 border border-amber-500/30 text-amber-300 text-xs sm:text-sm">Mantener Dinero Extra</button>
+                    </div>
+                </form>
+                <div id="extraDebtStatus" class="hidden text-center text-xs font-bold rounded-xl p-2"></div>
+                <p class="text-[11px] text-slate-500 text-center pt-1">Es opcional usarlo para pagar deudas. Si no tenés deuda, o decidís no usarlo, queda registrado como Saldo a Favor.</p>
+            </div>
+        </div>
+
+        <!-- Liquidadas -->
+        <div class="glass-panel rounded-3xl p-5 sm:p-7 space-y-3 border border-slate-500/20">
+            <h2 class="font-bold text-base sm:text-lg text-slate-300 flex items-center gap-2">
+                🏁 Deudas Liquidadas (Tachadas)
+            </h2>
+            <div id="clearedList" class="space-y-2"></div>
+        </div>
+
+        <!-- Historial -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+                <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left"></i> Historial General de Pagos
+                </h2>
+                <button id="btnClearHistory" title="Vaciar historial" class="text-slate-500 hover:text-rose-400 text-xs bg-slate-900/60 hover:bg-rose-500/10 border border-white/10 px-2.5 py-1.5 rounded-lg transition-colors">
+                    <i class="fa-solid fa-broom"></i>
+                </button>
+            </div>
+            <div id="historyList" class="space-y-1"></div>
+        </div>
+
+        </div> <!-- fin lf-tab-emergencia -->
+
+        <!-- ==================== TAB: INVERSIONES ==================== -->
+        <div id="lf-tab-inversiones" class="lf-tab-panel hidden space-y-5">
+
+        <!-- Calculadora de Libertad Financiera (regla del 4% / número x25) -->
+        <div class="glass-panel neon-card neon-blue rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-sky-300 flex items-center gap-2">
+                <i class="fa-solid fa-crown"></i> 5- Tu Número de Libertad Financiera
+            </h2>
+            <p class="text-[11px] text-slate-500">Cuánto necesitás invertido para vivir del 4% anual sin trabajar más. Se calcula: gasto mensual × 12 × 25.</p>
+            <div>
+                <label>Gasto Mensual para Vivir ($)</label>
+                <input type="number" id="fireMonthlyExpense" step="any" placeholder="Ej: 5000000">
+            </div>
+            <button id="btnCalcFire" class="btn bg-sky-400 hover:bg-sky-300 text-slate-950">Calcular</button>
+
+            <div id="fireResultBox" class="hidden bg-slate-950/60 border border-sky-500/30 rounded-2xl p-4 space-y-2 text-center">
+                <div class="text-xs text-slate-400">Gasto Anual</div>
+                <div id="fireAnnualExpense" class="text-lg font-bold text-white">$0</div>
+                <div class="text-xs text-sky-300 uppercase tracking-wider mt-2">Necesitás tener invertido</div>
+                <div id="fireTargetAmount" class="text-2xl sm:text-3xl font-bold text-sky-400">$0</div>
+                <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden mt-2">
+                    <div id="fireProgressBar" class="bg-sky-400 h-2 rounded-full transition-all" style="width:0%"></div>
+                </div>
+                <p id="fireProgressText" class="text-[11px] text-slate-400"></p>
+            </div>
+        </div>
+
+        <!-- Cartera de inversiones -->
+        <div class="glass-panel neon-card neon-purple rounded-3xl p-5 sm:p-7 space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <h2 class="font-bold text-base sm:text-lg text-purple-300 flex items-center gap-2">
+                    <i class="fa-solid fa-seedling"></i> Cartera de Inversiones (S&P 500 / Activos)
+                </h2>
+                <a href="https://www.youtube.com/@TUCANAL" target="_blank" class="inline-flex items-center gap-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-xs font-bold px-3 py-2 rounded-xl whitespace-nowrap">
+                    <i class="fa-brands fa-youtube"></i> Antes de empezar ver el video tutorial
+                </a>
+            </div>
+            <div class="glass-panel p-2.5 rounded-2xl flex items-center gap-2.5">
+                <button type="button" id="btn-voice-invest" class="bg-purple-500 hover:bg-purple-400 text-slate-950 font-bold w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-95">
+                    <i id="voice-invest-icon" class="fa-solid fa-microphone text-sm"></i>
+                </button>
+                <p id="voice-invest-status" class="text-[10px] text-slate-400">Ej: "Compré 10 acciones de Apple a 500 pesos cada una"</p>
+            </div>
+            <form id="investForm" class="space-y-3">
+                <div>
+                    <label>Nombre del Activo / Acción / ETF</label>
+                    <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label>Ticker / Símbolo (opcional)</label>
+                        <input type="text" id="investTicker" placeholder="Ej: NVDA, AAPL, SPY">
+                    </div>
+                    <div>
+                        <label>Mercado</label>
+                        <select id="investMarket">
+                            <option value="BCBA">🇦🇷 CEDEAR (BCBA)</option>
+                            <option value="NASDAQ">🇺🇸 NASDAQ</option>
+                            <option value="NYSE">🇺🇸 NYSE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label>Cantidad (Unidades)</label>
+                        <input type="number" id="investQty" step="any" placeholder="Ej: 500" required>
+                    </div>
+                    <div>
+                        <label>Precio Unitario ($)</label>
+                        <input type="number" id="investPrice" step="any" placeholder="Ej: 500" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn bg-purple-500 hover:bg-purple-400 text-slate-950">Registrar en Cartera</button>
+            </form>
+            <div>
+                <label>Tus Inversiones Actuales</label>
+                <div id="investList" class="space-y-2"></div>
+            </div>
+        </div>
+
+        <!-- Mercado en Vivo -->
+        <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-4">
+            <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> Mercado en Vivo
+            </h2>
+            <div class="rounded-2xl overflow-hidden border border-white/10">
+                <div class="tradingview-widget-container">
+                    <div class="tradingview-widget-container__widget"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+                    {
+                      "symbols": [
+                        { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
+                        { "proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100" },
+                        { "proName": "FOREXCOM:DJI", "title": "Dow Jones" },
+                        { "proName": "BCBA:IMV", "title": "Merval" },
+                        { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" }
+                      ],
+                      "showSymbolLogo": true,
+                      "colorTheme": "dark",
+                      "isTransparent": false,
+                      "displayMode": "adaptive",
+                      "locale": "es"
+                    }
+                    </script>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="relative flex-1">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                    <input type="text" id="market-search-input" placeholder="Ej: SP500, AAPL, GGAL, BITCOIN, ORO...">
+                </div>
+                <button id="market-search-btn" class="btn w-auto px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300">
+                    Buscar
+                </button>
+            </div>
+            <p class="text-[11px] text-slate-500">También podés tocar el nombre del símbolo dentro del gráfico para buscar.</p>
+            <div class="rounded-2xl overflow-hidden border border-white/10" style="height:420px">
+                <div class="tradingview-widget-container" id="market-chart-outer" style="height:100%">
+                    <div class="tradingview-widget-container__widget" style="height:100%"></div>
+                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async id="market-chart-script">
+                    {
+                      "autosize": true,
+                      "symbol": "AMEX:SPY",
+                      "interval": "D",
+                      "timezone": "America/Argentina/Buenos_Aires",
+                      "theme": "dark",
+                      "style": "1",
+                      "locale": "es",
+                      "allow_symbol_change": true,
+                      "support_host": "https://www.tradingview.com"
+                    }
+                    </script>
+                </div>
+            </div>
+        </div>
+
+        </div> <!-- fin lf-tab-inversiones -->
+
+    </div>
+
+    <!-- Hidden PDF invoice template -->
+    <div id="pdf-report-template" style="display:none; background:#ffffff; color:#111111; padding:32px; width:820px; font-family: Arial, Helvetica, sans-serif;">
+        <div id="pdf-report-content"></div>
+    </div>
+
+<!-- Botón flotante del Asistente Ressetia -->
+<div id="assistant-float-container-lf" class="fixed bottom-6 right-5 z-30 flex flex-col items-end gap-2" style="touch-action: none;">
+    <div id="assistant-hint-bubble-lf" class="hidden bg-slate-900 border border-sky-400/40 text-sky-200 text-xs font-semibold px-3 py-2 rounded-2xl rounded-br-sm shadow-xl max-w-[180px] text-center">
+        ¿Tenés dudas? Preguntame acá 👋
+    </div>
+    <div class="relative">
+        <span class="absolute inset-0 rounded-full bg-sky-400/40 animate-ping"></span>
+        <button id="btn-open-assistant-lf" title="Preguntale a Ressetia (mantené presionado para moverlo)" class="relative float-bounce bg-gradient-to-br from-sky-400 to-sky-300 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(56,189,248,0.6)] flex items-center justify-center text-xl active:scale-95 transition-all">
+            <i class="fa-solid fa-comment-dots"></i>
+        </button>
+    </div>
+</div>
+
+<!-- Modal del Asistente Ressetia -->
+<div id="assistant-modal-lf" class="fixed inset-0 bg-slate-950/90 backdrop-blur-sm hidden items-center justify-center z-50 p-0 sm:p-4">
+    <div class="glass-panel w-full sm:max-w-lg h-[100dvh] sm:h-[80vh] sm:max-h-[700px] rounded-none sm:rounded-3xl flex flex-col border border-cyan-500/30 overflow-hidden">
+        <div class="flex items-center justify-between p-3 sm:p-4 border-b border-white/10 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="w-9 h-9 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-arrow-rotate-right"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-white text-base">Ressetia</p>
+                    <p class="text-xs text-slate-400">Tu guía dentro de la app</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                <button id="btn-clear-assistant-lf" title="Borrar esta conversación" class="text-slate-400 hover:text-rose-300 text-base px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
+                <button id="btn-close-assistant-lf" class="text-slate-400 hover:text-white text-xl px-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+        <p class="text-xs text-slate-500 px-3 sm:px-4 pt-2 pb-2 border-b border-white/5 flex-shrink-0">Te ayudo a entender tus deudas, inversiones y a usar las funciones de la app. No reemplazo a un asesor financiero matriculado.</p>
+
+        <div id="assistant-messages-lf" class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-0">
+            <div class="bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]" id="assistant-welcome-bubble-lf">
+                Hola, soy Ressetia 🔥. Puedo mirar tus deudas, inversiones y tu saldo, y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿cómo salgo de esta deuda?"</em>
+            </div>
+        </div>
+
+        <div class="p-3 border-t border-white/10 flex-shrink-0">
+            <div class="flex items-center gap-2">
+                <button type="button" id="btn-assistant-voice-lf" title="Preguntar por voz" class="bg-sky-400 hover:bg-sky-300 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i id="assistant-voice-icon-lf" class="fa-solid fa-microphone"></i>
+                </button>
+                <input type="text" id="assistant-input-lf" placeholder="Escribí o hablá tu consulta..." class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-3 text-base text-white focus:outline-none focus:border-cyan-500">
+                <button id="btn-send-assistant-lf" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 🔒 ESTADO CONFIRMADO ESTABLE (a la fecha de este comentario): sesión y modo sin
+    // internet, pago de deudas con registro cruzado a Control Financiero, pestañas
+    // reorganizadas (Patrimonio Neto, Fondos de Emergencia, Registrar Deudas, Pagar
+    // Deudas, Inversiones). Cualquier cambio nuevo debe tocar SOLO lo que pide
+    // explícitamente el usuario, avisando antes si hace falta tocar algo más.
+    const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentUser = null;
+
+    let debts = [];
+    let investments = [];
+    let history = [];
+    let creditBalance = 0;
+    let userSalary = 0;
+    let externalPatrimonioNeto = 0; // Patrimonio Neto de Control Financiero (index.html), este mes
+    let pieChart = null;
+    let progressChart = null;
+
+    const debtForm = document.getElementById('debtForm');
+    const editingIdEl = document.getElementById('editingId');
+    const formTitleEl = document.getElementById('formTitle');
+    const btnSaveDebt = document.getElementById('btnSaveDebt');
+    const btnCancelEdit = document.getElementById('btnCancelEdit');
+
+    const investForm = document.getElementById('investForm');
+    const investList = document.getElementById('investList');
+    const totalInvestEl = document.getElementById('totalInvest');
+
+    const extraForm = document.getElementById('extraForm');
+    const categorySelect = document.getElementById('extraSourceCategory');
+    const otherCategoryGroup = document.getElementById('otherCategoryGroup');
+    const otherCategoryDetail = document.getElementById('otherCategoryDetail');
+
+    const debtList = document.getElementById('debtList');
+    const clearedList = document.getElementById('clearedList');
+    const historyList = document.getElementById('historyList');
+    const totalDebtEl = document.getElementById('totalDebt');
+
+    // ============================================
+    // VERIFICACIÓN DE SESIÓN Y SUSCRIPCIÓN PREMIUM
+    // ============================================
+    // Guarda/recupera el estado de acceso (premium/prueba) para poder seguir
+    // entrando aunque no haya internet en ese momento.
+    function saveAccessCache(settings) {
+        try { localStorage.setItem(`lf_access_cache_${currentUser.id}`, JSON.stringify(settings)); } catch (e) {}
+    }
+    function loadAccessCache() {
+        if (!currentUser) return null;
+        try {
+            const raw = localStorage.getItem(`lf_access_cache_${currentUser.id}`);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+
+    // Usa la MISMA clave que ya guarda Control Financiero (comparten dominio),
+    // para que la sesión guardada sirva en las dos páginas sin duplicar nada.
+    function saveCachedUserLF(user) {
+        try { localStorage.setItem('cached_user', JSON.stringify({ id: user.id, email: user.email })); } catch (e) {}
+    }
+    function getCachedUserLF() {
+        try {
+            const raw = localStorage.getItem('cached_user');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+
+    // 🔒 ZONA PROTEGIDA — VALIDACIÓN DE ACCESO Y MODO SIN INTERNET (NO TOCAR)
+    // Misma lógica robusta que ya funciona bien en index.html: si no hay internet
+    // (o tarda demasiado en responder), usa la sesión y el acceso guardados
+    // localmente en este dispositivo, en vez de trabarse o pedir loguearse de nuevo.
+    async function checkAccess() {
+        let session = null;
+
+        if (!navigator.onLine) {
+            // Sin internet: directamente probamos con la sesión guardada localmente
+            // (la misma copia que usa Control Financiero, comparten el mismo dominio).
+            const cachedUser = getCachedUserLF();
+            if (cachedUser) {
+                currentUser = cachedUser;
+            } else {
+                document.getElementById('gate-loading').classList.add('hidden');
+                document.getElementById('gate-no-session').classList.remove('hidden');
+                return;
+            }
+        } else {
+            try {
+                const sessionPromise = sb.auth.getSession();
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), 6000));
+                const result = await Promise.race([sessionPromise, timeoutPromise]);
+
+                if (result.timedOut) {
+                    const cachedUser = getCachedUserLF();
+                    if (cachedUser) { currentUser = cachedUser; }
+                    else {
+                        document.getElementById('gate-loading').classList.add('hidden');
+                        document.getElementById('gate-no-session').classList.remove('hidden');
+                        return;
+                    }
+                } else {
+                    session = result.data.session;
+                    if (!session) {
+                        document.getElementById('gate-loading').classList.add('hidden');
+                        document.getElementById('gate-no-session').classList.remove('hidden');
+                        return;
+                    }
+                    currentUser = session.user;
+                    saveCachedUserLF(session.user);
+                }
+            } catch (err) {
+                console.warn('Error al validar la sesión, probamos con la guardada localmente:', err);
+                const cachedUser = getCachedUserLF();
+                if (cachedUser) { currentUser = cachedUser; }
+                else {
+                    document.getElementById('gate-loading').classList.add('hidden');
+                    document.getElementById('gate-no-session').classList.remove('hidden');
+                    return;
+                }
+            }
+        }
+
+        let settings = null;
+        let usedCache = false;
+
+        if (!navigator.onLine) {
+            settings = loadAccessCache();
+            usedCache = true;
+        } else {
+            try {
+                const { data } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary').eq('user_id', currentUser.id).maybeSingle();
+                if (data) {
+                    settings = data;
+                    saveAccessCache(data);
+                } else {
+                    settings = loadAccessCache();
+                    usedCache = true;
+                }
+            } catch (err) {
+                console.warn('No se pudo verificar el acceso en la nube, usando lo guardado localmente:', err);
+                settings = loadAccessCache();
+                usedCache = true;
+            }
+        }
+
+        const subscriptionActive = settings && settings.is_premium === true &&
+            (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
+        const trialActive = settings && settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
+        const hasAccess = subscriptionActive || trialActive;
+
+        if (!hasAccess) {
+            // Si esto pasó SIN internet y encima sin ninguna copia guardada, es mejor
+            // avisar que no se pudo verificar, en vez de decir directo "se te terminó".
+            if (usedCache && !settings) {
+                document.getElementById('gate-loading').classList.add('hidden');
+                document.getElementById('gate-not-premium').classList.remove('hidden');
+                const notPremiumEl = document.getElementById('gate-not-premium');
+                if (notPremiumEl) notPremiumEl.insertAdjacentHTML('afterbegin', '<p class="text-xs text-amber-300 mb-2">📴 No se pudo verificar tu acceso porque no hay internet, y todavía no había una copia guardada en este dispositivo.</p>');
+                return;
+            }
+            document.getElementById('gate-loading').classList.add('hidden');
+            document.getElementById('gate-not-premium').classList.remove('hidden');
+            return;
+        }
+
+        if (usedCache) {
+            document.getElementById('trial-banner').textContent = '📴 Sin conexión — mostrando tu último acceso guardado en este dispositivo.';
+            document.getElementById('trial-banner').classList.remove('hidden');
+        } else if (trialActive && !subscriptionActive) {
+            const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
+            document.getElementById('trial-banner').textContent = `Estás en tu prueba gratis — te quedan ${daysLeft} día(s).`;
+            document.getElementById('trial-banner').classList.remove('hidden');
+        }
+
+        document.getElementById('gate-screen').classList.add('hidden');
+        document.getElementById('app-content').classList.remove('hidden');
+        userSalary = parseFloat(settings?.salary) || 0;
+        await fetchExternalPatrimonioNeto();
+        await loadLibertadData();
+        await runAutoPayFromPatrimonioIfNeeded();
+    }
+
+    // Si venimos de Control Financiero con un pago pendiente de confirmar, lo aplicamos
+    // acá mismo con el código que ya sabemos que funciona bien (mismo que "Ingresos Extras"),
+    // y volvemos avisando que ya se puede descontar del Patrimonio Neto.
+    async function runAutoPayFromPatrimonioIfNeeded() {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('auto_pay_patrimonio') !== '1') return;
+
+        const pendingRaw = localStorage.getItem(`finzia_pending_patrimonio_payment_${currentUser.id}`);
+        if (!pendingRaw) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        let pending;
+        try { pending = JSON.parse(pendingRaw); } catch (e) {
+            window.location.href = 'index.html';
+            return;
+        }
+
+        showLibertadToast('Aplicando tu pago desde Control Financiero...');
+        await applyPaymentAcrossDebts(pending.amount, 'Patrimonio Neto', 'Pago desde Control Financiero');
+
+        // Volvemos avisando que el pago ya se confirmó, para que recién ahí se descuente
+        // la plata del Patrimonio Neto (nunca antes de estar seguros).
+        window.location.href = 'index.html?patrimonio_payment_done=1';
+    }
+
+    // Trae el Patrimonio Neto de este mes desde Control Financiero (index.html),
+    // para que "Saldo Favor/Contra" muestre el panorama real completo, no solo lo de acá.
+    // Reemplazan el confirm()/alert() feo del navegador por cuadros propios, con el
+    // mismo estilo que ya tiene Control Financiero.
+    function showConfirmModal(message, danger = false) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('confirm-modal');
+            const icon = document.getElementById('confirm-modal-icon');
+            const msgEl = document.getElementById('confirm-modal-message');
+            const acceptBtn = document.getElementById('confirm-modal-accept');
+            msgEl.textContent = message;
+            if (danger) {
+                icon.className = 'w-10 h-10 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center flex-shrink-0 text-lg';
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                acceptBtn.className = 'bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition-all';
+            } else {
+                icon.className = 'w-10 h-10 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center flex-shrink-0 text-lg';
+                icon.innerHTML = '<i class="fa-solid fa-circle-question"></i>';
+                acceptBtn.className = 'bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-xs transition-all';
+            }
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            function cleanup(result) {
+                modal.classList.add('hidden'); modal.classList.remove('flex');
+                document.getElementById('confirm-modal-accept').removeEventListener('click', onAccept);
+                document.getElementById('confirm-modal-cancel').removeEventListener('click', onCancel);
+                resolve(result);
+            }
+            function onAccept() { cleanup(true); }
+            function onCancel() { cleanup(false); }
+            document.getElementById('confirm-modal-accept').addEventListener('click', onAccept);
+            document.getElementById('confirm-modal-cancel').addEventListener('click', onCancel);
+        });
+    }
+
+    function showAlertModal(message) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('alert-modal');
+            document.getElementById('alert-modal-message').textContent = message;
+            modal.classList.remove('hidden'); modal.classList.add('flex');
+            function onOk() {
+                modal.classList.add('hidden'); modal.classList.remove('flex');
+                document.getElementById('alert-modal-ok').removeEventListener('click', onOk);
+                resolve();
+            }
+            document.getElementById('alert-modal-ok').addEventListener('click', onOk);
+        });
+    }
+
+    async function fetchExternalPatrimonioNeto() {
+        try {
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            // Traemos TODOS los movimientos (no solo el mes actual), para sumar el
+            // Patrimonio Neto acumulado de cada mes, no solo el de hoy.
+            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id);
+
+            const byMonth = {};
+            (txs || []).forEach(t => {
+                if (!byMonth[t.month]) byMonth[t.month] = { egresos: 0, ingresos: 0 };
+                if (t.type === 'egreso') byMonth[t.month].egresos += parseFloat(t.price) || 0;
+                if (t.type === 'ingreso') byMonth[t.month].ingresos += parseFloat(t.price) || 0;
+            });
+
+            let totalAcumulado = 0;
+            Object.keys(byMonth).forEach(mes => {
+                const mesSalary = (mes === currentMonth) ? userSalary : 0; // el sueldo fijo solo aplica al mes vigente
+                totalAcumulado += (mesSalary + byMonth[mes].ingresos) - byMonth[mes].egresos;
+            });
+            // Si el mes actual todavía no tiene ningún movimiento cargado, igual sumamos el sueldo fijo
+            if (!byMonth[currentMonth]) totalAcumulado += userSalary;
+
+            externalPatrimonioNeto = totalAcumulado;
+        } catch (err) {
+            console.warn('No se pudo traer el Patrimonio Neto de Control Financiero:', err);
+            externalPatrimonioNeto = 0;
+        }
+    }
+
+    function getBackupKey() {
+        return 'lf_backup_' + currentUser.id;
+    }
+
+    // Copia liviana de deudas/inversiones, compartida con Control Financiero (index.html)
+    // para que el asistente Ressetia pueda leerla sin depender de un pedido extra a Supabase.
+    function saveSharedSnapshotForAssistant(data) {
+        if (!currentUser) return;
+        try {
+            const debtsData = data.debts || debts || [];
+            const investmentsData = data.investments || investments || [];
+            const creditBalanceData = parseFloat(data.credit_balance ?? creditBalance) || 0;
+
+            const activeDebts = debtsData.filter(d => !d.cleared && d.amount > 0);
+            const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
+            const totalInvest = investmentsData.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
+            const fondoEmergenciaActual = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
+
+            const snapshot = {
+                deudas: activeDebts.map(d => ({ nombre: d.name, monto: d.amount })),
+                deuda_total: totalDebt,
+                inversiones: investmentsData.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
+                inversiones_total: totalInvest,
+                // Sumamos el Patrimonio Neto acumulado, igual que en la caja "Saldo Favor/Contra"
+                saldo_favor_o_contra: (creditBalanceData + Math.max(externalPatrimonioNeto, 0)) - totalDebt,
+                fondo_emergencia_actual: fondoEmergenciaActual,
+                updated_at: Date.now()
+            };
+            localStorage.setItem(`finzia_lf_snapshot_${currentUser.id}`, JSON.stringify(snapshot));
+
+            // Guardamos también la fila COMPLETA (sin recortar), para que Control Financiero
+            // pueda escribir un pago sin necesitar un segundo pedido de lectura a Supabase.
+            const fullRow = { ...data, user_id: currentUser.id, debts: debtsData, investments: investmentsData, credit_balance: creditBalanceData };
+            localStorage.setItem(`finzia_lf_rawdata_${currentUser.id}`, JSON.stringify(fullRow));
+        } catch (err) {
+            console.warn('No se pudo guardar la copia local para el asistente:', err);
+        }
+    }
+
+    async function loadLibertadData() {
+        const backupKey = getBackupKey();
+        let data = null;
+        let fetchFailed = false;
+
+        try {
+            const result = await sb.from('libertad_financiera_data').select('*').eq('user_id', currentUser.id).maybeSingle();
+            if (result.error) { fetchFailed = true; console.error('Error al leer de Supabase:', result.error); }
+            data = result.data;
+        } catch (err) {
+            fetchFailed = true;
+            console.error('Error de conexión al leer Supabase:', err);
+        }
+
+        if (data) {
+            debts = data.debts || [];
+            investments = data.investments || [];
+            history = data.history || [];
+            creditBalance = parseFloat(data.credit_balance) || 0;
+            localStorage.setItem('emergencyBasic_target', data.emergency_basic_target || 0);
+            localStorage.setItem('emergencyBasic_current', data.emergency_basic_current || 0);
+            localStorage.setItem('emergencyFull_target', data.emergency_full_target || 0);
+            localStorage.setItem('emergencyFull_current', data.emergency_full_current || 0);
+            if (data.fire_monthly_expense) {
+                document.getElementById('fireMonthlyExpense').value = data.fire_monthly_expense;
+                calculateFireNumber(false);
+            }
+            // Actualizamos el respaldo local para que coincida con lo que vino de Supabase
+            localStorage.setItem(backupKey, JSON.stringify(data));
+            saveSharedSnapshotForAssistant(data);
+        } else {
+            // No hay datos en Supabase (o falló la conexión) — revisamos si hay un respaldo local guardado antes
+            const backupRaw = localStorage.getItem(backupKey);
+            if (backupRaw) {
+                try {
+                    const backup = JSON.parse(backupRaw);
+                    debts = backup.debts || [];
+                    investments = backup.investments || [];
+                    history = backup.history || [];
+                    creditBalance = parseFloat(backup.credit_balance) || 0;
+                    localStorage.setItem('emergencyBasic_target', backup.emergency_basic_target || 0);
+                    localStorage.setItem('emergencyBasic_current', backup.emergency_basic_current || 0);
+                    localStorage.setItem('emergencyFull_target', backup.emergency_full_target || 0);
+                    localStorage.setItem('emergencyFull_current', backup.emergency_full_current || 0);
+                    if (backup.fire_monthly_expense) {
+                        document.getElementById('fireMonthlyExpense').value = backup.fire_monthly_expense;
+                        calculateFireNumber(false);
+                    }
+                    if (fetchFailed) {
+                        console.warn('No se pudo conectar con el servidor. Se cargó el respaldo local.');
+                    }
+                    // Reintentamos guardar ese respaldo en Supabase para que quede sincronizado
+                    await saveStorage();
+                    saveSharedSnapshotForAssistant(backup);
+                } catch (err) {
+                    console.error('Error al leer el respaldo local:', err);
+                }
+            } else if (!fetchFailed) {
+                await sb.from('libertad_financiera_data').insert({ user_id: currentUser.id });
+            }
+        }
+        renderEmergencyBox('emergencyBasic');
+        renderEmergencyBox('emergencyFull');
+        render();
+    }
+
+    categorySelect.addEventListener('change', () => {
+        if (categorySelect.value === 'Otros') {
+            otherCategoryGroup.style.display = 'block';
+            otherCategoryDetail.required = true;
+        } else {
+            otherCategoryGroup.style.display = 'none';
+            otherCategoryDetail.required = false;
+        }
+    });
+
+    async function saveStorage(retryCount = 0) {
+        if (!currentUser) return;
+
+        const payload = {
+            user_id: currentUser.id,
+            debts: debts,
+            investments: investments,
+            history: history,
+            credit_balance: creditBalance,
+            emergency_basic_target: parseFloat(localStorage.getItem('emergencyBasic_target')) || 0,
+            emergency_basic_current: parseFloat(localStorage.getItem('emergencyBasic_current')) || 0,
+            emergency_full_target: parseFloat(localStorage.getItem('emergencyFull_target')) || 0,
+            emergency_full_current: parseFloat(localStorage.getItem('emergencyFull_current')) || 0,
+            fire_monthly_expense: parseFloat(document.getElementById('fireMonthlyExpense').value) || 0,
+            updated_at: new Date().toISOString()
+        };
+
+        // Guardamos el respaldo local YA, antes de intentar la conexión — así, aunque falle
+        // internet en este instante, los datos quedan guardados en este dispositivo sin que
+        // el usuario note nada raro.
+        try {
+            localStorage.setItem(getBackupKey(), JSON.stringify(payload));
+            saveSharedSnapshotForAssistant(payload);
+        } catch (err) {
+            console.error('No se pudo guardar el respaldo local:', err);
+        }
+
+        try {
+            const { error } = await sb.from('libertad_financiera_data').upsert(payload, { onConflict: 'user_id' });
+            if (error) {
+                console.error('Error al guardar en Supabase:', error);
+                if (retryCount < 2) {
+                    // Reintentamos en silencio antes de resignarnos (suele resolver cortes breves de conexión)
+                    setTimeout(() => saveStorage(retryCount + 1), 1500);
+                } else {
+                    showLibertadToast('⚠️ No se pudo guardar en la nube después de varios intentos. Avisá si esto se repite.');
+                }
+            }
+        } catch (err) {
+            console.error('Error de conexión al guardar:', err);
+            if (retryCount < 2) {
+                setTimeout(() => saveStorage(retryCount + 1), 1500);
+            } else {
+                showLibertadToast('⚠️ No se pudo guardar en la nube después de varios intentos. Avisá si esto se repite.');
+            }
+        }
+    }
+
+    // ============================================
+    // NÚMERO DE LIBERTAD FINANCIERA (regla del 4% / x25)
+    // ============================================
+    function calculateFireNumber(persist = true) {
+        const monthlyExpense = parseFloat(document.getElementById('fireMonthlyExpense').value) || 0;
+        if (monthlyExpense <= 0) {
+            document.getElementById('fireResultBox').classList.add('hidden');
+            return;
+        }
+        const annualExpense = monthlyExpense * 12;
+        const fireTarget = annualExpense * 25;
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        const pct = fireTarget > 0 ? Math.min(100, (totalInvestVal / fireTarget) * 100) : 0;
+
+        document.getElementById('fireResultBox').classList.remove('hidden');
+        document.getElementById('fireAnnualExpense').textContent = `$${annualExpense.toLocaleString()}`;
+        document.getElementById('fireTargetAmount').textContent = `$${fireTarget.toLocaleString()}`;
+        document.getElementById('fireProgressBar').style.width = pct + '%';
+        document.getElementById('fireProgressText').textContent = `${pct.toFixed(1)}% del camino — con tu cartera actual de inversiones ($${totalInvestVal.toLocaleString()})`;
+
+        if (persist) saveStorage();
+    }
+
+    document.getElementById('btnCalcFire').addEventListener('click', () => calculateFireNumber(true));
+
+    // Fondos de emergencia (con meta, ahorrado y porcentaje)
+    function renderEmergencyBox(prefix) {
+        const target = parseFloat(localStorage.getItem(prefix + '_target')) || 0;
+        const current = parseFloat(localStorage.getItem(prefix + '_current')) || 0;
+        document.getElementById(prefix + 'Target').value = target || '';
+        document.getElementById(prefix + 'Current').value = current || '';
+        const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+        document.getElementById(prefix + 'Bar').style.width = pct + '%';
+        const text = target > 0
+            ? (pct >= 100
+                ? '¡Meta alcanzada! 🎉'
+                : `${pct.toFixed(0)}% logrado — te faltan $${(target - current).toLocaleString()} para la meta`)
+            : 'Definí tu meta para ver el progreso';
+        document.getElementById(prefix + 'Text').textContent = text;
+    }
+
+    // Bloquea "Emergencia 3 a 6 Sueldos" hasta que: el fondo básico esté completo Y no haya deudas pendientes
+    function updateEmergencyFullLock() {
+        const basicTarget = parseFloat(localStorage.getItem('emergencyBasic_target')) || 0;
+        const basicCurrent = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
+        const basicComplete = basicTarget > 0 && basicCurrent >= basicTarget;
+        const hasPendingDebts = debts.some(d => !d.cleared && d.amount > 0);
+
+        const lock = document.getElementById('emergencyFullLock');
+        const reason = document.getElementById('emergencyFullLockReason');
+
+        if (!basicComplete || hasPendingDebts) {
+            lock.classList.remove('hidden');
+            if (hasPendingDebts && !basicComplete) {
+                reason.textContent = 'Primero completá tu fondo de "Emergencias" y saldá todas tus deudas.';
+            } else if (hasPendingDebts) {
+                reason.textContent = 'Primero saldá todas tus deudas pendientes.';
+            } else {
+                reason.textContent = 'Primero completá tu fondo de "Emergencias".';
+            }
+        } else {
+            lock.classList.add('hidden');
+        }
+    }
+
+    renderEmergencyBox('emergencyBasic');
+    renderEmergencyBox('emergencyFull');
+    updateEmergencyFullLock();
+
+    document.getElementById('btnSaveEmergencyBasic').addEventListener('click', async () => {
+        localStorage.setItem('emergencyBasic_target', document.getElementById('emergencyBasicTarget').value || 0);
+        localStorage.setItem('emergencyBasic_current', document.getElementById('emergencyBasicCurrent').value || 0);
+        renderEmergencyBox('emergencyBasic');
+        updateEmergencyFullLock();
+        await saveStorage();
+    });
+
+    // Usa el Fondo de Emergencia para pagar deuda (opcional) — reduce el fondo
+    // guardado, y reparte ese dinero entre las deudas de menor a mayor.
+    document.getElementById('btnUseEmergencyForDebt').addEventListener('click', async () => {
+        const currentAmount = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
+        if (currentAmount <= 0) {
+            await showAlertModal('Todavía no tenés nada guardado en este fondo.');
+            return;
+        }
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        if (pendingDebts.length === 0) {
+            await showAlertModal('No tenés deudas pendientes donde usarlo.');
+            return;
+        }
+        const ok = await showConfirmModal(`¿Usar $${currentAmount.toLocaleString()} de tu Fondo de Emergencia para pagar deuda? Te recomendamos volver a juntarlo después — funciona como tu banco personal, sin intereses.`, true);
+        if (!ok) return;
+
+        localStorage.setItem('emergencyBasic_current', 0);
+        document.getElementById('emergencyBasicCurrent').value = 0;
+        renderEmergencyBox('emergencyBasic');
+        updateEmergencyFullLock();
+
+        await applyPaymentAcrossDebts(currentAmount, 'Fondo de Emergencia', 'Uso del Fondo de Emergencia para pagar deuda');
+        await showAlertModal('Listo. No te olvides de volver a juntar tu Fondo de Emergencia apenas puedas — es tu propio respaldo ante imprevistos.');
+    });
+
+    document.getElementById('btnSaveEmergencyFull').addEventListener('click', async () => {
+        if (!document.getElementById('emergencyFullLock').classList.contains('hidden')) {
+            await showAlertModal('Todavía no cumplís los requisitos para cargar este fondo.');
+            return;
+        }
+        localStorage.setItem('emergencyFull_target', document.getElementById('emergencyFullTarget').value || 0);
+        localStorage.setItem('emergencyFull_current', document.getElementById('emergencyFullCurrent').value || 0);
+        renderEmergencyBox('emergencyFull');
+        await saveStorage();
+    });
+
+    // Inyectar saldo a favor a una deuda (acción opcional, el usuario decide)
+    document.getElementById('btnInjectCredit').addEventListener('click', async () => {
+        // Usamos la MISMA plata combinada que ves en la caja "Saldo Favor/Contra"
+        // (saldo guardado acá + Patrimonio Neto acumulado de Control Financiero).
+        const externalAvailable = Math.max(externalPatrimonioNeto, 0);
+        const totalAvailable = creditBalance + externalAvailable;
+
+        if (totalAvailable <= 0) { await showAlertModal('Todavía no tenés saldo a favor acumulado.'); return; }
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0).sort((a, b) => a.amount - b.amount);
+        if (pendingDebts.length === 0) { await showAlertModal('No tenés deudas pendientes donde inyectarlo.'); return; }
+
+        const targetDebt = pendingDebts[0];
+        const used = Math.min(totalAvailable, targetDebt.amount);
+        const usedFromCredit = Math.min(used, creditBalance);
+        const usedFromPatrimonio = used - usedFromCredit;
+
+        const ok = await showConfirmModal(`¿Querés usar $${used.toLocaleString()} (de tu saldo a favor y Patrimonio Neto acumulado) para pagar "${targetDebt.name}"? Esto es totalmente opcional.`);
+        if (!ok) return;
+
+        // Si parte de lo usado viene del Patrimonio Neto de Control Financiero, registramos
+        // ahí el egreso correspondiente PRIMERO — recién si eso se confirma, tocamos la deuda.
+        if (usedFromPatrimonio > 0) {
+            try {
+                const { error } = await sb.from('transactions').insert({
+                    user_id: currentUser.id,
+                    name: 'Pago a Deuda (desde Saldo a Favor)',
+                    date: new Date().toISOString().slice(0, 10),
+                    month: new Date().toISOString().slice(0, 7),
+                    qty_num: 1, unit: '', unit_price: usedFromPatrimonio, price: usedFromPatrimonio,
+                    category: 'Servicios', fuel_type: null, type: 'egreso', icon: '💳', completed: false
+                });
+                if (error) throw error;
+            } catch (err) {
+                console.error('No se pudo registrar el egreso en Control Financiero:', err);
+                await showAlertModal('No se pudo confirmar el uso de tu Patrimonio Neto ahora. No se descontó nada, probá de nuevo en un momento.');
+                return;
+            }
+        }
+
+        targetDebt.amount -= used;
+        creditBalance -= usedFromCredit;
+
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            category: 'Saldo a Favor',
+            detail: 'Inyección voluntaria de saldo a favor',
+            amount: used,
+            targetName: targetDebt.name,
+            isMin: false
+        });
+
+        let clearedMessage = '';
+        if (targetDebt.amount <= 0) {
+            targetDebt.amount = 0;
+            targetDebt.cleared = true;
+            clearedMessage = `¡Felicidades! Has cancelado la deuda: ${targetDebt.name}`;
+        }
+
+        await saveStorage();
+        await fetchExternalPatrimonioNeto(); // refrescamos, ya que una parte se fue a Control Financiero
+        render();
+
+        if (clearedMessage) await showAlertModal(clearedMessage);
+    });
+
+    investForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('investName').value;
+        const ticker = document.getElementById('investTicker').value.trim().toUpperCase();
+        const market = document.getElementById('investMarket').value;
+        const qty = parseFloat(document.getElementById('investQty').value);
+        const price = parseFloat(document.getElementById('investPrice').value);
+
+        investments.push({ id: Date.now(), name, ticker, market, qty, price });
+        investForm.reset();
+        await saveStorage();
+        render();
+    });
+
+    async function deleteInvest(id) {
+        if (await showConfirmModal('¿Deseas quitar este activo de tu cartera?', true)) {
+            investments = investments.filter(i => i.id != id);
+            await saveStorage();
+            render();
+        }
+    }
+
+    // Guarda el precio actual que la persona mira manualmente (ej. en Google Finance)
+    // y con eso se calcula la ganancia o pérdida de esa inversión.
+    async function updateInvestCurrentPrice(id, newPrice) {
+        const inv = investments.find(i => i.id == id);
+        if (!inv) return;
+        const parsed = parseFloat(newPrice);
+        inv.currentPrice = (!isNaN(parsed) && parsed > 0) ? parsed : inv.price;
+        await saveStorage();
+        render();
+        showLibertadToast(`Precio de "${inv.name}" actualizado a $${inv.currentPrice.toLocaleString()}`);
+    }
+    window.updateInvestCurrentPrice = updateInvestCurrentPrice;
+
+    // Reparte un pago entre TODAS las deudas pendientes (de menor a mayor) y
+    // manda cualquier sobrante al Saldo a Favor una vez que ya no queda deuda.
+    async function applyPaymentAcrossDebts(amount, category, detailText) {
+        let remaining = amount;
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0).sort((a, b) => a.amount - b.amount);
+        let clearedAny = [];
+
+        for (const debt of pendingDebts) {
+            if (remaining <= 0) break;
+            const used = Math.min(remaining, debt.amount);
+            debt.amount -= used;
+            remaining -= used;
+
+            history.unshift({
+                date: new Date().toLocaleDateString(),
+                category,
+                detail: detailText,
+                amount: used,
+                targetName: debt.name,
+                isMin: false
+            });
+
+            if (debt.amount <= 0) {
+                debt.amount = 0;
+                debt.cleared = true;
+                clearedAny.push(debt.name);
+            }
+        }
+
+        if (remaining > 0) {
+            creditBalance += remaining;
+        }
+
+        await saveStorage();
+        render();
+
+        if (clearedAny.length > 0) {
+            await showAlertModal(`¡Felicidades! Cancelaste: ${clearedAny.join(', ')}.` + (remaining > 0 ? ` Te quedó un saldo a favor de $${remaining.toLocaleString()}.` : ''));
+        } else if (remaining > 0) {
+            await showAlertModal(`No te quedaba deuda pendiente. Se sumó $${remaining.toLocaleString()} a tu Saldo a Favor.`);
+        }
+    }
+
+    async function injectInvestToDebt(id) {
+        const inv = investments.find(i => i.id == id);
+        if (!inv) return;
+
+        const totalValue = inv.qty * inv.price;
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+
+        if (pendingDebts.length === 0) {
+            if (!(await showConfirmModal(`No tenés deudas pendientes. ¿Deseas liquidar $${totalValue.toLocaleString()} de "${inv.name}" y sumarlo directo a tu Saldo a Favor?`))) return;
+            creditBalance += totalValue;
+            investments = investments.filter(i => i.id != id);
+            await saveStorage();
+            render();
+            return;
+        }
+
+        if (await showConfirmModal(`¿Deseas liquidar $${totalValue.toLocaleString()} de "${inv.name}" y usarlo para pagar tu deuda total? Si sobra, se guarda como Saldo a Favor.`)) {
+            investments = investments.filter(i => i.id != id);
+            await applyPaymentAcrossDebts(totalValue, 'Liquidación Inversión', `Venta de ${inv.qty} x ${inv.name}`);
+        }
+    }
+
+    debtForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('name').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const minPayment = parseFloat(document.getElementById('minPayment').value);
+        const editingId = editingIdEl.value;
+
+        if (editingId) {
+            const index = debts.findIndex(d => d.id == editingId);
+            if (index !== -1) {
+                debts[index].name = name;
+                debts[index].amount = amount;
+                debts[index].minPayment = minPayment;
+            }
+            resetForm();
+        } else {
+            debts.push({ id: Date.now(), name, amount, minPayment, cleared: false });
+            debtForm.reset();
+        }
+
+        await saveStorage();
+        render();
+    });
+
+    function editDebt(id) {
+        const debt = debts.find(d => d.id == id);
+        if (!debt) return;
+
+        document.getElementById('name').value = debt.name;
+        document.getElementById('amount').value = debt.amount;
+        document.getElementById('minPayment').value = debt.minPayment;
+        editingIdEl.value = debt.id;
+
+        formTitleEl.innerHTML = '<i class="fa-solid fa-file-invoice-dollar"></i> Modificar Deuda';
+        btnSaveDebt.textContent = 'Guardar Cambios';
+        btnCancelEdit.style.display = 'block';
+    }
+
+    async function deleteDebt(id) {
+        if (await showConfirmModal('¿Deseas borrar esta deuda?', true)) {
+            debts = debts.filter(d => d.id != id);
+            await saveStorage();
+            render();
+        }
+    }
+
+    // 🔒 ZONA PROTEGIDA — PAGO DE DEUDAS (NO TOCAR)
+    // Ya quedó confirmado que registra bien el egreso en Control Financiero antes
+    // de descontar la deuda. No modificar salvo pedido explícito y puntual.
+    async function payMin(id) {
+        const debt = debts.find(d => d.id == id);
+        if (!debt) return;
+
+        const payAmount = Math.min(debt.amount, debt.minPayment);
+        const overflow = debt.minPayment - payAmount;
+
+        // Registramos el pago como egreso en Control Financiero PRIMERO — si falla,
+        // no tocamos nada de la deuda, para que nunca quede desincronizado.
+        try {
+            const { error } = await sb.from('transactions').insert({
+                user_id: currentUser.id,
+                name: `Pago de deuda - ${debt.name}`,
+                date: new Date().toISOString().slice(0, 10),
+                month: new Date().toISOString().slice(0, 7),
+                qty_num: 1, unit: '', unit_price: payAmount, price: payAmount,
+                category: 'Servicios', fuel_type: null, type: 'egreso', icon: '💳', completed: false
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error('No se pudo registrar el pago en Control Financiero:', err);
+            await showAlertModal('No se pudo confirmar el pago ahora mismo. No se descontó nada de tu deuda. Probá de nuevo en un momento.');
+            return;
+        }
+
+        debt.amount -= payAmount;
+        if (overflow > 0) creditBalance += overflow;
+
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            category: 'Pago Mínimo',
+            detail: `Cuota mensual habitual de ${debt.name}`,
+            amount: payAmount,
+            targetName: debt.name,
+            isMin: true
+        });
+
+        if (debt.amount <= 0) {
+            debt.amount = 0;
+            debt.cleared = true;
+            await showAlertModal(`¡Felicidades! Has liquidado por completo: ${debt.name}`);
+        }
+
+        await saveStorage();
+        await fetchExternalPatrimonioNeto(); // se registró un egreso nuevo, refrescamos el Patrimonio Neto
+        render();
+    }
+
+    btnCancelEdit.addEventListener('click', resetForm);
+
+    function resetForm() {
+        debtForm.reset();
+        editingIdEl.value = '';
+        formTitleEl.innerHTML = '<i class="fa-solid fa-file-invoice-dollar"></i> Registrar Deuda';
+        btnSaveDebt.textContent = 'Agregar Deuda';
+        btnCancelEdit.style.display = 'none';
+    }
+
+    // Vista previa en vivo del total (Cantidad × Monto), igual que la compra de inversiones
+    function updateExtraTotalPreview() {
+        const qty = parseFloat(document.getElementById('extraQty').value) || 0;
+        const price = parseFloat(document.getElementById('extraAmount').value) || 0;
+        document.getElementById('extraTotalPreview').textContent = `$${(qty * price).toLocaleString()}`;
+    }
+    document.getElementById('extraQty').addEventListener('input', updateExtraTotalPreview);
+    document.getElementById('extraAmount').addEventListener('input', updateExtraTotalPreview);
+
+    function getExtraFormValues() {
+        let category = categorySelect.value;
+        if (category === 'Otros') {
+            category = `Otros (${otherCategoryDetail.value.trim()})`;
+        }
+        const detail = document.getElementById('extraDetail').value;
+        const qty = parseFloat(document.getElementById('extraQty').value) || 1;
+        const unitPrice = parseFloat(document.getElementById('extraAmount').value) || 0;
+        return { category, detail, amount: qty * unitPrice };
+    }
+
+    function resetExtraForm() {
+        extraForm.reset();
+        document.getElementById('extraQty').value = 1;
+        updateExtraTotalPreview();
+        otherCategoryGroup.style.display = 'none';
+    }
+
+    // Botón "Pagar a mis deudas" (submit del form)
+    extraForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const { category, detail, amount } = getExtraFormValues();
+        if (amount <= 0) { await showAlertModal('Completá un monto válido'); return; }
+
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const statusBox = document.getElementById('extraDebtStatus');
+        statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
+
+        if (pendingDebts.length === 0) {
+            await showAlertModal('No tenés deudas pendientes. Este ingreso se va a guardar como Saldo a Favor.');
+            creditBalance += amount;
+            history.unshift({ date: new Date().toLocaleDateString(), category, detail, amount, targetName: 'Saldo a Favor', isMin: false });
+            await saveStorage();
+            render();
+            statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
+            statusBox.textContent = '✅ CANCELADO DEUDA (no tenías deuda pendiente)';
+        } else {
+            await applyPaymentAcrossDebts(amount, category, detail);
+            const remainingAfter = debts.filter(d => !d.cleared && d.amount > 0).reduce((acc, d) => acc + d.amount, 0);
+            if (remainingAfter <= 0) {
+                statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
+                statusBox.textContent = '✅ CANCELADO DEUDA';
+            } else {
+                statusBox.classList.add('bg-rose-500/10', 'text-rose-300');
+                statusBox.textContent = `⚠️ FALTA PAGAR DEUDA: $${remainingAfter.toLocaleString()}`;
+            }
+        }
+
+        resetExtraForm();
+    });
+
+    // Botón "Mantener Dinero Extra" — va directo al Saldo a Favor, sin tocar deudas
+    document.getElementById('btnKeepExtra').addEventListener('click', async () => {
+        const { category, detail, amount } = getExtraFormValues();
+        if (amount <= 0) { await showAlertModal('Completá un monto válido'); return; }
+
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const totalPendingBefore = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
+
+        creditBalance += amount;
+        history.unshift({ date: new Date().toLocaleDateString(), category, detail, amount, targetName: 'Saldo a Favor', isMin: false });
+        await saveStorage();
+        render();
+
+        const statusBox = document.getElementById('extraDebtStatus');
+        statusBox.classList.remove('hidden', 'bg-emerald-500/10', 'text-emerald-300', 'bg-rose-500/10', 'text-rose-300');
+        if (totalPendingBefore <= 0) {
+            statusBox.classList.add('bg-emerald-500/10', 'text-emerald-300');
+            statusBox.textContent = '✅ Guardado en Saldo a Favor (no tenías deuda pendiente)';
+        } else {
+            statusBox.classList.add('bg-rose-500/10', 'text-rose-300');
+            statusBox.textContent = `💰 Guardado en Saldo a Favor. Igual tenés pendiente: $${totalPendingBefore.toLocaleString()}`;
+        }
+
+        resetExtraForm();
+    });
+
+    function updateChart() {
+        const ctx = document.getElementById('debtPieChart').getContext('2d');
+        const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
+
+        // Consolidamos deudas con el mismo nombre en una sola porción (sumando montos)
+        const consolidated = {};
+        activeDebts.forEach(d => {
+            const key = d.name.trim().toLowerCase();
+            if (!consolidated[key]) consolidated[key] = { name: d.name.trim(), total: 0 };
+            consolidated[key].total += d.amount;
+        });
+        const grouped = Object.values(consolidated);
+
+        const labels = grouped.map(g => g.name);
+        const data = grouped.map(g => g.total);
+
+        if (pieChart) pieChart.destroy();
+
+        if (grouped.length > 0) {
+            pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#22d3ee', '#a855f7', '#f472b6'],
+                        borderWidth: 2,
+                        borderColor: '#111827'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (c) => {
+                                    const pctSalary = userSalary > 0 ? ` (${((c.parsed / userSalary) * 100).toFixed(0)}% del sueldo)` : '';
+                                    return ` ${c.label}: $${c.parsed.toLocaleString()}${pctSalary}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Barras de comparación: Sueldo vs Inversiones/Ingresos Extra vs Deuda Total
+        const totalDebtAll = grouped.reduce((acc, g) => acc + g.total, 0);
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        const maxScale = Math.max(userSalary, totalInvestVal, totalDebtAll, 1);
+
+        document.getElementById('salaryBarValue').textContent = `$${userSalary.toLocaleString()}`;
+        document.getElementById('salaryBar').style.width = `${Math.min((userSalary / maxScale) * 100, 100)}%`;
+
+        document.getElementById('investBarValue').textContent = `$${totalInvestVal.toLocaleString()}`;
+        document.getElementById('investBar').style.width = `${Math.min((totalInvestVal / maxScale) * 100, 100)}%`;
+
+        document.getElementById('debtBarValue').textContent = `$${totalDebtAll.toLocaleString()}`;
+        document.getElementById('debtBar').style.width = `${Math.min((totalDebtAll / maxScale) * 100, 100)}%`;
+
+        const warningBox = document.getElementById('debt-vs-salary-warning');
+        if (totalDebtAll > (userSalary + totalInvestVal) && totalDebtAll > 0) {
+            warningBox.classList.remove('hidden');
+        } else {
+            warningBox.classList.add('hidden');
+        }
+    }
+
+    function updateProgressChart() {
+        const ctx = document.getElementById('progressPieChart').getContext('2d');
+        const totalRemaining = debts.filter(d => !d.cleared).reduce((acc, d) => acc + d.amount, 0);
+        const totalDisponible = creditBalance + Math.max(externalPatrimonioNeto, 0);
+        const netBalance = totalDisponible - totalRemaining;
+
+        if (progressChart) progressChart.destroy();
+
+        const isFavor = netBalance >= 0;
+        const favorSlice = isFavor ? Math.max(netBalance, 0.01) : 0.01;
+        const contraSlice = isFavor ? 0.01 : Math.max(Math.abs(netBalance), 0.01);
+
+        progressChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: isFavor ? ['Saldo Favor', 'Deuda Restante'] : ['Saldo (cubierto)', 'Saldo Contra'],
+                datasets: [{
+                    data: [favorSlice, contraSlice],
+                    backgroundColor: isFavor ? ['#22d3ee', 'rgba(244,63,94,0.35)'] : ['rgba(148,163,184,0.25)', '#f43f5e'],
+                    borderWidth: 2,
+                    borderColor: '#111827'
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } } },
+                cutout: '68%'
+            }
+        });
+    }
+
+    function render() {
+        const totalRemainingForBalance = debts.filter(d => !d.cleared).reduce((acc, d) => acc + d.amount, 0);
+        // Ahora sumamos TODO el dinero disponible: el saldo guardado acá + el Patrimonio Neto
+        // de Control Financiero, para que el panorama sea el real, completo, no solo la mitad.
+        const totalDisponible = creditBalance + Math.max(externalPatrimonioNeto, 0);
+        const netBalance = totalDisponible - totalRemainingForBalance;
+        const balanceDisplayEl = document.getElementById('creditBalanceDisplay');
+        const statusLabelEl = document.getElementById('saldoStatusLabel');
+
+        if (netBalance >= 0) {
+            balanceDisplayEl.textContent = `$${netBalance.toLocaleString()}`;
+            balanceDisplayEl.classList.remove('text-rose-400');
+            balanceDisplayEl.classList.add('text-cyan-400');
+            statusLabelEl.textContent = 'Saldo Favor';
+            statusLabelEl.classList.remove('text-rose-300');
+            statusLabelEl.classList.add('text-cyan-300');
+        } else {
+            balanceDisplayEl.textContent = `$${Math.abs(netBalance).toLocaleString()}`;
+            balanceDisplayEl.classList.remove('text-cyan-400');
+            balanceDisplayEl.classList.add('text-rose-400');
+            statusLabelEl.textContent = 'Saldo Contra';
+            statusLabelEl.classList.remove('text-cyan-300');
+            statusLabelEl.classList.add('text-rose-300');
+        }
+
+        // Detalle claro: cuánta plata hay en total, y cuánta deuda falta pagar
+        const balanceDetailEl = document.getElementById('creditBalanceDetail');
+        if (balanceDetailEl) {
+            if (totalRemainingForBalance > 0) {
+                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible (saldo + Patrimonio Neto acumulado de todos los meses) contra $${totalRemainingForBalance.toLocaleString()} de deuda pendiente.`;
+            } else {
+                balanceDetailEl.textContent = `Tenés $${totalDisponible.toLocaleString()} disponible (saldo + Patrimonio Neto acumulado de todos los meses) y no tenés deuda pendiente.`;
+            }
+        }
+
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        totalInvestEl.textContent = `$${totalInvestVal.toLocaleString()}`;
+
+        // Banner de Saldo a Favor visible también en la pestaña Pagar Deudas
+        const bannerPD = document.getElementById('saldo-favor-banner-pd');
+        const activeDebtCount = debts.filter(d => !d.cleared && d.amount > 0).length;
+        if (creditBalance > 0 && activeDebtCount > 0) {
+            bannerPD.classList.remove('hidden');
+            document.getElementById('saldo-favor-banner-amount').textContent = `$${creditBalance.toLocaleString()}`;
+        } else {
+            bannerPD.classList.add('hidden');
+        }
+
+        investList.innerHTML = '';
+        if (investments.length === 0) {
+            investList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">Sin inversiones en cartera.</p>';
+        } else {
+            investments.forEach(inv => {
+                const itemVal = inv.qty * inv.price;
+                const currentPrice = inv.currentPrice || inv.price;
+                const currentVal = inv.qty * currentPrice;
+                const gainLoss = currentVal - itemVal;
+                const gainLossPct = itemVal > 0 ? ((gainLoss / itemVal) * 100).toFixed(1) : 0;
+                const gainClass = gainLoss >= 0 ? 'text-emerald-400' : 'text-rose-400';
+                const gainSign = gainLoss >= 0 ? '+' : '';
+
+                // Link directo a Google Finance (funciona bien tanto para CEDEARs argentinos como acciones de EE.UU.)
+                const ticker = inv.ticker || '';
+                const market = inv.market || 'BCBA';
+                const googleFinanceUrl = ticker
+                    ? `https://www.google.com/finance/quote/${encodeURIComponent(ticker)}:${market}`
+                    : `https://www.google.com/finance/`;
+
+                const item = document.createElement('div');
+                item.className = 'bg-slate-950/60 border border-purple-500/20 border-l-4 border-l-purple-500 rounded-xl p-3 space-y-2';
+                item.innerHTML = `
+                    <div class="flex justify-between items-center gap-2">
+                        <div class="min-w-0">
+                            <strong class="text-sm text-white block truncate">${inv.name} ${ticker ? `<span class="text-purple-400 text-[10px]">(${ticker})</span>` : ''}</strong>
+                            <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} (compra) = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
+                        </div>
+                        <div class="flex gap-1.5 flex-shrink-0">
+                            <button onclick="injectInvestToDebt(${inv.id})" class="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap">Pagar</button>
+                            <button onclick="deleteInvest(${inv.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 bg-slate-900/60 rounded-xl p-2 flex-wrap">
+                        <a href="${googleFinanceUrl}" target="_blank" class="text-[10px] bg-sky-500/20 hover:bg-sky-500/30 text-sky-300 font-bold px-2 py-1.5 rounded-lg whitespace-nowrap flex items-center gap-1">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Google Finance
+                        </a>
+                        <input type="number" step="any" id="price-input-${inv.id}" value="${currentPrice}"
+                            class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white" placeholder="Precio Actual">
+                        <button onclick="updateInvestCurrentPrice(${inv.id}, document.getElementById('price-input-${inv.id}').value)"
+                            class="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] font-bold px-2 py-1.5 rounded-lg whitespace-nowrap">
+                            Guardar
+                        </button>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[11px] font-bold ${gainClass} whitespace-nowrap">${gainSign}$${Math.abs(gainLoss).toLocaleString()} (${gainSign}${gainLossPct}%)</span>
+                    </div>
+                `;
+                investList.appendChild(item);
+            });
+        }
+
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0).sort((a, b) => a.amount - b.amount);
+        const clearedDebts = debts.filter(d => d.cleared || d.amount <= 0);
+
+        const total = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
+        totalDebtEl.textContent = `$${total.toLocaleString()}`;
+
+        debtList.innerHTML = '';
+        if (pendingDebts.length === 0) {
+            debtList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">¡No tienes deudas pendientes!</p>';
+        } else {
+            pendingDebts.forEach((debt, index) => {
+                const isTarget = index === 0;
+                const item = document.createElement('div');
+                item.className = `bg-slate-950/60 border rounded-xl p-4 space-y-2 ${isTarget ? 'border-cyan-500/40 border-l-4 border-l-cyan-500 bg-cyan-500/5' : 'border-rose-500/20 border-l-4 border-l-rose-500'}`;
+                item.innerHTML = `
+                    <div class="flex items-center justify-between flex-wrap gap-1">
+                        <strong class="text-sm text-white">${debt.name}</strong>
+                        ${isTarget ? '<span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-bold">🎯 PRIORITARIA</span>' : ''}
+                    </div>
+                    <div class="text-xs text-slate-400 space-y-0.5">
+                        <p>Saldo Restante: <span class="text-white font-bold">$${debt.amount.toLocaleString()}</span></p>
+                        <p>Pago Mínimo Mensual: $${debt.minPayment.toLocaleString()}</p>
+                    </div>
+                    <div class="flex gap-2 flex-wrap pt-1">
+                        <button onclick="payMin(${debt.id})" class="flex-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold px-3 py-2 rounded-lg">Pagar Mínimo</button>
+                        <button onclick="editDebt(${debt.id})" class="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold px-3 py-2 rounded-lg">Editar</button>
+                        <button onclick="deleteDebt(${debt.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold px-3 py-2 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `;
+                debtList.appendChild(item);
+            });
+        }
+
+        clearedList.innerHTML = '';
+        if (clearedDebts.length === 0) {
+            clearedList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">Aún no hay deudas tachadas.</p>';
+        } else {
+            clearedDebts.forEach(debt => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-950/40 border border-slate-500/20 border-l-4 border-l-slate-500 rounded-xl p-3 flex items-center justify-between opacity-60';
+                item.innerHTML = `
+                    <strong class="text-sm text-slate-300 line-through">✔ ${debt.name}</strong>
+                    <button onclick="deleteDebt(${debt.id})" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>
+                `;
+                clearedList.appendChild(item);
+            });
+        }
+
+        historyList.innerHTML = '';
+        if (history.length === 0) {
+            historyList.innerHTML = '<p class="text-center text-slate-500 text-sm py-2">Sin movimientos registrados.</p>';
+        } else {
+            history.forEach(item => {
+                const hItem = document.createElement('div');
+                hItem.className = 'flex items-center justify-between border-b border-white/5 py-2.5 gap-2';
+                const badgeClass = item.isMin ? 'bg-sky-900/60 text-sky-300' : (item.category.includes('Inversión') ? 'bg-purple-900/60 text-purple-300' : 'bg-slate-800 text-cyan-300');
+                hItem.innerHTML = `
+                    <div class="min-w-0">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeClass}">${item.category}</span>
+                        <strong class="text-sm text-white ml-1">${item.detail}</strong>
+                        <div class="text-xs text-slate-400 mt-0.5">Acreedor: ${item.targetName} (${item.date})</div>
+                    </div>
+                    <div class="font-bold text-sm flex-shrink-0 ${item.isMin ? 'text-sky-400' : 'text-cyan-400'}">-$${item.amount.toLocaleString()}</div>
+                `;
+                historyList.appendChild(hItem);
+            });
+        }
+
+        updateChart();
+        updateProgressChart();
+        calculateFireNumber(false);
+        updateEmergencyFullLock();
+    }
+
+    // ============================================
+    // VACIAR HISTORIAL
+    // ============================================
+    document.getElementById('btnClearHistory').addEventListener('click', async () => {
+        if (history.length === 0) return;
+        if (await showConfirmModal('¿Deseas vaciar el historial de pagos? Esto no afecta tus deudas ni tu saldo a favor, solo borra la lista de movimientos.', true)) {
+            history = [];
+            await saveStorage();
+            render();
+        }
+    });
+
+    // ============================================
+    // ESTADO FINANCIERO EN PDF + COMPARTIR WHATSAPP
+    // ============================================
+    function buildFinancialReportHTML() {
+        const today = new Date().toLocaleDateString('es-AR');
+        const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const clearedDebts = debts.filter(d => d.cleared || d.amount <= 0);
+        const totalDebtRemaining = pendingDebts.reduce((acc, d) => acc + d.amount, 0);
+        const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
+        const balanceStatus = creditBalance - totalDebtRemaining;
+
+        const debtPieImg = pieChart ? pieChart.toBase64Image() : null;
+        const progressPieImg = progressChart ? progressChart.toBase64Image() : null;
+
+        let historyRows = '';
+        if (history.length === 0) {
+            historyRows = `<tr><td colspan="4" style="padding:14px 6px; text-align:center; color:#999; font-size:12px;">Sin movimientos registrados</td></tr>`;
+        } else {
+            history.forEach(h => {
+                historyRows += `
+                    <tr>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.date}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.category}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.detail} <span style="color:#999;">(${h.targetName})</span></td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; font-weight:bold; border-bottom:1px solid #eee;">$${h.amount.toLocaleString()}</td>
+                    </tr>`;
+            });
+        }
+
+        let investRows = '';
+        if (investments.length === 0) {
+            investRows = `<tr><td colspan="3" style="padding:10px 6px; text-align:center; color:#999; font-size:12px;">Sin inversiones activas</td></tr>`;
+        } else {
+            investments.forEach(inv => {
+                investRows += `
+                    <tr>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${inv.name}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; border-bottom:1px solid #eee;">${inv.qty} u. x $${inv.price.toLocaleString()}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; font-weight:bold; border-bottom:1px solid #eee;">$${(inv.qty * inv.price).toLocaleString()}</td>
+                    </tr>`;
+            });
+        }
+
+        return `
+            <div style="border-bottom:3px solid #22d3ee; padding-bottom:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1 style="font-size:20px; font-weight:bold; margin:0; color:#111;">Estado Financiero — Ressetia</h1>
+                    <p style="font-size:12px; color:#666; margin:4px 0 0 0;">Emitido el ${today}</p>
+                </div>
+                <div style="font-size:24px;">📑</div>
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; margin-bottom:20px;">
+                <tr>
+                    <td style="padding:8px; background:#fef2f2; border-radius:6px 0 0 6px;">
+                        <div style="font-size:10px; color:#e11d48; font-weight:bold;">DEUDA RESTANTE</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${totalDebtRemaining.toLocaleString()}</div>
+                    </td>
+                    <td style="padding:8px; background:${balanceStatus >= 0 ? '#ecfeff' : '#fef2f2'};">
+                        <div style="font-size:10px; color:${balanceStatus >= 0 ? '#0891b2' : '#e11d48'}; font-weight:bold;">SALDO ${balanceStatus >= 0 ? 'A FAVOR' : 'EN CONTRA'}</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${Math.abs(balanceStatus).toLocaleString()}</div>
+                    </td>
+                    <td style="padding:8px; background:#faf5ff;">
+                        <div style="font-size:10px; color:#9333ea; font-weight:bold;">INVERSIONES</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${totalInvestVal.toLocaleString()}</div>
+                    </td>
+                    <td style="padding:8px; background:#f0fdfa; border-radius:0 6px 6px 0;">
+                        <div style="font-size:10px; color:#0d9488; font-weight:bold;">SALDO A FAVOR ACUM.</div>
+                        <div style="font-size:15px; font-weight:bold; color:#111;">$${creditBalance.toLocaleString()}</div>
+                    </td>
+                </tr>
+            </table>
+
+            ${(debtPieImg || progressPieImg) ? `
+            <table style="width:100%; margin-bottom:20px;">
+                <tr>
+                    ${debtPieImg ? `<td style="text-align:center; padding:6px;"><p style="font-size:11px; font-weight:bold; color:#111; margin:0 0 6px 0;">Distribución de Deudas</p><img src="${debtPieImg}" style="max-width:220px;"></td>` : ''}
+                    ${progressPieImg ? `<td style="text-align:center; padding:6px;"><p style="font-size:11px; font-weight:bold; color:#111; margin:0 0 6px 0;">Progreso: Pagado vs Restante</p><img src="${progressPieImg}" style="max-width:220px;"></td>` : ''}
+                </tr>
+            </table>` : ''}
+
+            <h2 style="font-size:13px; font-weight:bold; color:#111; margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">Cartera de Inversiones</h2>
+            <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">${investRows}</table>
+
+            <h2 style="font-size:13px; font-weight:bold; color:#111; margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">Historial de Pagos (día y fecha)</h2>
+            <table style="width:100%; border-collapse:collapse;">${historyRows}</table>
+
+            <h2 style="font-size:13px; font-weight:bold; color:#111; margin:18px 0 8px 0; border-bottom:1px solid #ddd; padding-bottom:6px;">Deudas Liquidadas</h2>
+            <p style="font-size:11px; color:#333;">${clearedDebts.length === 0 ? 'Ninguna deuda liquidada todavía.' : clearedDebts.map(d => d.name).join(', ')}</p>
+
+            <p style="margin-top:24px; font-size:10px; color:#999; text-align:center;">Generado con Ressetia</p>
+        `;
+    }
+
+    async function downloadFinancialReport() {
+        const template = document.getElementById('pdf-report-template');
+        document.getElementById('pdf-report-content').innerHTML = buildFinancialReportHTML();
+        template.style.display = 'block';
+
+        const filename = `Estado_Financiero_${new Date().toISOString().slice(0,10)}.pdf`;
+        const opt = {
+            margin: 0.4,
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+
+        try {
+            const worker = html2pdf().set(opt).from(template);
+            const pdfBlob = await worker.outputPdf('blob');
+            template.style.display = 'none';
+
+            const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+            let shared = false;
+
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({ files: [file], title: 'Estado Financiero', text: 'Mi estado financiero actualizado' });
+                    shared = true;
+                } catch (shareErr) {
+                    // El usuario canceló el share, o el navegador lo rechazó — no es un error grave, pasamos a descargar igual.
+                    shared = false;
+                }
+            }
+
+            if (!shared) {
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement('a');
+                a.href = url; a.download = filename; a.click();
+                URL.revokeObjectURL(url);
+                await showAlertModal('PDF descargado. Adjuntalo en WhatsApp manualmente (en computadora, los navegadores no permiten compartir directo).');
+            }
+        } catch (err) {
+            template.style.display = 'none';
+            console.error('Error generando el PDF:', err);
+            await showAlertModal('No se pudo generar el PDF. Si el problema sigue, avisá con una captura de este error: ' + err.message);
+        }
+    }
+
+    document.getElementById('btnFinancialReport').addEventListener('click', downloadFinancialReport);
+
+    // ============================================
+    // EMPEZAR DE NUEVO (borra todo, con doble confirmación)
+    // ============================================
+    document.getElementById('btnResetAll').addEventListener('click', async () => {
+        const step1 = await showConfirmModal('Esto borra TODAS tus deudas, inversiones, saldo a favor e historial, para empezar de cero. ¿Continuar?', true);
+        if (!step1) return;
+        const step2 = await showConfirmModal('Confirmá de nuevo: esta acción no se puede deshacer. ¿Reiniciar todo ahora?', true);
+        if (!step2) return;
+
+        debts = [];
+        investments = [];
+        history = [];
+        creditBalance = 0;
+        localStorage.removeItem('emergencyBasic_target');
+        localStorage.removeItem('emergencyBasic_current');
+        localStorage.removeItem('emergencyFull_target');
+        localStorage.removeItem('emergencyFull_current');
+
+        await saveStorage();
+        renderEmergencyBox('emergencyBasic');
+        renderEmergencyBox('emergencyFull');
+        render();
+        await showAlertModal('Listo, todo reiniciado. Podés empezar de cero.');
+    });
+
+    // ============================================
+    // BUSCADOR DEL GRÁFICO DE MERCADO
+    // ============================================
+    const MARKET_ALIASES = {
+        'SP500': 'AMEX:SPY', 'S&P500': 'AMEX:SPY', 'S&P 500': 'AMEX:SPY', 'SPY500': 'AMEX:SPY',
+        'SPY 500': 'AMEX:SPY', 'SP 500': 'AMEX:SPY', 'SPY': 'AMEX:SPY',
+        'NASDAQ': 'NASDAQ:NDX', 'NASDAQ100': 'NASDAQ:NDX', 'DOW JONES': 'DJ:DJI', 'DOWJONES': 'DJ:DJI',
+        'MERVAL': 'BCBA:IMV', 'BITCOIN': 'BITSTAMP:BTCUSD', 'BTC': 'BITSTAMP:BTCUSD',
+        'ORO': 'TVC:GOLD', 'GOLD': 'TVC:GOLD', 'DOLAR': 'FX_IDC:USDARS', 'DÓLAR': 'FX_IDC:USDARS'
+    };
+
+    function normalizeMarketSymbol(raw) {
+        const cleaned = raw.trim().toUpperCase().replace(/\s+/g, ' ');
+        if (MARKET_ALIASES[cleaned]) return MARKET_ALIASES[cleaned];
+        if (cleaned.includes(':')) return cleaned.replace(/\s+/g, '');
+        return cleaned.split(' ')[0];
+    }
+
+    function reloadMarketChart(rawSymbol) {
+        const symbol = normalizeMarketSymbol(rawSymbol);
+        const outer = document.getElementById('market-chart-outer');
+        outer.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%"></div>';
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+        script.async = true;
+        script.innerHTML = JSON.stringify({
+            autosize: true,
+            symbol: symbol,
+            interval: 'D',
+            timezone: 'America/Argentina/Buenos_Aires',
+            theme: 'dark',
+            style: '1',
+            locale: 'es',
+            allow_symbol_change: true,
+            support_host: 'https://www.tradingview.com'
+        });
+        outer.appendChild(script);
+    }
+
+    const marketSearchInput = document.getElementById('market-search-input');
+    const marketSearchBtn = document.getElementById('market-search-btn');
+    marketSearchBtn.addEventListener('click', () => {
+        const val = marketSearchInput.value.trim();
+        if (val) reloadMarketChart(val);
+    });
+    marketSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); marketSearchBtn.click(); }
+    });
+
+    // ============================================
+    // NAVEGACIÓN POR PESTAÑAS
+    // ============================================
+    function switchLfTab(tabName) {
+        document.querySelectorAll('.lf-tab-panel').forEach(panel => panel.classList.add('hidden'));
+        document.getElementById('lf-tab-' + tabName).classList.remove('hidden');
+
+        document.querySelectorAll('.lf-tab-btn').forEach(btn => {
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('bg-cyan-500', 'text-slate-950', 'shadow-md');
+                btn.classList.remove('text-slate-400');
+            } else {
+                btn.classList.remove('bg-cyan-500', 'text-slate-950', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            }
+        });
+    }
+
+    document.querySelectorAll('.lf-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchLfTab(btn.dataset.tab));
+    });
+
+    // ============================================
+    // MENÚ LATERAL
+    // ============================================
+    function openSideMenu() {
+        document.getElementById('side-menu').classList.remove('-translate-x-full');
+        document.getElementById('side-menu-overlay').classList.remove('hidden');
+    }
+    function closeSideMenu() {
+        document.getElementById('side-menu').classList.add('-translate-x-full');
+        document.getElementById('side-menu-overlay').classList.add('hidden');
+    }
+    document.getElementById('btn-open-menu').addEventListener('click', openSideMenu);
+    document.getElementById('btn-close-menu').addEventListener('click', closeSideMenu);
+    document.getElementById('side-menu-overlay').addEventListener('click', closeSideMenu);
+
+    document.querySelectorAll('.menu-item-btn-lf').forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchLfTab(btn.dataset.menuLfTab);
+            closeSideMenu();
+        });
+    });
+
+    // Si venimos con ?goto=xxx (desde el menú de Control Financiero), abrimos esa pestaña directo
+    function checkGotoParamLF() {
+        const params = new URLSearchParams(window.location.search);
+        const goto = params.get('goto');
+        if (goto && document.getElementById('lf-tab-' + goto)) {
+            switchLfTab(goto);
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }
+
+    switchLfTab('saldo');
+    checkGotoParamLF();
+
+    checkAccess();
+
+    // Le mostramos el globito "¿Tenés dudas?" solo la primera vez (misma clave que Control Financiero)
+    if (!localStorage.getItem('assistant_hint_shown')) {
+        setTimeout(() => {
+            const hint = document.getElementById('assistant-hint-bubble-lf');
+            if (hint) {
+                hint.classList.remove('hidden');
+                setTimeout(() => hint.classList.add('hidden'), 6000);
+            }
+            localStorage.setItem('assistant_hint_shown', '1');
+        }, 2500);
+    }
+
+    // ============================================
+    // CARGA POR VOZ (Registrar Deuda, Ingresos Extra, Cartera de Inversiones)
+    // ============================================
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    function createVoiceRecognizer(iconId, statusId, onResult, exampleText) {
+        if (!SpeechRecognitionAPI) return null;
+        const recognizer = new SpeechRecognitionAPI();
+        recognizer.lang = 'es-AR';
+        recognizer.continuous = false;
+        recognizer.interimResults = false;
+
+        recognizer.onstart = () => {
+            document.getElementById(iconId).className = 'fa-solid fa-microphone-lines text-lg animate-pulse';
+            document.getElementById(statusId).textContent = 'Escuchando...';
+        };
+        recognizer.onerror = () => {
+            document.getElementById(statusId).textContent = 'No te escuché bien, tocá de nuevo el micrófono.';
+        };
+        recognizer.onend = () => {
+            document.getElementById(iconId).className = 'fa-solid fa-microphone text-lg';
+        };
+        recognizer.onresult = async (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById(statusId).textContent = 'Interpretando con IA...';
+            try {
+                await onResult(transcript);
+                document.getElementById(statusId).textContent = exampleText;
+            } catch (err) {
+                console.error('Error al procesar voz:', err);
+                document.getElementById(statusId).textContent = 'No se pudo procesar, probá de nuevo o cargalo a mano.';
+            }
+        };
+        return recognizer;
+    }
+
+    async function callVoiceParser(transcript, context) {
+        const resp = await fetch('/api/parse-libertad-voice', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ transcript, context })
+        });
+        const parsed = await resp.json();
+        if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
+        return parsed;
+    }
+
+    // --- Voz para Registrar Deuda ---
+    const voiceDebtRecognizer = createVoiceRecognizer('voice-debt-icon', 'voice-debt-status', async (transcript) => {
+        const parsed = await callVoiceParser(transcript, 'deuda');
+        document.getElementById('name').value = parsed.name || '';
+        document.getElementById('amount').value = parsed.amount || '';
+        document.getElementById('minPayment').value = parsed.minPayment || '';
+        showLibertadToast(`Deuda completada: "${parsed.name}" — revisá y tocá "Agregar Deuda"`);
+    }, 'Ej: "Debo 400000 pesos a Yola, pago mínimo 50000"');
+
+    if (voiceDebtRecognizer) {
+        document.getElementById('btn-voice-debt').addEventListener('click', () => voiceDebtRecognizer.start());
+    } else {
+        document.getElementById('btn-voice-debt').addEventListener('click', () => showLibertadToast('Tu navegador no permite cargar por voz. Probá con Chrome.'));
+    }
+
+    // --- Voz para Ingresos Extra ---
+    const voiceExtraRecognizer = createVoiceRecognizer('voice-extra-icon', 'voice-extra-status', async (transcript) => {
+        const parsed = await callVoiceParser(transcript, 'ingreso_extra');
+        if (parsed.category) categorySelect.value = parsed.category;
+        if (categorySelect.value === 'Otros' && parsed.customCategory) {
+            otherCategoryGroup.style.display = 'block';
+            otherCategoryDetail.value = parsed.customCategory;
+        }
+        document.getElementById('extraDetail').value = parsed.detail || '';
+        document.getElementById('extraQty').value = parsed.qty || 1;
+        document.getElementById('extraAmount').value = parsed.unitPrice || parsed.amount || '';
+        updateExtraTotalPreview();
+        showLibertadToast('Ingreso completado, revisá y tocá el botón para confirmar');
+    }, 'Ej: "Vendí un curso por 50000 pesos"');
+
+    if (voiceExtraRecognizer) {
+        document.getElementById('btn-voice-extra').addEventListener('click', () => voiceExtraRecognizer.start());
+    } else {
+        document.getElementById('btn-voice-extra').addEventListener('click', () => showLibertadToast('Tu navegador no permite cargar por voz. Probá con Chrome.'));
+    }
+
+    // --- Voz para Cartera de Inversiones ---
+    const voiceInvestRecognizer = createVoiceRecognizer('voice-invest-icon', 'voice-invest-status', async (transcript) => {
+        const parsed = await callVoiceParser(transcript, 'inversion');
+        document.getElementById('investName').value = parsed.name || '';
+        document.getElementById('investQty').value = parsed.qty || '';
+        document.getElementById('investPrice').value = parsed.unitPrice || '';
+        showLibertadToast(`Inversión completada: "${parsed.name}" — revisá y tocá "Registrar en Cartera"`);
+    }, 'Ej: "Compré 10 acciones de Apple a 500 pesos cada una"');
+
+    if (voiceInvestRecognizer) {
+        document.getElementById('btn-voice-invest').addEventListener('click', () => voiceInvestRecognizer.start());
+    } else {
+        document.getElementById('btn-voice-invest').addEventListener('click', () => showLibertadToast('Tu navegador no permite cargar por voz. Probá con Chrome.'));
+    }
+
+    // Cartelito simple de aviso (esta página no tenía un sistema de "toast" propio)
+    function showLibertadToast(message) {
+        let el = document.getElementById('libertad-toast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'libertad-toast';
+            el.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-cyan-500/40 text-cyan-200 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xl z-50 transition-opacity duration-300 max-w-[90%] text-center';
+            document.body.appendChild(el);
+        }
+        el.textContent = message;
+        el.style.opacity = '1';
+        clearTimeout(window._libertadToastTimeout);
+        window._libertadToastTimeout = setTimeout(() => { el.style.opacity = '0'; }, 3500);
+    }
+
+    // ============================================
+    // ASISTENTE FINZIA (misma IA, con contexto de deudas e inversiones de esta página)
+    // ============================================
+    let assistantConversationLF = [];
+
+    // Misma clave que en Control Financiero: el chat es UNO SOLO, compartido entre las 2 páginas
+    function getAssistantStorageKeyLF() { return `finzia_chat_${currentUser.id}`; }
+
+    function saveAssistantConversationLF() {
+        if (!currentUser) return;
+        localStorage.setItem(getAssistantStorageKeyLF(), JSON.stringify(assistantConversationLF));
+    }
+
+    function restoreAssistantConversationLF() {
+        if (!currentUser) return;
+        const saved = localStorage.getItem(getAssistantStorageKeyLF());
+        if (!saved) return;
+        try {
+            const history = JSON.parse(saved);
+            if (!Array.isArray(history) || history.length === 0) return;
+            assistantConversationLF = history;
+            document.getElementById('assistant-welcome-bubble-lf').style.display = 'none';
+            history.forEach(msg => addAssistantMessageLF(msg.content, msg.role === 'user', msg.suggestedSection));
+        } catch (e) { /* ignoramos si está corrupto */ }
+    }
+
+    document.getElementById('btn-clear-assistant-lf').addEventListener('click', async () => {
+        if (!(await showConfirmModal('¿Borrar toda esta conversación con Ressetia? No se puede deshacer.', true))) return;
+        assistantConversationLF = [];
+        localStorage.removeItem(getAssistantStorageKeyLF());
+        document.getElementById('assistant-messages-lf').innerHTML = '';
+        const welcomeBubble = document.createElement('div');
+        welcomeBubble.id = 'assistant-welcome-bubble-lf';
+        welcomeBubble.className = 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%]';
+        welcomeBubble.innerHTML = 'Hola, soy Ressetia 🔥. Puedo mirar tus deudas, inversiones y tu saldo, y ayudarte con un diagnóstico concreto. Preguntame algo como <em>"¿cómo salgo de esta deuda?"</em>';
+        document.getElementById('assistant-messages-lf').appendChild(welcomeBubble);
+    });
+
+    async function buildFinancialSnapshotLF() {
+        let salaryVal = 0;
+        let egresosDelMes = 0;
+        let ingresosExtraDelMes = 0;
+        try {
+            const { data: settings } = await sb.from('user_settings').select('salary').eq('user_id', currentUser.id).maybeSingle();
+            salaryVal = parseFloat(settings?.salary) || 0;
+
+            const currentMonth = new Date().toISOString().slice(0, 7);
+            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id).eq('month', currentMonth);
+            (txs || []).forEach(t => {
+                if (t.type === 'egreso') egresosDelMes += parseFloat(t.price) || 0;
+                if (t.type === 'ingreso') ingresosExtraDelMes += parseFloat(t.price) || 0;
+            });
+        } catch (err) {
+            console.warn('No se pudo traer sueldo/gastos para el asistente:', err);
+        }
+
+        const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
+        const totalDebt = activeDebts.reduce((a, d) => a + d.amount, 0);
+        const totalInvest = investments.reduce((a, i) => a + (i.qty * (i.currentPrice || i.price)), 0);
+
+        // El Fondo de Emergencia vive solo en este dispositivo (localStorage), no en
+        // Supabase — lo agregamos acá para que la IA sepa que existe esa plata.
+        const fondoEmergenciaActual = parseFloat(localStorage.getItem('emergencyBasic_current')) || 0;
+
+        return {
+            sueldo: salaryVal,
+            ingresos_extra_del_mes: ingresosExtraDelMes,
+            ingresos_totales_del_mes: salaryVal + ingresosExtraDelMes,
+            egresos_totales_del_mes: egresosDelMes,
+            saldo_neto_del_mes: (salaryVal + ingresosExtraDelMes) - egresosDelMes,
+            egresos_por_categoria: {},
+            deudas: activeDebts.map(d => ({ nombre: d.name, monto: d.amount })),
+            deuda_total: totalDebt,
+            inversiones: investments.map(i => ({ nombre: i.name, valor_actual: i.qty * (i.currentPrice || i.price) })),
+            inversiones_total: totalInvest,
+            // Usamos el MISMO cálculo combinado que se ve en pantalla en "Saldo Favor/Contra"
+            // (saldo guardado + Patrimonio Neto acumulado), para que la IA vea exactamente
+            // lo mismo que la persona ve en la caja.
+            saldo_favor_o_contra: (creditBalance + Math.max(externalPatrimonioNeto, 0)) - totalDebt,
+            fondo_emergencia_actual: fondoEmergenciaActual
+        };
+    }
+
+    // Elige la mejor voz en español disponible (esperando a que carguen; si no, se queda mudo en silencio)
+    let cachedSpanishVoiceLF = null;
+    function getBestSpanishVoiceLF() {
+        if (cachedSpanishVoiceLF) return cachedSpanishVoiceLF;
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices || voices.length === 0) return null;
+
+        const priorities = ['es-AR', 'es-419', 'es-MX', 'es-US', 'es-ES', 'es'];
+        const spanishVoices = voices.filter(v => v.lang && priorities.some(p => v.lang.toLowerCase().startsWith(p.toLowerCase())));
+        if (spanishVoices.length === 0) { cachedSpanishVoiceLF = voices[0] || null; return cachedSpanishVoiceLF; }
+
+        // Las voces "de red" (localService: false) suenan mucho más naturales que las básicas
+        // del celular (localService: true) — les damos prioridad siempre que existan.
+        const networkVoices = spanishVoices.filter(v => v.localService === false);
+        const pool = networkVoices.length > 0 ? networkVoices : spanishVoices;
+
+        const femaleMatch = pool.find(v => /female|mujer|paulina|monica|mónica|helena|isabela|marisol|lucia|lucía|camila|valeria/i.test(v.name));
+        if (femaleMatch) { cachedSpanishVoiceLF = femaleMatch; return femaleMatch; }
+
+        for (const lang of priorities) {
+            const anyMatch = pool.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+            if (anyMatch) { cachedSpanishVoiceLF = anyMatch; return anyMatch; }
+        }
+        cachedSpanishVoiceLF = pool[0];
+        return cachedSpanishVoiceLF;
+    }
+    if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => { cachedSpanishVoiceLF = null; getBestSpanishVoiceLF(); };
+        getBestSpanishVoiceLF();
+    }
+    let currentSpeakingBtnLF = null;
+
+    function speakAssistantTextLF(text, btnEl) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        resetSpeakButtonLF(currentSpeakingBtnLF);
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        const voice = getBestSpanishVoiceLF();
+        if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
+        else { utterance.lang = 'es-AR'; }
+        utterance.rate = 1.15;
+        utterance.pitch = 1;
+
+        if (btnEl) {
+            currentSpeakingBtnLF = btnEl;
+            btnEl.innerHTML = '<i class="fa-solid fa-stop"></i> Detener';
+            btnEl.classList.add('text-rose-400');
+            btnEl.classList.remove('text-cyan-400');
+        }
+        utterance.onend = () => resetSpeakButtonLF(btnEl);
+        utterance.onerror = () => resetSpeakButtonLF(btnEl);
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function resetSpeakButtonLF(btnEl) {
+        if (!btnEl) return;
+        btnEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
+        btnEl.classList.remove('text-rose-400');
+        btnEl.classList.add('text-cyan-400');
+        if (currentSpeakingBtnLF === btnEl) currentSpeakingBtnLF = null;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!window.speechSynthesis) return;
+        if (document.hidden) {
+            if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+                window.speechSynthesis.pause();
+            }
+        } else {
+            if (window.speechSynthesis.paused) {
+                window.speechSynthesis.resume();
+            }
+        }
+    });
+
+    const SECTION_LABELS_LF = {
+        cuadrante: 'Ir a Control Financiero → Cuadrante de Flujo',
+        ingresos: 'Ir a Control Financiero → Ingresos',
+        egresos: 'Ir a Control Financiero → Egresos',
+        resumen: 'Ir a Control Financiero → Mis Movimientos',
+        lf_saldo: 'Ir a Patrimonio Neto',
+        lf_fondos: 'Ir a Fondos de Emergencia',
+        lf_deudas: 'Ir a Registrar Deudas',
+        lf_emergencia: 'Ir a Pagar Deudas',
+        lf_inversiones: 'Ir a Inversiones'
+    };
+
+    function navigateToSuggestedSectionLF(section) {
+        if (!section.startsWith('lf_')) {
+            window.open('index.html', '_blank');
+            return;
+        }
+        document.getElementById('btn-close-assistant-lf').click();
+        const tabMap = { lf_saldo: 'saldo', lf_deudas: 'deudas', lf_emergencia: 'emergencia', lf_inversiones: 'inversiones' };
+        switchLfTab(tabMap[section]);
+    }
+
+    function addAssistantMessageLF(text, isUser, suggestedSection) {
+        const container = document.getElementById('assistant-messages-lf');
+        const bubble = document.createElement('div');
+        bubble.className = isUser
+            ? 'bg-cyan-500/20 border border-cyan-500/30 rounded-2xl rounded-tr-sm p-3 text-base text-white max-w-[90%] sm:max-w-[85%] ml-auto'
+            : 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-200 max-w-[90%] sm:max-w-[85%] space-y-2';
+
+        if (isUser) {
+            bubble.style.whiteSpace = 'pre-wrap';
+            bubble.textContent = text;
+        } else {
+            const textEl = document.createElement('p');
+            textEl.style.whiteSpace = 'pre-wrap';
+            textEl.textContent = text;
+            bubble.appendChild(textEl);
+
+            const actionsRow = document.createElement('div');
+            actionsRow.className = 'flex flex-wrap items-center gap-3';
+
+            const speakBtn = document.createElement('button');
+            speakBtn.type = 'button';
+            speakBtn.className = 'text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5';
+            speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
+            speakBtn.addEventListener('click', () => {
+                if (currentSpeakingBtnLF === speakBtn && window.speechSynthesis.speaking) {
+                    window.speechSynthesis.cancel();
+                    resetSpeakButtonLF(speakBtn);
+                    return;
+                }
+                speakAssistantTextLF(text, speakBtn);
+            });
+            actionsRow.appendChild(speakBtn);
+
+            if (suggestedSection && SECTION_LABELS_LF[suggestedSection]) {
+                const goBtn = document.createElement('button');
+                goBtn.type = 'button';
+                goBtn.className = 'text-sky-400 hover:text-sky-300 text-xs font-semibold flex items-center gap-1.5';
+                goBtn.innerHTML = `<i class="fa-solid fa-arrow-right"></i> ${SECTION_LABELS_LF[suggestedSection]}`;
+                goBtn.addEventListener('click', () => navigateToSuggestedSectionLF(suggestedSection));
+                actionsRow.appendChild(goBtn);
+            }
+
+            bubble.appendChild(actionsRow);
+        }
+
+        container.appendChild(bubble);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    let assistantConversationRestoredLF = false;
+
+    // Hacemos que el botón flotante se pueda arrastrar y mover a cualquier parte de la pantalla
+    (function makeAssistantButtonDraggableLF() {
+        const container = document.getElementById('assistant-float-container-lf');
+        const btn = document.getElementById('btn-open-assistant-lf');
+        let isDragging = false, moved = false, startX, startY, startLeft, startTop;
+
+        container.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            moved = false;
+            const rect = container.getBoundingClientRect();
+            startX = e.clientX; startY = e.clientY;
+            startLeft = rect.left; startTop = rect.top;
+            container.style.left = startLeft + 'px';
+            container.style.top = startTop + 'px';
+            container.style.right = 'auto';
+            container.style.bottom = 'auto';
+            container.setPointerCapture(e.pointerId);
+        });
+
+        container.addEventListener('pointermove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+            if (moved) {
+                let newLeft = Math.max(4, Math.min(window.innerWidth - container.offsetWidth - 4, startLeft + dx));
+                let newTop = Math.max(4, Math.min(window.innerHeight - container.offsetHeight - 4, startTop + dy));
+                container.style.left = newLeft + 'px';
+                container.style.top = newTop + 'px';
+            }
+        });
+
+        container.addEventListener('pointerup', (e) => {
+            isDragging = false;
+            if (moved) {
+                localStorage.setItem('assistant_btn_position', JSON.stringify({ left: container.style.left, top: container.style.top }));
+            }
+            container.releasePointerCapture(e.pointerId);
+        });
+
+        btn.addEventListener('click', (e) => {
+            if (moved) { e.stopImmediatePropagation(); e.preventDefault(); moved = false; }
+        }, true);
+
+        const saved = localStorage.getItem('assistant_btn_position');
+        if (saved) {
+            try {
+                const pos = JSON.parse(saved);
+                container.style.left = pos.left; container.style.top = pos.top;
+                container.style.right = 'auto'; container.style.bottom = 'auto';
+            } catch (e) { /* ignoramos si está corrupto */ }
+        }
+    })();
+
+    document.getElementById('btn-open-assistant-lf').addEventListener('click', () => {
+        const modal = document.getElementById('assistant-modal-lf');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (!assistantConversationRestoredLF) {
+            assistantConversationRestoredLF = true;
+            restoreAssistantConversationLF();
+        }
+    });
+
+    document.getElementById('btn-close-assistant-lf').addEventListener('click', () => {
+        const modal = document.getElementById('assistant-modal-lf');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+    });
+
+    const AssistantSpeechRecognitionAPI_LF = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let assistantVoiceRecognizerLF = null;
+    if (AssistantSpeechRecognitionAPI_LF) {
+        assistantVoiceRecognizerLF = new AssistantSpeechRecognitionAPI_LF();
+        assistantVoiceRecognizerLF.lang = 'es-AR';
+        assistantVoiceRecognizerLF.continuous = false;
+        assistantVoiceRecognizerLF.interimResults = false;
+        assistantVoiceRecognizerLF.onstart = () => {
+            document.getElementById('assistant-voice-icon-lf').className = 'fa-solid fa-microphone-lines animate-pulse';
+        };
+        assistantVoiceRecognizerLF.onend = () => {
+            document.getElementById('assistant-voice-icon-lf').className = 'fa-solid fa-microphone';
+        };
+        assistantVoiceRecognizerLF.onresult = (event) => {
+            document.getElementById('assistant-input-lf').value = event.results[0][0].transcript;
+            sendAssistantMessageLF();
+        };
+    }
+    document.getElementById('btn-assistant-voice-lf').addEventListener('click', () => {
+        if (assistantVoiceRecognizerLF) {
+            assistantVoiceRecognizerLF.start();
+        } else {
+            showLibertadToast('Tu navegador no permite preguntar por voz. Probá con Chrome.');
+        }
+    });
+
+    async function sendAssistantMessageLF() {
+        const input = document.getElementById('assistant-input-lf');
+        const question = input.value.trim();
+        if (!question || !currentUser) return;
+
+        addAssistantMessageLF(question, true);
+        input.value = '';
+
+        const loadingBubble = document.createElement('div');
+        loadingBubble.className = 'bg-slate-900/60 rounded-2xl rounded-tl-sm p-3 text-base text-slate-400 max-w-[85%]';
+        loadingBubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
+        document.getElementById('assistant-messages-lf').appendChild(loadingBubble);
+        document.getElementById('assistant-messages-lf').scrollTop = 999999;
+
+        try {
+            const snapshot = await buildFinancialSnapshotLF();
+            const resp = await fetch('/api/finzia-assistant', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, snapshot, history: assistantConversationLF })
+            });
+            const data = await resp.json();
+            loadingBubble.remove();
+            if (!resp.ok || data.error) throw new Error(data.error || 'Error del asistente');
+
+            addAssistantMessageLF(data.answer, false, data.suggestedSection);
+            assistantConversationLF.push({ role: 'user', content: question });
+            assistantConversationLF.push({ role: 'assistant', content: data.answer, suggestedSection: data.suggestedSection });
+            if (assistantConversationLF.length > 20) assistantConversationLF = assistantConversationLF.slice(-20);
+            saveAssistantConversationLF();
+        } catch (err) {
+            loadingBubble.remove();
+            addAssistantMessageLF('No pude procesar tu consulta ahora. Probá de nuevo en un momento.', false);
+        }
+    }
+
+    document.getElementById('btn-send-assistant-lf').addEventListener('click', sendAssistantMessageLF);
+    document.getElementById('assistant-input-lf').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendAssistantMessageLF();
+    });
+</script>
+
+
+
+</body>
+</html>
