@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ressetia — Tomá el control de tu dinero, antes de que el dinero te controle a vos</title>
+<meta name="description" content="La app argentina que te ayuda a salir de deudas, controlar tus gastos y empezar a invertir. 14 días gratis. Con IA por voz y foto.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg-deep: #05070d;
+    --bg-panel: #0b0f1a;
+    --cyan: #22d3ee;
+    --cyan-dim: #0891b2;
+    --rose: #fb7185;
+    --fuchsia: #d946ef;
+    --ink: #f1f5f9;
+    --ink-dim: #94a3b8;
+  }
+  * { font-family: 'Inter', sans-serif; }
+  h1, h2, h3, .display { font-family: 'Sora', sans-serif; }
+  body {
+    background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.12), transparent),
+                radial-gradient(ellipse 60% 40% at 90% 20%, rgba(217,70,239,0.08), transparent),
+                var(--bg-deep);
+    color: var(--ink);
+  }
+  .neon-text { text-shadow: 0 0 24px rgba(34,211,238,0.5); }
+  .glass { background: rgba(15,23,42,0.55); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
+  .grad-cyan { background: linear-gradient(135deg, #22d3ee, #0891b2); }
+  @keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .reset-spin { animation: spinOnce 3.5s cubic-bezier(0.65,0,0.35,1) 1; }
+  @keyframes pulseSlow { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+  .pulse-slow { animation: pulseSlow 2.4s ease-in-out infinite; }
+  .num-counter { font-variant-numeric: tabular-nums; }
+  ::selection { background: rgba(34,211,238,0.3); }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- NAV -->
+<nav class="fixed top-0 w-full z-50 glass">
+  <div class="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl grad-cyan flex items-center justify-center text-slate-950">
+        <i class="fa-solid fa-arrow-rotate-right"></i>
+      </div>
+      <span class="font-bold text-lg display">Ressetia</span>
+    </div>
+    <a href="https://www.ressetia.com/app" class="grad-cyan text-slate-950 font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl hover:brightness-110 transition-all">
+      Probar 14 días gratis
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="pt-32 pb-20 px-5 max-w-6xl mx-auto">
+  <div class="grid md:grid-cols-2 gap-12 items-center">
+    <div>
+      <div class="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold px-3.5 py-1.5 rounded-full mb-6">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>Oferta de lanzamiento — quedan cupos limitados</span>
+      </div>
+      <h1 class="display text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] mb-6">
+        Tu plata te está <span class="text-rose-400">controlando</span> a vos.<br>
+        <span class="neon-text text-cyan-300">Dale vuelta.</span>
+      </h1>
+      <p class="text-slate-300 text-base sm:text-lg leading-relaxed mb-8 max-w-lg">
+        Ressetia es la app que te muestra, con IA y en segundos, en qué se te va la plata, cómo salir de tus deudas paso a paso, y cómo empezar a invertir lo que te queda — todo desde el celular, hablando o sacando una foto.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-3 mb-6">
+        <a href="https://www.ressetia.com/app" class="grad-cyan text-slate-950 font-bold px-7 py-3.5 rounded-2xl text-center hover:brightness-110 transition-all shadow-[0_0_30px_rgba(34,211,238,0.35)]">
+          Empezar gratis por 14 días →
+        </a>
+      </div>
+      <p class="text-[11px] text-slate-500">No se cobra nada durante los 14 días. Cancelás cuando quieras.</p>
+    </div>
+
+    <!-- Signature visual: el cuadrante de flujo, animado, como espejo del producto real -->
+    <div class="relative flex items-center justify-center">
+      <div class="absolute w-64 h-64 rounded-full bg-cyan-500/10 blur-3xl"></div>
+      <div class="relative w-full max-w-sm aspect-square glass rounded-3xl p-6 grid grid-cols-2 grid-rows-2 gap-3">
+        <div class="rounded-2xl bg-slate-900/60 border border-white/5 flex flex-col items-center justify-center gap-1 p-3">
+          <span class="text-2xl">👔</span><span class="text-[11px] font-bold text-slate-300">Empleado</span>
+        </div>
+        <div class="rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex flex-col items-center justify-center gap-1 p-3">
+          <span class="text-2xl">🏢</span><span class="text-[11px] font-bold text-cyan-300">Dueño de Negocio</span>
+        </div>
+        <div class="rounded-2xl bg-slate-900/60 border border-white/5 flex flex-col items-center justify-center gap-1 p-3">
+          <span class="text-2xl">🛠️</span><span class="text-[11px] font-bold text-slate-300">Autoempleado</span>
+        </div>
+        <div class="rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/30 flex flex-col items-center justify-center gap-1 p-3">
+          <span class="text-2xl">📈</span><span class="text-[11px] font-bold text-fuchsia-300">Inversionista</span>
+        </div>
+        <div class="col-span-2 flex items-center justify-center gap-2 pt-1">
+          <div class="w-8 h-8 rounded-full grad-cyan flex items-center justify-center reset-spin">
+            <i class="fa-solid fa-arrow-rotate-right text-slate-950 text-xs"></i>
+          </div>
+          <span class="text-[11px] text-slate-400">Tu punto de partida, hoy</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEMA: datos reales -->
+<section class="py-16 px-5 border-t border-white/5">
+  <div class="max-w-5xl mx-auto text-center mb-12">
+    <p class="text-rose-400 font-bold text-xs uppercase tracking-widest mb-3">La realidad, con números</p>
+    <h2 class="display text-2xl sm:text-3xl font-bold max-w-2xl mx-auto leading-snug">
+      No es que no sepas administrarte. Es que nadie te enseñó, y el sistema no te lo hace fácil.
+    </h2>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+    <div class="glass rounded-2xl p-5 text-center">
+      <p class="display text-4xl font-extrabold text-rose-400 mb-1">92,3%</p>
+      <p class="text-xs text-slate-400">de los hogares argentinos tiene algún tipo de deuda pendiente hoy</p>
+    </div>
+    <div class="glass rounded-2xl p-5 text-center">
+      <p class="display text-4xl font-extrabold text-cyan-300 mb-1">7 de 10</p>
+      <p class="text-xs text-slate-400">personas en Argentina conviven con estrés financiero todos los días</p>
+    </div>
+    <div class="glass rounded-2xl p-5 text-center">
+      <p class="display text-4xl font-extrabold text-fuchsia-400 mb-1">83%</p>
+      <p class="text-xs text-slate-400">de los hogares no logra ahorrar nada, mes tras mes</p>
+    </div>
+    <div class="glass rounded-2xl p-5 text-center">
+      <p class="display text-4xl font-extrabold text-amber-300 mb-1">5%</p>
+      <p class="text-xs text-slate-400">de la gente en el mundo se siente realmente segura con su plata</p>
+    </div>
+  </div>
+  <p class="text-center text-[11px] text-slate-600 mt-6">Fuentes: D'Alessio Irol, Mercer, ODSA-UCA, Allianz Global Wealth Report (2025-2026)</p>
+</section>
+
+<!-- SOLUCIÓN / FEATURES -->
+<section class="py-20 px-5 border-t border-white/5">
+  <div class="max-w-5xl mx-auto text-center mb-14">
+    <p class="text-cyan-400 font-bold text-xs uppercase tracking-widest mb-3">Cómo lo resolvemos</p>
+    <h2 class="display text-3xl sm:text-4xl font-extrabold">Una app, todo lo que necesitás</h2>
+  </div>
+  <div class="grid md:grid-cols-2 gap-5 max-w-5xl mx-auto">
+    <div class="glass rounded-3xl p-6 space-y-3">
+      <div class="w-11 h-11 rounded-2xl bg-sky-400/20 text-sky-300 flex items-center justify-center text-lg"><i class="fa-solid fa-microphone"></i></div>
+      <h3 class="font-bold text-lg">Cargá gastos hablando</h3>
+      <p class="text-sm text-slate-400">Decís "gasté 5000 en el super" y ya quedó anotado. Sacale una foto al ticket o subí el PDF de la factura — la IA hace el resto.</p>
+    </div>
+    <div class="glass rounded-3xl p-6 space-y-3">
+      <div class="w-11 h-11 rounded-2xl bg-fuchsia-500/20 text-fuchsia-300 flex items-center justify-center text-lg"><i class="fa-solid fa-comment-dots"></i></div>
+      <h3 class="font-bold text-lg">Un asistente que te guía</h3>
+      <p class="text-sm text-slate-400">Preguntale "¿en qué estoy gastando más?" o "¿cómo salgo de esta deuda?" y te responde con un plan concreto, mirando tus números reales.</p>
+    </div>
+    <div class="glass rounded-3xl p-6 space-y-3">
+      <div class="w-11 h-11 rounded-2xl bg-rose-500/20 text-rose-300 flex items-center justify-center text-lg"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+      <h3 class="font-bold text-lg">Salí de tus deudas, en orden</h3>
+      <p class="text-sm text-slate-400">Prioridad de pago sugerida, fondo de emergencia, y un lugar para cargar cualquier ingreso extra y decidir si va a la deuda o se guarda.</p>
+    </div>
+    <div class="glass rounded-3xl p-6 space-y-3">
+      <div class="w-11 h-11 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center text-lg"><i class="fa-solid fa-scale-balanced"></i></div>
+      <h3 class="font-bold text-lg">Repartí tu plata sola</h3>
+      <p class="text-sm text-slate-400">Elegí una regla (el diezmo, la del hombre más rico de Babilonia, Dave Ramsey, 50/30/20) y la app aparta el porcentaje automático, sin que hagas nada.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CÓMO FUNCIONA -->
+<section class="py-16 px-5 border-t border-white/5 max-w-4xl mx-auto">
+  <h2 class="display text-2xl sm:text-3xl font-extrabold text-center mb-10">Empezar te lleva 2 minutos</h2>
+  <div class="grid sm:grid-cols-3 gap-6">
+    <div class="text-center">
+      <div class="w-12 h-12 rounded-2xl grad-cyan text-slate-950 font-extrabold flex items-center justify-center mx-auto mb-3">1</div>
+      <p class="text-sm font-semibold">Te registrás y activás tus 14 días gratis</p>
+    </div>
+    <div class="text-center">
+      <div class="w-12 h-12 rounded-2xl grad-cyan text-slate-950 font-extrabold flex items-center justify-center mx-auto mb-3">2</div>
+      <p class="text-sm font-semibold">Cargás tu primer gasto hablando o con una foto</p>
+    </div>
+    <div class="text-center">
+      <div class="w-12 h-12 rounded-2xl grad-cyan text-slate-950 font-extrabold flex items-center justify-center mx-auto mb-3">3</div>
+      <p class="text-sm font-semibold">Ves tu panorama real, por primera vez</p>
+    </div>
+  </div>
+</section>
+
+<!-- OFERTA / PRECIO -->
+<section id="oferta" class="py-20 px-5 border-t border-white/5">
+  <div class="max-w-4xl mx-auto text-center mb-10">
+    <div class="inline-flex items-center gap-2 bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 text-xs font-bold px-3.5 py-1.5 rounded-full mb-5 pulse-slow">
+      <i class="fa-solid fa-fire"></i>
+      <span>30% OFF los primeros 60 días — solo para las primeras 200 personas</span>
+    </div>
+    <h2 class="display text-3xl sm:text-4xl font-extrabold mb-3">Menos que un café por día</h2>
+    <p class="text-slate-400 max-w-xl mx-auto">Empezá gratis. Necesitamos tu tarjeta solo para activar la cuenta — no te cobramos un peso hasta que termine tu prueba de 14 días, y podés cancelar cuando quieras.</p>
+  </div>
+
+  <div class="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
+    <div class="glass rounded-3xl p-7 space-y-4 border-2 border-white/10">
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Plan Mensual</p>
+      <div>
+        <span class="text-slate-500 line-through text-sm">$6.999</span>
+        <p class="display text-4xl font-extrabold text-cyan-300">$4.899<span class="text-base text-slate-500 font-normal">/mes</span></p>
+      </div>
+      <a href="https://www.ressetia.com/app" class="block text-center grad-cyan text-slate-950 font-bold py-3 rounded-xl hover:brightness-110 transition-all">Empezar gratis</a>
+    </div>
+    <div class="glass rounded-3xl p-7 space-y-4 border-2 border-cyan-400/50 relative">
+      <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-400 text-slate-950 text-[10px] font-extrabold px-3 py-1 rounded-full">MÁS ELEGIDO</span>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Plan Anual</p>
+      <div>
+        <span class="text-slate-500 line-through text-sm">$69.990</span>
+        <p class="display text-4xl font-extrabold text-cyan-300">$48.993<span class="text-base text-slate-500 font-normal">/año</span></p>
+      </div>
+      <a href="https://www.ressetia.com/app" class="block text-center grad-cyan text-slate-950 font-bold py-3 rounded-xl hover:brightness-110 transition-all">Empezar gratis</a>
+    </div>
+  </div>
+  <p class="text-center text-[11px] text-slate-600 mt-6">14 días 100% gratis. Se requiere tarjeta para activar la cuenta, pero no se cobra nada hasta el día 15. Cancelá cuando quieras, sin vueltas.</p>
+</section>
+
+<!-- CTA FINAL -->
+<section class="py-20 px-5 border-t border-white/5 text-center">
+  <h2 class="display text-3xl sm:text-4xl font-extrabold max-w-xl mx-auto mb-4">
+    El mejor momento para ordenar tu plata fue ayer. El segundo mejor es ahora.
+  </h2>
+  <p class="text-slate-400 mb-8">Sin excusas, sin vueltas. 14 días gratis, empezás en 2 minutos.</p>
+  <a href="https://www.ressetia.com/app" class="inline-block grad-cyan text-slate-950 font-bold px-9 py-4 rounded-2xl hover:brightness-110 transition-all shadow-[0_0_40px_rgba(34,211,238,0.4)]">
+    Quiero tomar el control de mi dinero →
+  </a>
+</section>
+
+<footer class="py-8 px-5 border-t border-white/5 text-center text-[11px] text-slate-600">
+  <p>Ressetia © 2026. Esta herramienta te ayuda a organizar y entender tus finanzas — no reemplaza a un asesor financiero matriculado.</p>
+</footer>
+
+</body>
+</html>
