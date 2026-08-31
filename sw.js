@@ -4,7 +4,7 @@
 // hay señal, los gastos/ingresos nuevos se guardan localmente y se sincronizan
 // solos apenas vuelve la conexión (eso lo maneja index.html, no este archivo).
 
-const CACHE_NAME = 'ressetia-shell-v2';
+const CACHE_NAME = 'ressetia-shell-v3';
 const APP_SHELL = [
   '/',
   '/index.html',
