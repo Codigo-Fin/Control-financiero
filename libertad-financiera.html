@@ -738,14 +738,71 @@
         } catch (e) { return null; }
     }
 
+    // Usa la MISMA clave que ya guarda Control Financiero (comparten dominio),
+    // para que la sesión guardada sirva en las dos páginas sin duplicar nada.
+    function saveCachedUserLF(user) {
+        try { localStorage.setItem('cached_user', JSON.stringify({ id: user.id, email: user.email })); } catch (e) {}
+    }
+    function getCachedUserLF() {
+        try {
+            const raw = localStorage.getItem('cached_user');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+
+    // 🔒 ZONA PROTEGIDA — VALIDACIÓN DE ACCESO Y MODO SIN INTERNET (NO TOCAR)
+    // Misma lógica robusta que ya funciona bien en index.html: si no hay internet
+    // (o tarda demasiado en responder), usa la sesión y el acceso guardados
+    // localmente en este dispositivo, en vez de trabarse o pedir loguearse de nuevo.
     async function checkAccess() {
-        const { data: { session } } = await sb.auth.getSession();
-        if (!session) {
-            document.getElementById('gate-loading').classList.add('hidden');
-            document.getElementById('gate-no-session').classList.remove('hidden');
-            return;
+        let session = null;
+
+        if (!navigator.onLine) {
+            // Sin internet: directamente probamos con la sesión guardada localmente
+            // (la misma copia que usa Control Financiero, comparten el mismo dominio).
+            const cachedUser = getCachedUserLF();
+            if (cachedUser) {
+                currentUser = cachedUser;
+            } else {
+                document.getElementById('gate-loading').classList.add('hidden');
+                document.getElementById('gate-no-session').classList.remove('hidden');
+                return;
+            }
+        } else {
+            try {
+                const sessionPromise = sb.auth.getSession();
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), 6000));
+                const result = await Promise.race([sessionPromise, timeoutPromise]);
+
+                if (result.timedOut) {
+                    const cachedUser = getCachedUserLF();
+                    if (cachedUser) { currentUser = cachedUser; }
+                    else {
+                        document.getElementById('gate-loading').classList.add('hidden');
+                        document.getElementById('gate-no-session').classList.remove('hidden');
+                        return;
+                    }
+                } else {
+                    session = result.data.session;
+                    if (!session) {
+                        document.getElementById('gate-loading').classList.add('hidden');
+                        document.getElementById('gate-no-session').classList.remove('hidden');
+                        return;
+                    }
+                    currentUser = session.user;
+                    saveCachedUserLF(session.user);
+                }
+            } catch (err) {
+                console.warn('Error al validar la sesión, probamos con la guardada localmente:', err);
+                const cachedUser = getCachedUserLF();
+                if (cachedUser) { currentUser = cachedUser; }
+                else {
+                    document.getElementById('gate-loading').classList.add('hidden');
+                    document.getElementById('gate-no-session').classList.remove('hidden');
+                    return;
+                }
+            }
         }
-        currentUser = session.user;
 
         let settings = null;
         let usedCache = false;
