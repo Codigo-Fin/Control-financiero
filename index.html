@@ -3473,7 +3473,7 @@
                 const savedBuckets = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]');
                 document.getElementById('allocation-custom-rows').innerHTML = '';
                 if (savedBuckets.length > 0) {
-                    savedBuckets.forEach(b => addAllocationCustomRow(b.name, b.pct));
+                    savedBuckets.forEach(b => addAllocationCustomRow(b.name, b.pct, b.auto));
                 } else {
                     addAllocationCustomRow();
                     addAllocationCustomRow();
