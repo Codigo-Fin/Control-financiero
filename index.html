@@ -1258,6 +1258,10 @@
             }, 1000);
         });
 
+        // 🔒 ZONA PROTEGIDA — INICIO DE SESIÓN Y MODO SIN INTERNET (NO TOCAR)
+        // Ya quedó funcionando bien: entra sin pedir loguearse de nuevo si no hay
+        // internet y ya había una sesión guardada en este dispositivo. No modificar
+        // salvo pedido explícito y puntual sobre esto mismo.
         async function checkSession() {
             if (isPasswordRecoveryFlow) return; // ya se está mostrando el modal de nueva contraseña
 
@@ -1959,6 +1963,11 @@
         // Devuelve SIEMPRE una lista (puede ser de 1, varias, o ninguna) de las partes
         // que se apartan solas como egreso. Para las reglas predefinidas es una sola;
         // para "personalizada" son todas las que la persona marcó "Apartar solo".
+        // 🔒 ZONA PROTEGIDA — REPARTO DE MI DINERO Y DESCUENTO AUTOMÁTICO (NO TOCAR)
+        // Ya quedó funcionando bien (predefinidas + personalizada, sin duplicar al
+        // cambiar de regla). No modificar getAutoDeductBuckets, removeStaleAutoAllocationSummaryEntries,
+        // applyAutoAllocationToSalary, applyAutoAllocationToIncome, ni applyAutoAllocationToWholeMonth
+        // salvo pedido explícito y puntual sobre esto mismo.
         function getAutoDeductBuckets(ruleCode) {
             const predefined = {
                 diezmo: [{ name: 'Ofrenda / Diezmo', pct: 10 }],
