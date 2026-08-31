@@ -4,10 +4,11 @@
 // hay señal, los gastos/ingresos nuevos se guardan localmente y se sincronizan
 // solos apenas vuelve la conexión (eso lo maneja index.html, no este archivo).
 
-const CACHE_NAME = 'ressetia-shell-v3';
+const CACHE_NAME = 'ressetia-shell-v4';
 const APP_SHELL = [
   './',
   './index.html',
+  './libertad-financiera.html',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
@@ -51,8 +52,10 @@ self.addEventListener('fetch', (event) => {
         return networkResponse;
       })
       .catch(() => {
-        // Sin internet: devolvemos la copia guardada, para que la app abra igual
-        return caches.match(event.request).then((cached) => cached || caches.match('/index.html'));
+        // Sin internet: devolvemos la copia guardada de ESTE archivo puntual, y si
+        // no existiera, la de index.html (siempre relativo a la carpeta de la app,
+        // nunca a la raíz del sitio, que ahora es la landing).
+        return caches.match(event.request).then((cached) => cached || caches.match('./index.html'));
       })
   );
 });
