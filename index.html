@@ -194,6 +194,9 @@
                 <a href="libertad-financiera.html?goto=saldo" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
                 </a>
+                <a href="libertad-financiera.html?goto=fondos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                    <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
+                </a>
                 <a href="libertad-financiera.html?goto=deudas" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Registrar Deudas
                 </a>
@@ -1953,14 +1956,24 @@
         // Devuelve qué parte de la regla de reparto elegida se "aparta" automáticamente
         // (la porción que sale de circulación: diezmo, inversión, ahorro). El resto
         // ("Vivir", "Necesidades", "Deseos") se sigue gastando con normalidad, sin tocar.
-        function getAutoDeductBucket(ruleCode) {
-            const map = {
-                diezmo: { name: 'Ofrenda / Diezmo', pct: 10 },
-                babilonia: { name: 'Invertir', pct: 10 },
-                ramsey: { name: 'Invertir', pct: 65 },
-                '503020': { name: 'Ahorro', pct: 20 }
+        // Devuelve SIEMPRE una lista (puede ser de 1, varias, o ninguna) de las partes
+        // que se apartan solas como egreso. Para las reglas predefinidas es una sola;
+        // para "personalizada" son todas las que la persona marcó "Apartar solo".
+        function getAutoDeductBuckets(ruleCode) {
+            const predefined = {
+                diezmo: [{ name: 'Ofrenda / Diezmo', pct: 10 }],
+                babilonia: [{ name: 'Invertir', pct: 10 }],
+                ramsey: [{ name: 'Invertir', pct: 65 }],
+                '503020': [{ name: 'Ahorro', pct: 20 }]
             };
-            return map[ruleCode] || null; // la regla "custom" queda solo informativa, no se automatiza
+            if (predefined[ruleCode]) return predefined[ruleCode];
+            if (ruleCode === 'custom') {
+                try {
+                    const saved = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]');
+                    return saved.filter(b => b.auto).map(b => ({ name: b.name, pct: b.pct }));
+                } catch (e) { return []; }
+            }
+            return [];
         }
 
         // Si se cambia de regla (ej. de Diezmo a 50/30/20), hay que borrar el egreso
@@ -1968,12 +1981,13 @@
         // acumulando descuentos de reglas viejas y suma todo mal. Esto NO toca los
         // egresos puntuales que ya se generaron día a día con "applyAutoAllocationToIncome"
         // (esos son historial real de lo que se descontó en su momento, no se tocan).
-        async function removeStaleAutoAllocationSummaryEntries(exceptName) {
+        async function removeStaleAutoAllocationSummaryEntries(exceptNames) {
+            const exceptList = Array.isArray(exceptNames) ? exceptNames : [exceptNames];
             const monthProducts = products.filter(p => p.month === currentM);
             const staleOnes = monthProducts.filter(p =>
                 p.type === 'egreso' &&
                 /\(\d+% automático\)$/.test(p.name) &&
-                p.name !== exceptName
+                !exceptList.includes(p.name)
             );
             for (const item of staleOnes) {
                 try {
@@ -1986,47 +2000,53 @@
         }
 
         // Se llama cada vez que se guarda el sueldo fijo (mensual/quincenal). Crea o
-        // actualiza UN solo egreso automático por mes con la porción correspondiente.
+        // actualiza un egreso automático por mes por CADA categoría marcada para apartar.
         async function applyAutoAllocationToSalary() {
             const rule = localStorage.getItem('allocation_rule');
-            const bucket = getAutoDeductBucket(rule);
-            if (!bucket || incomeFrequency === 'diario' || !salary) return;
+            const buckets = getAutoDeductBuckets(rule);
+            if (buckets.length === 0 || incomeFrequency === 'diario' || !salary) return;
 
-            const amount = Math.round(salary * bucket.pct / 100);
-            const entryName = `${bucket.name} (${bucket.pct}% automático)`;
-            await removeStaleAutoAllocationSummaryEntries(entryName);
-            const monthProducts = products.filter(p => p.month === currentM);
-            const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
+            const entryNames = buckets.map(b => `${b.name} (${b.pct}% automático)`);
+            await removeStaleAutoAllocationSummaryEntries(entryNames);
 
-            if (existing) {
-                if (existing.price !== amount) {
-                    try {
-                        await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
-                    } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
-                    existing.price = amount; existing.unitPrice = amount;
-                    renderApp();
+            for (const bucket of buckets) {
+                const amount = Math.round(salary * bucket.pct / 100);
+                const entryName = `${bucket.name} (${bucket.pct}% automático)`;
+                const monthProducts = products.filter(p => p.month === currentM);
+                const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
+
+                if (existing) {
+                    if (existing.price !== amount) {
+                        try {
+                            await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
+                        } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
+                        existing.price = amount; existing.unitPrice = amount;
+                        renderApp();
+                    }
+                } else {
+                    await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
                 }
-            } else {
-                await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
             }
         }
 
         // Se llama cada vez que se agrega un ingreso nuevo (voz, foto, manual) — aplica
-        // la misma porción automática sobre ESE monto puntual (cubre a quien cobra por día).
+        // la misma porción automática sobre ESE monto puntual (cubre a quien cobra por día),
+        // por CADA categoría marcada para apartar.
         async function applyAutoAllocationToIncome(amount, dateVal) {
             const rule = localStorage.getItem('allocation_rule');
-            const bucket = getAutoDeductBucket(rule);
-            if (!bucket) return;
-            const deductAmount = Math.round(amount * bucket.pct / 100);
-            if (deductAmount <= 0) return;
-            await addTransactionRecord({
-                name: `${bucket.name} (${bucket.pct}% automático)`,
-                dateVal,
-                amount: deductAmount,
-                categoryVal: bucket.name,
-                fuelTypeVal: null,
-                typeVal: 'egreso'
-            });
+            const buckets = getAutoDeductBuckets(rule);
+            for (const bucket of buckets) {
+                const deductAmount = Math.round(amount * bucket.pct / 100);
+                if (deductAmount <= 0) continue;
+                await addTransactionRecord({
+                    name: `${bucket.name} (${bucket.pct}% automático)`,
+                    dateVal,
+                    amount: deductAmount,
+                    categoryVal: bucket.name,
+                    fuelTypeVal: null,
+                    typeVal: 'egreso'
+                });
+            }
         }
 
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
@@ -3348,12 +3368,15 @@
             }).join('');
         }
 
-        function addAllocationCustomRow(name = '', pct = '') {
+        function addAllocationCustomRow(name = '', pct = '', auto = false) {
             const row = document.createElement('div');
             row.className = 'flex gap-2 items-center allocation-custom-row';
             row.innerHTML = `
                 <input type="text" placeholder="Nombre (ej. Ahorro)" value="${name}" class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-name">
                 <input type="number" placeholder="%" value="${pct}" class="w-16 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-pct">
+                <label class="flex items-center gap-1 text-[10px] text-slate-400 whitespace-nowrap" title="Si lo marcás, esta parte se descuenta sola de Egresos cada vez que entra plata. Dejalo sin marcar para la parte que es para vivir/gastar normal.">
+                    <input type="checkbox" class="alloc-auto custom-checkbox" ${auto ? 'checked' : ''}> Apartar solo
+                </label>
                 <button type="button" class="text-rose-400 hover:text-rose-300 text-xs px-2" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
             `;
             document.getElementById('allocation-custom-rows').appendChild(row);
@@ -3361,7 +3384,7 @@
 
         document.getElementById('btn-add-allocation-row').addEventListener('click', () => addAllocationCustomRow());
 
-        document.getElementById('btn-save-allocation-custom').addEventListener('click', () => {
+        document.getElementById('btn-save-allocation-custom').addEventListener('click', async () => {
             const rows = document.querySelectorAll('.allocation-custom-row');
             const buckets = [];
             const colors = ['#22d3ee', '#38bdf8', '#a855f7', '#f472b6', '#22d3ee', '#84cc16'];
@@ -3369,8 +3392,9 @@
             rows.forEach((row, i) => {
                 const name = row.querySelector('.alloc-name').value.trim();
                 const pct = parseFloat(row.querySelector('.alloc-pct').value) || 0;
+                const auto = row.querySelector('.alloc-auto').checked;
                 if (name && pct > 0) {
-                    buckets.push({ name, pct, color: colors[i % colors.length] });
+                    buckets.push({ name, pct, color: colors[i % colors.length], auto });
                     total += pct;
                 }
             });
@@ -3386,6 +3410,10 @@
             localStorage.setItem('allocation_rule', 'custom');
             localStorage.setItem('allocation_custom_buckets', JSON.stringify(buckets));
             renderAllocationResult(buckets);
+
+            // A diferencia de las reglas predefinidas, "personalizada" sí se aplica
+            // automáticamente apenas se guarda (antes no hacía nada al guardar).
+            await applyAutoAllocationToWholeMonth();
         });
 
         let isRestoringAllocationRule = false; // evita re-aplicar el descuento solo por recargar la página
@@ -3395,28 +3423,32 @@
         // DESPUÉS de ya tener ingresos cargados, no solo hacia adelante.
         async function applyAutoAllocationToWholeMonth() {
             const rule = localStorage.getItem('allocation_rule');
-            const bucket = getAutoDeductBucket(rule);
-            if (!bucket) return;
+            const buckets = getAutoDeductBuckets(rule);
+            if (buckets.length === 0) return;
 
             const totalIncome = getCurrentMonthIncomeForAllocation();
             if (totalIncome <= 0) return;
 
-            const amount = Math.round(totalIncome * bucket.pct / 100);
-            const entryName = `${bucket.name} (${bucket.pct}% automático)`;
-            await removeStaleAutoAllocationSummaryEntries(entryName);
-            const monthProducts = products.filter(p => p.month === currentM);
-            const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
+            const entryNames = buckets.map(b => `${b.name} (${b.pct}% automático)`);
+            await removeStaleAutoAllocationSummaryEntries(entryNames);
 
-            if (existing) {
-                if (existing.price !== amount) {
-                    try {
-                        await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
-                    } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
-                    existing.price = amount; existing.unitPrice = amount;
-                    renderApp();
+            for (const bucket of buckets) {
+                const amount = Math.round(totalIncome * bucket.pct / 100);
+                const entryName = `${bucket.name} (${bucket.pct}% automático)`;
+                const monthProducts = products.filter(p => p.month === currentM);
+                const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
+
+                if (existing) {
+                    if (existing.price !== amount) {
+                        try {
+                            await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
+                        } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
+                        existing.price = amount; existing.unitPrice = amount;
+                        renderApp();
+                    }
+                } else {
+                    await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
                 }
-            } else {
-                await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
             }
         }
 
@@ -3694,6 +3726,7 @@
             egresos: 'Ir a Egresos',
             resumen: 'Ir a Mis Movimientos',
             lf_saldo: 'Ir a Libertad Financiera → Patrimonio Neto',
+            lf_fondos: 'Ir a Libertad Financiera → Fondos de Emergencia',
             lf_deudas: 'Ir a Libertad Financiera → Registrar Deudas',
             lf_emergencia: 'Ir a Libertad Financiera → Pagar Deudas',
             lf_inversiones: 'Ir a Libertad Financiera → Inversiones'
