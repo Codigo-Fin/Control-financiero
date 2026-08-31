@@ -1963,6 +1963,28 @@
             return map[ruleCode] || null; // la regla "custom" queda solo informativa, no se automatiza
         }
 
+        // Si se cambia de regla (ej. de Diezmo a 50/30/20), hay que borrar el egreso
+        // "resumen del mes" que había quedado de la regla ANTERIOR — si no, se van
+        // acumulando descuentos de reglas viejas y suma todo mal. Esto NO toca los
+        // egresos puntuales que ya se generaron día a día con "applyAutoAllocationToIncome"
+        // (esos son historial real de lo que se descontó en su momento, no se tocan).
+        async function removeStaleAutoAllocationSummaryEntries(exceptName) {
+            const monthProducts = products.filter(p => p.month === currentM);
+            const staleOnes = monthProducts.filter(p =>
+                p.type === 'egreso' &&
+                /\(\d+% automático\)$/.test(p.name) &&
+                p.name !== exceptName
+            );
+            for (const item of staleOnes) {
+                try {
+                    await sb.from('transactions').delete().eq('id', item.id);
+                    products = products.filter(p => p.id !== item.id);
+                } catch (err) {
+                    console.warn('No se pudo borrar el egreso automático viejo:', err);
+                }
+            }
+        }
+
         // Se llama cada vez que se guarda el sueldo fijo (mensual/quincenal). Crea o
         // actualiza UN solo egreso automático por mes con la porción correspondiente.
         async function applyAutoAllocationToSalary() {
@@ -1972,6 +1994,7 @@
 
             const amount = Math.round(salary * bucket.pct / 100);
             const entryName = `${bucket.name} (${bucket.pct}% automático)`;
+            await removeStaleAutoAllocationSummaryEntries(entryName);
             const monthProducts = products.filter(p => p.month === currentM);
             const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
 
@@ -3380,6 +3403,7 @@
 
             const amount = Math.round(totalIncome * bucket.pct / 100);
             const entryName = `${bucket.name} (${bucket.pct}% automático)`;
+            await removeStaleAutoAllocationSummaryEntries(entryName);
             const monthProducts = products.filter(p => p.month === currentM);
             const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
 
@@ -3406,12 +3430,14 @@
             if (rule === 'none') {
                 customBuilder.classList.add('hidden');
                 resultBox.classList.add('hidden');
+                if (!isRestoringAllocationRule) await removeStaleAutoAllocationSummaryEntries(null);
                 return;
             }
 
             if (rule === 'custom') {
                 customBuilder.classList.remove('hidden');
                 resultBox.classList.add('hidden');
+                if (!isRestoringAllocationRule) await removeStaleAutoAllocationSummaryEntries(null);
                 const savedBuckets = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]');
                 document.getElementById('allocation-custom-rows').innerHTML = '';
                 if (savedBuckets.length > 0) {
