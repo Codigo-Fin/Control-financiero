@@ -2,7 +2,7 @@
   "name": "Ressetia - Control Financiero & Mercado",
   "short_name": "Ressetia",
   "description": "Control financiero, ahorro, deudas e inversiones en un solo lugar.",
-  "start_url": "/app/index.html",
+  "start_url": "/app/",
   "scope": "/app/",
   "display": "standalone",
   "background_color": "#0b0f1a",
