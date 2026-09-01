@@ -150,15 +150,12 @@
                     <i class="fa-solid fa-house w-5 text-center"></i> Inicio
                 </a>
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-3 pb-1">Control de mis Finanzas</p>
-                <a href="index.html?goto=ingresos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
-                    <i class="fa-solid fa-building-columns w-5 text-center"></i> Ingresos
-                </a>
-                <a href="index.html?goto=egresos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
-                    <i class="fa-solid fa-bag-shopping w-5 text-center"></i> Egresos
-                </a>
                 <a href="index.html?goto=resumen" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </a>
+                <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Bola de Nieve
+                </button>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
                 <button data-menu-lf-tab="saldo" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
@@ -166,9 +163,6 @@
                 </button>
                 <button data-menu-lf-tab="fondos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
-                </button>
-                <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Plan de Deudas
                 </button>
                 <button data-menu-lf-tab="inversiones" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
@@ -213,7 +207,7 @@
         <div class="hidden gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PATRIMONIO NETO</button>
             <button data-tab="fondos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">FONDOS DE EMERGENCIA</button>
-            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PLAN DE DEUDAS</button>
+            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">BOLA DE NIEVE</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
         </div>
 
@@ -315,7 +309,7 @@
         <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
         <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
 
-        <!-- Pestañas internas: Registrar / Pagar, todo dentro de "Plan de Deudas" -->
+        <!-- Pestañas internas: Registrar / Pagar, todo dentro de "Bola de Nieve" -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5">
             <button data-sub-tab-lf="registrar" class="sub-tab-btn-lf flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
                 <i class="fa-solid fa-file-invoice-dollar"></i> REGISTRAR
@@ -510,7 +504,7 @@
 
         </div>
 
-        </div> <!-- fin lf-tab-emergencia (Plan de Deudas: Registrar + Pagar, unificado) -->
+        </div> <!-- fin lf-tab-emergencia (Bola de Nieve: Registrar + Pagar, unificado) -->
 
 
         <!-- ==================== TAB: INVERSIONES ==================== -->
@@ -521,15 +515,16 @@
             <h2 class="font-bold text-base sm:text-lg text-sky-300 flex items-center gap-2">
                 <i class="fa-solid fa-crown"></i> 5- Tu Número de Libertad Financiera
             </h2>
-            <p class="text-[11px] text-slate-500">Cuánto necesitás invertido para vivir del 4% anual sin trabajar más. Se calcula: gasto mensual × 12 × 25.</p>
+            <p class="text-sm text-slate-300 font-semibold">¿Con cuánto dinero al mes te gustaría retirarte o vivir tranquilo, sin depender de un sueldo?</p>
+            <p class="text-[11px] text-slate-500">Con ese número, te calculamos cuánto necesitás tener invertido en total para que ese monto te lo genere solo, mes a mes, para siempre.</p>
             <div>
-                <label>Gasto Mensual para Vivir ($)</label>
+                <label>¿Cuánto querés vivir por mes? ($)</label>
                 <input type="number" id="fireMonthlyExpense" step="any" placeholder="Ej: 5000000">
             </div>
-            <button id="btnCalcFire" class="btn bg-sky-400 hover:bg-sky-300 text-slate-950">Calcular</button>
+            <button id="btnCalcFire" class="btn bg-sky-400 hover:bg-sky-300 text-slate-950">Calcular mi número</button>
 
             <div id="fireResultBox" class="hidden bg-slate-950/60 border border-sky-500/30 rounded-2xl p-4 space-y-2 text-center">
-                <div class="text-xs text-slate-400">Gasto Anual</div>
+                <div class="text-xs text-slate-400">Eso es, al año</div>
                 <div id="fireAnnualExpense" class="text-lg font-bold text-white">$0</div>
                 <div class="text-xs text-sky-300 uppercase tracking-wider mt-2">Necesitás tener invertido</div>
                 <div id="fireTargetAmount" class="text-2xl sm:text-3xl font-bold text-sky-400">$0</div>
@@ -537,6 +532,7 @@
                     <div id="fireProgressBar" class="bg-sky-400 h-2 rounded-full transition-all" style="width:0%"></div>
                 </div>
                 <p id="fireProgressText" class="text-[11px] text-slate-400"></p>
+                <p class="text-[11px] text-slate-500 pt-1">No te preocupes si el número parece grande — es una meta de largo plazo, el último paso del camino, no algo para lograr ya mismo.</p>
             </div>
         </div>
 
@@ -1644,8 +1640,18 @@
         });
         const grouped = Object.values(consolidated);
 
-        const labels = grouped.map(g => g.name);
-        const data = grouped.map(g => g.total);
+        // Si hay más de 4 deudas distintas, mostramos las 4 más grandes y agrupamos
+        // el resto en "Otras deudas" — así el gráfico y la leyenda no se amontonan.
+        let chartData = grouped;
+        if (grouped.length > 4) {
+            const sorted = [...grouped].sort((a, b) => b.total - a.total);
+            const top4 = sorted.slice(0, 4);
+            const restoTotal = sorted.slice(4).reduce((acc, g) => acc + g.total, 0);
+            chartData = [...top4, { name: `Otras deudas (${sorted.length - 4})`, total: restoTotal }];
+        }
+
+        const labels = chartData.map(g => g.name);
+        const data = chartData.map(g => g.total);
 
         if (pieChart) pieChart.destroy();
 
@@ -2139,7 +2145,7 @@
     // ============================================
     let currentDebtSubTab = 'registrar';
 
-    // Cambia entre las pestañas internas de "Plan de Deudas" (Registrar/Pagar)
+    // Cambia entre las pestañas internas de "Bola de Nieve" (Registrar/Pagar)
     function switchDebtSubTab(subTab) {
         currentDebtSubTab = subTab;
         document.querySelectorAll('.sub-tab-panel-lf').forEach(panel => panel.classList.add('hidden'));
@@ -2160,7 +2166,7 @@
     });
 
     function switchLfTab(tabName) {
-        // "Registrar Deudas" ahora es una sub-pestaña DENTRO de "Plan de Deudas"
+        // "Registrar Deudas" ahora es una sub-pestaña DENTRO de "Bola de Nieve"
         // (antes "Pagar Deudas") — cualquier link viejo que pida "deudas" lo mandamos ahí.
         if (tabName === 'deudas') {
             switchLfTab('emergencia');
@@ -2216,7 +2222,7 @@
         const goto = params.get('goto');
         if (!goto) return;
         // "deudas" ya no es una pestaña propia, ahora es la sub-pestaña "Registrar"
-        // dentro de "Plan de Deudas" — switchLfTab ya sabe redirigir esto solo.
+        // dentro de "Bola de Nieve" — switchLfTab ya sabe redirigir esto solo.
         if (goto === 'deudas' || document.getElementById('lf-tab-' + goto)) {
             switchLfTab(goto);
             window.history.replaceState({}, '', window.location.pathname);
