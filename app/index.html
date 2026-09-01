@@ -283,6 +283,21 @@
             </div>
         </div>
 
+        <!-- Instrucciones genéricas para Android/compu, cuando el navegador no
+             disparó el aviso automático de instalar por su cuenta. -->
+        <div id="generic-install-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+            <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30 text-center">
+                <i class="fa-solid fa-ellipsis-vertical text-cyan-400 text-2xl"></i>
+                <h3 class="font-bold text-white text-base">Instalar Ressetia</h3>
+                <p class="text-sm text-slate-300 text-left">
+                    1. Tocá los <strong>3 puntitos</strong> (o el ícono de menú) arriba a la derecha del navegador.<br><br>
+                    2. Buscá la opción <strong>"Instalar app"</strong> o <strong>"Agregar a pantalla de inicio"</strong>.<br><br>
+                    3. Confirmá — te va a quedar un ícono como cualquier otra app, sin la barra del navegador.
+                </p>
+                <button onclick="document.getElementById('generic-install-modal').classList.add('hidden'); document.getElementById('generic-install-modal').classList.remove('flex');" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm w-full">Entendido</button>
+            </div>
+        </div>
+
         <!-- Navegación por pestañas de arriba: oculta a propósito, ahora se navega
              solo con el menú lateral (☰) para que se sienta más como una app de
              celular. Se deja el HTML sin borrar para no arriesgar romper el resto
@@ -4027,10 +4042,13 @@
                     await deferredInstallPrompt.userChoice;
                     deferredInstallPrompt = null;
                     installBtn.classList.add('hidden');
-                } else {
-                    // No hay prompt automático disponible (típico de iPhone) — mostramos instrucciones
+                } else if (isIOS) {
                     document.getElementById('ios-install-modal').classList.remove('hidden');
                     document.getElementById('ios-install-modal').classList.add('flex');
+                } else {
+                    // Android/compu sin el prompt automático disponible — instrucciones genéricas
+                    document.getElementById('generic-install-modal').classList.remove('hidden');
+                    document.getElementById('generic-install-modal').classList.add('flex');
                 }
             });
 
@@ -4049,6 +4067,17 @@
                 installBtn.classList.remove('hidden');
                 installBtn.classList.add('flex');
             }
+
+            // Red de seguridad: si a los 4 segundos Chrome/Android no disparó el
+            // aviso automático de instalar (puede pasar por distintos motivos según
+            // la versión del navegador), mostramos igual el botón con instrucciones
+            // manuales — así siempre hay una forma visible de instalar la app.
+            setTimeout(() => {
+                if (!isAlreadyInstalled && !deferredInstallPrompt && installBtn.classList.contains('hidden')) {
+                    installBtn.classList.remove('hidden');
+                    installBtn.classList.add('flex');
+                }
+            }, 4000);
 
             // Le mostramos el globito "¿Tenés dudas?" solo la primera vez, para que
             // cualquiera (sin importar la edad) sepa que el asistente está ahí para ayudar.
