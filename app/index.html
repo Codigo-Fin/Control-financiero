@@ -5,6 +5,8 @@
     <!-- Esto asegura que TODOS los links y rutas relativas de esta página se
          resuelvan siempre respecto a /app/ — sin importar si la barra de
          direcciones muestra o no la barra "/" al final. -->
+    <!-- 🔒 NO TOCAR: esta línea es la que arregló el 404 al navegar entre páginas
+         cuando la barra de direcciones no muestra la barra "/" final. -->
     <base href="/app/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ressetia - Control Financiero & Mercado</title>
@@ -34,6 +36,13 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <style>
+        /* Texto más grande en celular: como Tailwind mide el tamaño de letra en
+           "rem" (relativo al tamaño base), agrandar esto agranda TODO el texto de
+           la app de forma proporcional, sin tener que tocar cada clase una por una. */
+        html { font-size: 16px; }
+        @media (max-width: 640px) {
+            html { font-size: 18px; }
+        }
         body {
             font-family: 'Outfit', sans-serif;
             background: linear-gradient(135deg, #090d16 0%, #111827 40%, #06201b 100%);
@@ -246,6 +255,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-2 flex-shrink-0">
+                <button id="btn-install-app" class="hidden bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all items-center gap-1.5">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Instalar App</span>
+                </button>
                 <button id="btn-large-text" title="Texto grande (accesibilidad)" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 px-3 py-2 rounded-2xl text-xs font-semibold transition-all flex items-center gap-1.5">
                     <i class="fa-solid fa-magnifying-glass-plus"></i>
                 </button>
@@ -256,8 +269,25 @@
             </div>
         </div>
 
-        <!-- Navegación por pestañas estilo Mercado Pago -->
-        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
+        <!-- Instrucciones para instalar en iPhone (Safari no permite el botón automático) -->
+        <div id="ios-install-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+            <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30 text-center">
+                <i class="fa-solid fa-arrow-up-from-bracket text-cyan-400 text-2xl"></i>
+                <h3 class="font-bold text-white text-base">Instalar en iPhone</h3>
+                <p class="text-sm text-slate-300 text-left">
+                    1. Tocá el botón de <strong>Compartir</strong> (el cuadrado con la flecha hacia arriba), abajo en Safari.<br><br>
+                    2. Deslizá y elegí <strong>"Agregar a inicio"</strong>.<br><br>
+                    3. Confirmá — te va a quedar un ícono como cualquier otra app.
+                </p>
+                <button onclick="document.getElementById('ios-install-modal').classList.add('hidden'); document.getElementById('ios-install-modal').classList.remove('flex');" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-5 py-2 rounded-xl text-sm w-full">Entendido</button>
+            </div>
+        </div>
+
+        <!-- Navegación por pestañas de arriba: oculta a propósito, ahora se navega
+             solo con el menú lateral (☰) para que se sienta más como una app de
+             celular. Se deja el HTML sin borrar para no arriesgar romper el resto
+             del código que la usa (el resaltado de pestaña activa, etc.) -->
+        <div class="hidden gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="cuadrante" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">CUADRANTE DE FLUJO</button>
             <button data-tab="ingresos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INGRESOS</button>
             <button data-tab="egresos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">EGRESOS</button>
@@ -3982,6 +4012,49 @@
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error registrando el service worker:', err));
+            }
+
+            // ============================================
+            // BOTÓN DE INSTALAR APP (Android/Chrome/compu muestran el botón real;
+            // iPhone/Safari no lo permite, así que ahí mostramos instrucciones).
+            // ============================================
+            let deferredInstallPrompt = null;
+            const installBtn = document.getElementById('btn-install-app');
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredInstallPrompt = e;
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+            });
+
+            installBtn.addEventListener('click', async () => {
+                if (deferredInstallPrompt) {
+                    deferredInstallPrompt.prompt();
+                    await deferredInstallPrompt.userChoice;
+                    deferredInstallPrompt = null;
+                    installBtn.classList.add('hidden');
+                } else {
+                    // No hay prompt automático disponible (típico de iPhone) — mostramos instrucciones
+                    document.getElementById('ios-install-modal').classList.remove('hidden');
+                    document.getElementById('ios-install-modal').classList.add('flex');
+                }
+            });
+
+            window.addEventListener('appinstalled', () => {
+                installBtn.classList.add('hidden');
+            });
+
+            // Si ya está instalada (abierta como app, no como pestaña de navegador),
+            // no hace falta mostrar el botón para nada.
+            const isAlreadyInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+            // En iPhone (Safari) nunca dispara "beforeinstallprompt" — mostramos el
+            // botón igual, para que sepan que se puede instalar con instrucciones.
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS && !isAlreadyInstalled) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
             }
 
             // Le mostramos el globito "¿Tenés dudas?" solo la primera vez, para que
