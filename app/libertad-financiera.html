@@ -354,14 +354,16 @@
             </form>
         </div>
 
-        <!-- Distribución de Deudas -->
+        <!-- Distribución de Deudas: Top 3 en barras + botón para ver el resto -->
         <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
             <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
-                <i class="fa-solid fa-chart-pie"></i> Distribución de Deudas
+                <i class="fa-solid fa-chart-simple"></i> Distribución de Deudas
             </h2>
-            <div class="max-w-[280px] mx-auto">
-                <canvas id="debtPieChart"></canvas>
-            </div>
+            <div id="debt-top3-bars" class="space-y-2.5"></div>
+            <button id="btn-ver-desglose-deudas" class="hidden w-full text-center text-xs font-semibold text-teal-300 hover:text-teal-200 py-2 border border-teal-500/20 rounded-xl hover:bg-teal-500/10 transition-all">
+                Ver desglose completo <i class="fa-solid fa-chevron-down text-[10px]"></i>
+            </button>
+            <div id="debt-full-breakdown" class="hidden space-y-2.5 pt-1 border-t border-white/10"></div>
 
             <div id="debt-vs-salary-warning" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-2xl p-3 text-center">
                 <p class="text-rose-300 font-bold text-sm">⚠️ PÉRDIDA</p>
@@ -1628,10 +1630,9 @@
     });
 
     function updateChart() {
-        const ctx = document.getElementById('debtPieChart').getContext('2d');
         const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
 
-        // Consolidamos deudas con el mismo nombre en una sola porción (sumando montos)
+        // Consolidamos deudas con el mismo nombre en un solo total (sumando montos)
         const consolidated = {};
         activeDebts.forEach(d => {
             const key = d.name.trim().toLowerCase();
@@ -1639,53 +1640,46 @@
             consolidated[key].total += d.amount;
         });
         const grouped = Object.values(consolidated);
+        const sorted = [...grouped].sort((a, b) => b.total - a.total);
+        const totalDebtAll = grouped.reduce((acc, g) => acc + g.total, 0);
 
-        // Si hay más de 4 deudas distintas, mostramos las 4 más grandes y agrupamos
-        // el resto en "Otras deudas" — así el gráfico y la leyenda no se amontonan.
-        let chartData = grouped;
-        if (grouped.length > 4) {
-            const sorted = [...grouped].sort((a, b) => b.total - a.total);
-            const top4 = sorted.slice(0, 4);
-            const restoTotal = sorted.slice(4).reduce((acc, g) => acc + g.total, 0);
-            chartData = [...top4, { name: `Otras deudas (${sorted.length - 4})`, total: restoTotal }];
+        const colors = ['#f43f5e', '#38bdf8', '#fbbf24', '#22d3ee', '#a855f7', '#f472b6', '#84cc16', '#c084fc'];
+
+        function buildBarRow(item, color) {
+            const pct = totalDebtAll > 0 ? (item.total / totalDebtAll) * 100 : 0;
+            return `
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-300 mb-1">
+                        <span class="truncate pr-2">${item.name}</span>
+                        <span class="whitespace-nowrap font-semibold">$${item.total.toLocaleString()}</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                        <div class="h-2.5 rounded-full" style="width:${pct}%; background:${color};"></div>
+                    </div>
+                </div>`;
         }
 
-        const labels = chartData.map(g => g.name);
-        const data = chartData.map(g => g.total);
+        // Top 3 siempre visible arriba
+        const top3Container = document.getElementById('debt-top3-bars');
+        top3Container.innerHTML = sorted.slice(0, 3).map((item, i) => buildBarRow(item, colors[i % colors.length])).join('');
 
-        if (pieChart) pieChart.destroy();
+        // El resto (si hay más de 3), oculto detrás del botón "Ver desglose completo"
+        const btnVerDesglose = document.getElementById('btn-ver-desglose-deudas');
+        const fullBreakdown = document.getElementById('debt-full-breakdown');
+        if (sorted.length > 3) {
+            btnVerDesglose.classList.remove('hidden');
+            fullBreakdown.innerHTML = sorted.slice(3).map((item, i) => buildBarRow(item, colors[(i + 3) % colors.length])).join('');
+        } else {
+            btnVerDesglose.classList.add('hidden');
+            fullBreakdown.classList.add('hidden');
+            fullBreakdown.innerHTML = '';
+        }
 
-        if (grouped.length > 0) {
-            pieChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: data,
-                        backgroundColor: ['#f43f5e', '#38bdf8', '#fbbf24', '#22d3ee', '#a855f7', '#f472b6'],
-                        borderWidth: 2,
-                        borderColor: '#111827'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 12 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: (c) => {
-                                    const pctSalary = userSalary > 0 ? ` (${((c.parsed / userSalary) * 100).toFixed(0)}% del sueldo)` : '';
-                                    return ` ${c.label}: $${c.parsed.toLocaleString()}${pctSalary}`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+        if (grouped.length === 0) {
+            top3Container.innerHTML = '<p class="text-center text-slate-500 text-xs py-2">No tenés deudas activas para mostrar acá.</p>';
         }
 
         // Barras de comparación: Sueldo vs Inversiones/Ingresos Extra vs Deuda Total
-        const totalDebtAll = grouped.reduce((acc, g) => acc + g.total, 0);
         const totalInvestVal = investments.reduce((acc, i) => acc + (i.qty * i.price), 0);
         const maxScale = Math.max(userSalary, totalInvestVal, totalDebtAll, 1);
 
@@ -1705,6 +1699,15 @@
             warningBox.classList.add('hidden');
         }
     }
+
+    document.getElementById('btn-ver-desglose-deudas').addEventListener('click', function() {
+        const breakdown = document.getElementById('debt-full-breakdown');
+        const isHidden = breakdown.classList.contains('hidden');
+        breakdown.classList.toggle('hidden');
+        this.innerHTML = isHidden
+            ? 'Ocultar desglose <i class="fa-solid fa-chevron-up text-[10px]"></i>'
+            : 'Ver desglose completo <i class="fa-solid fa-chevron-down text-[10px]"></i>';
+    });
 
     function updateProgressChart() {
         const ctx = document.getElementById('progressPieChart').getContext('2d');
