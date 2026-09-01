@@ -3312,7 +3312,7 @@
                     body: JSON.stringify(body)
                 });
                 const parsed = await resp.json();
-                if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
+                if (!resp.ok || parsed.error) throw new Error((parsed.error || 'Fallo la IA') + (parsed.detail ? ` — ${parsed.detail}` : ''));
 
                 await addTransactionFromParsed(parsed, kind === 'pdf' ? 'Factura' : 'Comprobante');
                 statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
