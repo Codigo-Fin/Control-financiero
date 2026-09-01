@@ -98,8 +98,7 @@ Reglas:
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-beta': 'pdfs-2024-09-25'
+        'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
@@ -118,8 +117,8 @@ Reglas:
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Error de Anthropic:', data);
-      return res.status(500).json({ error: 'Error al interpretar con IA', detail: data });
+      console.error('Error de Anthropic:', JSON.stringify(data));
+      return res.status(500).json({ error: 'Error al interpretar con IA', detail: data?.error?.message || JSON.stringify(data) });
     }
 
     const textResponse = data.content?.[0]?.text || '{}';
