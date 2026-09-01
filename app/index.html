@@ -48,6 +48,8 @@
             background: linear-gradient(135deg, #090d16 0%, #111827 40%, #06201b 100%);
             min-height: 100vh;
         }
+        /* Tamaño de los íconos de categoría (reemplazan a los emojis nativos) */
+        .cat-icon { font-size: 1.15em; }
         @keyframes floatSlow { 0%, 100% { transform: translateY(0px) rotate(0deg); } 50% { transform: translateY(-6px) rotate(0.5deg); } }
         @keyframes floatDelay { 0%, 100% { transform: translateY(-4px) rotate(-0.5deg); } 50% { transform: translateY(4px) rotate(0.5deg); } }
         .floating-card-1 { animation: floatSlow 6s ease-in-out infinite; }
@@ -213,6 +215,9 @@
                 <button data-menu-tab="resumen" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </button>
+                <a href="libertad-financiera.html?goto=emergencia" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Bola de Nieve
+                </a>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
                 <a href="libertad-financiera.html?goto=saldo" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
@@ -220,9 +225,6 @@
                 </a>
                 <a href="libertad-financiera.html?goto=fondos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
-                </a>
-                <a href="libertad-financiera.html?goto=emergencia" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Plan de Deudas
                 </a>
                 <a href="libertad-financiera.html?goto=inversiones" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
@@ -1021,10 +1023,11 @@
     <div id="trial-ending-toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold shadow-2xl z-40 max-w-[92%] text-center"></div>
 
     <!-- Botón flotante de Acción Rápida: agregar un ingreso o egreso hablando,
-         desde cualquier pantalla, sin tener que abrir el menú primero. -->
-    <div class="fixed bottom-6 left-5 z-30 flex flex-col items-start gap-2">
+         desde cualquier pantalla — se puede arrastrar a cualquier parte, igual que
+         el asistente. -->
+    <div id="fab-float-container" class="fixed bottom-6 left-5 z-30 flex flex-col items-start gap-2" style="touch-action: none;">
         <p id="fab-voice-status" class="hidden bg-slate-900 border border-amber-400/40 text-amber-200 text-xs font-semibold px-3 py-2 rounded-2xl rounded-bl-sm shadow-xl max-w-[200px]"></p>
-        <button id="btn-fab-quick-add" title="Agregar por voz" class="bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)] flex items-center justify-center text-2xl active:scale-95 transition-all">
+        <button id="btn-fab-quick-add" title="Agregar por voz (mantené presionado para moverlo)" class="bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)] flex items-center justify-center text-2xl active:scale-95 transition-all">
             <i class="fa-solid fa-microphone" id="fab-icon"></i>
         </button>
     </div>
@@ -1235,11 +1238,14 @@
             return list;
         }
 
+        // Emojis por categoría — ver nota más abajo sobre por qué no son íconos SVG.
         const CATEGORY_ICONS = {
             'Belleza y Cuidado Personal': '💄',
             'Limpieza del Hogar': '🧼',
             'Mecánica y Mantenimiento': '🔧',
             'Transporte': '⛽',
+            'Delivery': '🛵',
+            'Apps': '📱',
             'Servicios': '💡',
             'Almacén, Súper y Mayoristas': '🌾',
             'Panadería': '🥐',
@@ -1262,6 +1268,8 @@
             if (c.includes('limpieza')) return '🧼';
             if (c.includes('mecanic') || c.includes('mecánica') || c.includes('mantenimiento')) return '🔧';
             if (c.includes('transporte') || c.includes('nafta') || c.includes('combustible') || c.includes('gnc') || c.includes('sube')) return '⛽';
+            if (c.includes('delivery')) return '🛵';
+            if (c.includes('apps')) return '📱';
             if (c.includes('servicio')) return '💡';
             if (c.includes('almacen') || c.includes('almacén') || c.includes('super') || c.includes('súper') || c.includes('mayorista')) return '🌾';
             if (c.includes('panader')) return '🥐';
@@ -4096,6 +4104,60 @@
 
             // Restauramos la posición guardada de la última vez
             const saved = localStorage.getItem('assistant_btn_position');
+            if (saved) {
+                try {
+                    const pos = JSON.parse(saved);
+                    container.style.left = pos.left; container.style.top = pos.top;
+                    container.style.right = 'auto'; container.style.bottom = 'auto';
+                } catch (e) { /* ignoramos si está corrupto */ }
+            }
+        })();
+
+        // Mismo sistema de arrastre, ahora para el botón flotante de voz (+)
+        (function makeFabButtonDraggable() {
+            const container = document.getElementById('fab-float-container');
+            const btn = document.getElementById('btn-fab-quick-add');
+            let isDragging = false, moved = false, startX, startY, startLeft, startTop;
+
+            container.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                moved = false;
+                const rect = container.getBoundingClientRect();
+                startX = e.clientX; startY = e.clientY;
+                startLeft = rect.left; startTop = rect.top;
+                container.style.left = startLeft + 'px';
+                container.style.top = startTop + 'px';
+                container.style.right = 'auto';
+                container.style.bottom = 'auto';
+                container.setPointerCapture(e.pointerId);
+            });
+
+            container.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+                if (moved) {
+                    let newLeft = Math.max(4, Math.min(window.innerWidth - container.offsetWidth - 4, startLeft + dx));
+                    let newTop = Math.max(4, Math.min(window.innerHeight - container.offsetHeight - 4, startTop + dy));
+                    container.style.left = newLeft + 'px';
+                    container.style.top = newTop + 'px';
+                }
+            });
+
+            container.addEventListener('pointerup', (e) => {
+                isDragging = false;
+                if (moved) {
+                    localStorage.setItem('fab_btn_position', JSON.stringify({ left: container.style.left, top: container.style.top }));
+                }
+                container.releasePointerCapture(e.pointerId);
+            });
+
+            btn.addEventListener('click', (e) => {
+                if (moved) { e.stopImmediatePropagation(); e.preventDefault(); moved = false; }
+            }, true);
+
+            const saved = localStorage.getItem('fab_btn_position');
             if (saved) {
                 try {
                     const pos = JSON.parse(saved);
