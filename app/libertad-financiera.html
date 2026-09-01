@@ -167,11 +167,8 @@
                 <button data-menu-lf-tab="fondos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
                 </button>
-                <button data-menu-lf-tab="deudas" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Registrar Deudas
-                </button>
                 <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-hand-holding-dollar w-5 text-center"></i> Pagar Deudas
+                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Plan de Deudas
                 </button>
                 <button data-menu-lf-tab="inversiones" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
@@ -216,8 +213,7 @@
         <div class="hidden gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PATRIMONIO NETO</button>
             <button data-tab="fondos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">FONDOS DE EMERGENCIA</button>
-            <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
-            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PAGAR DEUDAS</button>
+            <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PLAN DE DEUDAS</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
         </div>
 
@@ -314,7 +310,22 @@
         </div> <!-- fin lf-tab-fondos -->
 
         <!-- ==================== TAB: REGISTRAR DEUDAS ==================== -->
-        <div id="lf-tab-deudas" class="lf-tab-panel hidden space-y-5">
+
+
+        <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
+        <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
+
+        <!-- Pestañas internas: Registrar / Pagar, todo dentro de "Plan de Deudas" -->
+        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5">
+            <button data-sub-tab-lf="registrar" class="sub-tab-btn-lf flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
+                <i class="fa-solid fa-file-invoice-dollar"></i> REGISTRAR
+            </button>
+            <button data-sub-tab-lf="pagar" class="sub-tab-btn-lf flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
+                <i class="fa-solid fa-hand-holding-dollar"></i> PAGAR
+            </button>
+        </div>
+
+        <div id="sub-panel-lf-registrar" class="sub-tab-panel-lf space-y-5">
 
         <!-- Registrar deuda -->
         <div class="glass-panel neon-card neon-rose rounded-3xl p-5 sm:p-7 space-y-4">
@@ -394,10 +405,10 @@
             </div>
         </div>
 
-        </div> <!-- fin lf-tab-deudas -->
 
-        <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
-        <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
+        </div>
+
+        <div id="sub-panel-lf-pagar" class="sub-tab-panel-lf hidden space-y-5">
 
         <!-- Saldo a Favor visible acá también, para que no quede escondido en otra pestaña -->
         <div id="saldo-favor-banner-pd" class="hidden glass-panel rounded-2xl p-4 flex items-center justify-between gap-3 border border-cyan-500/30">
@@ -496,7 +507,11 @@
             <div id="historyList" class="space-y-1"></div>
         </div>
 
-        </div> <!-- fin lf-tab-emergencia -->
+
+        </div>
+
+        </div> <!-- fin lf-tab-emergencia (Plan de Deudas: Registrar + Pagar, unificado) -->
+
 
         <!-- ==================== TAB: INVERSIONES ==================== -->
         <div id="lf-tab-inversiones" class="lf-tab-panel hidden space-y-5">
@@ -2122,9 +2137,41 @@
     // ============================================
     // NAVEGACIÓN POR PESTAÑAS
     // ============================================
+    let currentDebtSubTab = 'registrar';
+
+    // Cambia entre las pestañas internas de "Plan de Deudas" (Registrar/Pagar)
+    function switchDebtSubTab(subTab) {
+        currentDebtSubTab = subTab;
+        document.querySelectorAll('.sub-tab-panel-lf').forEach(panel => panel.classList.add('hidden'));
+        document.getElementById('sub-panel-lf-' + subTab).classList.remove('hidden');
+
+        document.querySelectorAll('.sub-tab-btn-lf').forEach(btn => {
+            if (btn.dataset.subTabLf === subTab) {
+                btn.classList.add('bg-cyan-500', 'text-slate-950', 'shadow-md');
+                btn.classList.remove('text-slate-400');
+            } else {
+                btn.classList.remove('bg-cyan-500', 'text-slate-950', 'shadow-md');
+                btn.classList.add('text-slate-400');
+            }
+        });
+    }
+    document.querySelectorAll('.sub-tab-btn-lf').forEach(btn => {
+        btn.addEventListener('click', () => switchDebtSubTab(btn.dataset.subTabLf));
+    });
+
     function switchLfTab(tabName) {
+        // "Registrar Deudas" ahora es una sub-pestaña DENTRO de "Plan de Deudas"
+        // (antes "Pagar Deudas") — cualquier link viejo que pida "deudas" lo mandamos ahí.
+        if (tabName === 'deudas') {
+            switchLfTab('emergencia');
+            switchDebtSubTab('registrar');
+            return;
+        }
+
         document.querySelectorAll('.lf-tab-panel').forEach(panel => panel.classList.add('hidden'));
         document.getElementById('lf-tab-' + tabName).classList.remove('hidden');
+
+        if (tabName === 'emergencia') switchDebtSubTab(currentDebtSubTab);
 
         document.querySelectorAll('.lf-tab-btn').forEach(btn => {
             if (btn.dataset.tab === tabName) {
@@ -2167,7 +2214,10 @@
     function checkGotoParamLF() {
         const params = new URLSearchParams(window.location.search);
         const goto = params.get('goto');
-        if (goto && document.getElementById('lf-tab-' + goto)) {
+        if (!goto) return;
+        // "deudas" ya no es una pestaña propia, ahora es la sub-pestaña "Registrar"
+        // dentro de "Plan de Deudas" — switchLfTab ya sabe redirigir esto solo.
+        if (goto === 'deudas' || document.getElementById('lf-tab-' + goto)) {
             switchLfTab(goto);
             window.history.replaceState({}, '', window.location.pathname);
         }
