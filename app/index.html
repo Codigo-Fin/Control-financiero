@@ -585,12 +585,13 @@
             </div>
 
             <div class="grid grid-cols-3 gap-2">
-                <button type="button" id="btn-open-camera" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-amber-500/40 border border-transparent transition-all text-center">
+                <label for="input-camera-native" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-amber-500/40 border border-transparent transition-all text-center">
                     <div class="bg-amber-600/25 text-amber-400 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
                         <i class="fa-solid fa-camera"></i>
                     </div>
                     <p class="text-xs font-semibold text-white">Sacar Foto</p>
-                </button>
+                </label>
+                <input type="file" id="input-camera-native" accept="image/*" capture="environment" class="hidden">
 
                 <label for="input-photo-gallery" class="glass-panel p-3 rounded-2xl flex flex-col items-center gap-1.5 cursor-pointer hover:border-violet-400/40 border border-transparent transition-all text-center">
                     <div class="bg-violet-400/20 text-violet-300 w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0">
@@ -802,6 +803,13 @@
             <button id="btn-unsubscribe" class="hidden w-full sm:w-auto bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all items-center justify-center gap-2">
                 <i class="fa-solid fa-triangle-exclamation"></i> Dar de baja mi suscripción
             </button>
+
+            <div class="pt-4 border-t border-white/10">
+                <button id="btn-delete-account" class="w-full sm:w-auto bg-slate-900 hover:bg-rose-950/60 border border-rose-900/40 text-rose-500 font-semibold px-5 py-2.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> Eliminar mi cuenta permanentemente
+                </button>
+                <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
+            </div>
         </section>
         </div> <!-- fin tab-panel-suscripcion -->
     </div>
@@ -2870,6 +2878,39 @@
             }
         });
 
+        // Eliminar cuenta permanentemente (requisito de Apple/Google para publicar la app)
+        document.getElementById('btn-delete-account').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const step1 = await showConfirmModal('⚠️ Esto borra tu cuenta y TODOS tus datos (gastos, deudas, inversiones) de forma permanente y sin vuelta atrás. ¿Continuar?', true);
+            if (!step1) return;
+            const step2 = await showConfirmModal('Última confirmación: tu cuenta se va a eliminar para siempre ahora mismo. ¿Estás seguro?', true);
+            if (!step2) return;
+
+            const btn = document.getElementById('btn-delete-account');
+            btn.disabled = true;
+            btn.textContent = 'Eliminando...';
+
+            try {
+                const resp = await fetch('/api/delete-account', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: currentUser.id })
+                });
+                const result = await resp.json();
+                if (!resp.ok || result.error) throw new Error(result.error || 'Error desconocido');
+
+                localStorage.clear();
+                await sb.auth.signOut();
+                await showAlertModal('Tu cuenta fue eliminada. Gracias por haber usado Ressetia.');
+                window.location.reload();
+            } catch (err) {
+                console.error('Error al eliminar la cuenta:', err);
+                await showAlertModal('No se pudo eliminar la cuenta ahora mismo. Probá de nuevo en un momento, o escribinos.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-trash-can"></i> Eliminar mi cuenta permanentemente';
+            }
+        });
+
         document.getElementById('btn-upgrade-plan').addEventListener('click', async () => {
             if (!currentUser) return;
             if (!(await showConfirmModal('Vas a pasar al plan Anual ($69.990). Te vamos a pedir que autorices el nuevo cobro. ¿Continuar?'))) return;
@@ -3273,75 +3314,27 @@
         let cameraStream = null;
 
         async function openCameraModal() {
-            const modal = document.getElementById('camera-modal');
-            const video = document.getElementById('camera-video');
-            try {
-                cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 960 }
-                    },
-                    audio: false
-                });
-                video.srcObject = cameraStream;
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            } catch (err) {
-                console.error('No se pudo acceder a la cámara:', err);
-                showToast('No se pudo abrir la cámara. Revisá los permisos del navegador, o usá "De Galería".', 'warning');
-            }
+            // 🔒 Función vieja, ya no se usa (la cámara ahora usa el selector nativo
+            // del celular, más confiable) — se deja solo por si algo más la llama.
         }
 
         function closeCameraModal() {
             const modal = document.getElementById('camera-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
                 cameraStream = null;
             }
         }
 
-        document.getElementById('btn-open-camera').addEventListener('click', () => {
-            if (!navigator.onLine) {
-                showToast('📴 Sin acceso a internet — la cámara con IA necesita conexión. Podés anotarlo a mano mientras tanto.', 'warning');
-                return;
-            }
-            openCameraModal();
-        });
-        document.getElementById('btn-camera-cancel').addEventListener('click', closeCameraModal);
-
-        document.getElementById('btn-camera-capture').addEventListener('click', async () => {
-            const video = document.getElementById('camera-video');
-            const canvas = document.getElementById('camera-canvas');
-
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
-            const base64Data = dataUrl.split(',')[1];
-
-            closeCameraModal();
-
-            const statusEl = document.getElementById('photo-input-status');
-            statusEl.textContent = 'Leyendo y analizando con IA...';
-            try {
-                const resp = await fetch('/api/parse-receipt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ base64Data, mediaType: 'image/jpeg', kind: 'image' })
-                });
-                const parsed = await resp.json();
-                if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
-                await addTransactionFromParsed(parsed, 'Comprobante');
-            } catch (err) {
-                console.error('Error al procesar la foto:', err);
-                showToast('⚠️ No se pudo leer el comprobante. Probá de nuevo con mejor luz.', 'warning');
-            }
-            statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
+        // La cámara ahora usa el selector nativo del celular (igual que galería y PDF),
+        // en vez de un video en vivo dentro de la página — mucho más confiable en
+        // celulares reales, y reutiliza el mismo sistema ya probado que lee con IA.
+        document.getElementById('input-camera-native').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            await processReceiptFile(file, 'image', document.getElementById('photo-input-status'));
+            e.target.value = '';
         });
 
         document.getElementById('input-photo-gallery').addEventListener('change', async (e) => {
