@@ -210,12 +210,6 @@
                 </button>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Control de mis Finanzas</p>
-                <button data-menu-tab="ingresos" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
-                    <i class="fa-solid fa-building-columns w-5 text-center"></i> Ingresos
-                </button>
-                <button data-menu-tab="egresos" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
-                    <i class="fa-solid fa-bag-shopping w-5 text-center"></i> Egresos
-                </button>
                 <button data-menu-tab="resumen" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </button>
@@ -227,11 +221,8 @@
                 <a href="libertad-financiera.html?goto=fondos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
                 </a>
-                <a href="libertad-financiera.html?goto=deudas" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> Registrar Deudas
-                </a>
                 <a href="libertad-financiera.html?goto=emergencia" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-hand-holding-dollar w-5 text-center"></i> Pagar Deudas
+                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Plan de Deudas
                 </a>
                 <a href="libertad-financiera.html?goto=inversiones" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
@@ -384,141 +375,6 @@
         <!-- ==================== TAB: SALDOS DEL MES ==================== -->
         <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
 
-        <!-- Mismo navegador de mes que en Ingresos y Egresos, duplicado acá para no tener
-             que saltar de pestaña para cambiar de mes. -->
-        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
-            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-1 gap-1 shadow-inner">
-                        <button id="prev-month-btn-2" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
-                            <i class="fa-solid fa-chevron-left text-xs"></i>
-                        </button>
-                        <div class="flex items-center gap-1.5 px-2">
-                            <i class="fa-regular fa-calendar-days text-cyan-400 text-xs"></i>
-                            <select id="header-month-select-2" class="bg-transparent text-cyan-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
-                        </div>
-                        <button id="next-month-btn-2" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
-                            <i class="fa-solid fa-chevron-right text-xs"></i>
-                        </button>
-                    </div>
-
-                    <button onclick="toggleMonthDrawer(2)" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-layer-group text-cyan-400"></i>
-                        <span id="drawer-toggle-text-2">Ver Calendario Anual</span>
-                        <i id="drawer-arrow-2" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="month-drawer-2" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Patrimonio Neto por Mes</span>
-                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
-                </div>
-                <div id="annual-months-grid-2" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
-            </div>
-
-            <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
-                <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-share-nodes text-cyan-400"></i>
-                    <span>Comprobante Mensual:</span>
-                </span>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-invoice text-rose-300"></i>
-                        <span>Comprobante PDF a WhatsApp</span>
-                    </button>
-                    <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
-                        <span>Compartir Resumen (texto)</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Estilo "Didi": tus ganancias por Día / Semana / Mes -->
-        <section class="glass-panel rounded-3xl p-5 space-y-3">
-            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-coins text-cyan-400"></i> TUS GANANCIAS
-            </h2>
-            <div class="flex bg-slate-900/80 rounded-2xl p-1 gap-1">
-                <button data-period="diario" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-cyan-500 text-slate-950">Diario</button>
-                <button data-period="semanal" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400">Semanal</button>
-                <button data-period="mensual" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400">Mensual</button>
-            </div>
-            <div class="text-center py-2">
-                <p id="period-total-label" class="text-[11px] text-slate-500 uppercase tracking-wide">Patrimonio Neto de hoy</p>
-                <p id="period-total-amount" class="text-3xl sm:text-4xl font-bold text-teal-300">$0</p>
-            </div>
-            <div class="grid grid-cols-2 gap-3 text-center border-t border-white/10 pt-3">
-                <div>
-                    <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Ingresos</p>
-                    <p id="period-income-amount" class="text-base font-bold text-cyan-400">$0</p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-rose-300 uppercase tracking-wide">Egresos</p>
-                    <p id="period-expense-amount" class="text-base font-bold text-rose-400">$0</p>
-                </div>
-            </div>
-        </section>
-
-        <section class="space-y-3">
-            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-list-check text-cyan-400"></i> RESULTADOS DEL MES
-            </h2>
-
-            <div class="glass-panel p-5 rounded-3xl space-y-3">
-                <p class="text-sm font-bold text-white">Tu mayor gasto y mayor ingreso del mes</p>
-                <div class="h-40">
-                    <canvas id="topMovementsChart"></canvas>
-                </div>
-                <div class="grid grid-cols-2 gap-3 text-center">
-                    <div>
-                        <p class="text-[10px] text-rose-300 uppercase tracking-wide">Mayor Gasto</p>
-                        <p id="top-expense-label" class="text-xs text-slate-300 truncate">—</p>
-                        <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Mayor Ingreso</p>
-                        <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
-                        <p id="top-income-amount" class="text-base font-bold text-cyan-400">$0</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="space-y-3">
-            <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
-                <div class="flex items-center justify-between border-b border-white/10 pb-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-cyan-400 text-sm"></i>
-                        <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Ingresos y Egresos del Mes</h3>
-                    </div>
-                    <span id="chart-month-badge" class="text-[10px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div class="h-48 md:h-56 relative flex items-center justify-center">
-                        <canvas id="categoryPieChart"></canvas>
-                    </div>
-                    <div class="md:col-span-2 space-y-3">
-                        <div>
-                            <p class="text-[11px] font-bold text-rose-300 uppercase tracking-wide mb-1.5">Egresos por Categoría</p>
-                            <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
-                        </div>
-                        <div class="border-t border-white/10 pt-3">
-                            <p class="text-[11px] font-bold text-cyan-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
-                            <div id="chart-legend-grid-ingresos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        </div> <!-- fin tab-panel-resumen (Saldos y Movimientos, unificado) -->
-
-        <!-- ==================== TAB: GASTOS DEL MES ==================== -->
-        <div id="tab-panel-ingresos" class="tab-panel hidden space-y-5">
-
         <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
             <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
                 <div class="flex flex-wrap items-center gap-2">
@@ -568,6 +424,19 @@
                 </div>
             </div>
         </header>
+
+
+        <!-- Pestañas internas: Ingresos / Egresos, todo dentro de "Mis Movimientos" -->
+        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5">
+            <button data-sub-tab="ingresos" class="sub-tab-btn flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
+                <i class="fa-solid fa-building-columns"></i> INGRESOS
+            </button>
+            <button data-sub-tab="egresos" class="sub-tab-btn flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
+                <i class="fa-solid fa-bag-shopping"></i> EGRESOS
+            </button>
+        </div>
+
+        <div id="sub-panel-ingresos" class="sub-tab-panel space-y-5">
 
         <div class="flex justify-end">
             <button onclick="openSalaryModal()" class="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
@@ -720,9 +589,10 @@
             </div>
         </div>
 
-        </div> <!-- fin tab-panel-ingresos -->
 
-        <div id="tab-panel-egresos" class="tab-panel hidden space-y-5">
+        </div>
+
+        <div id="sub-panel-egresos" class="sub-tab-panel hidden space-y-5">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="bg-rose-950/40 p-4 rounded-2xl border-2 border-rose-500/30">
@@ -771,7 +641,148 @@
             </div>
         </div>
 
-        </div> <!-- fin tab-panel-egresos -->
+
+        </div>
+
+
+        <!-- Mismo navegador de mes que en Ingresos y Egresos, duplicado acá para no tener
+             que saltar de pestaña para cambiar de mes. -->
+        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
+                <div class="flex flex-wrap items-center gap-2">
+                    <div class="flex items-center bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-1 gap-1 shadow-inner">
+                        <button id="prev-month-btn-2" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-left text-xs"></i>
+                        </button>
+                        <div class="flex items-center gap-1.5 px-2">
+                            <i class="fa-regular fa-calendar-days text-cyan-400 text-xs"></i>
+                            <select id="header-month-select-2" class="bg-transparent text-cyan-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
+                        </div>
+                        <button id="next-month-btn-2" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
+                            <i class="fa-solid fa-chevron-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <button onclick="toggleMonthDrawer(2)" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-layer-group text-cyan-400"></i>
+                        <span id="drawer-toggle-text-2">Ver Calendario Anual</span>
+                        <i id="drawer-arrow-2" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="month-drawer-2" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Patrimonio Neto por Mes</span>
+                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
+                </div>
+                <div id="annual-months-grid-2" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
+            </div>
+
+            <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
+                <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-share-nodes text-cyan-400"></i>
+                    <span>Comprobante Mensual:</span>
+                </span>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-invoice text-rose-300"></i>
+                        <span>Comprobante PDF a WhatsApp</span>
+                    </button>
+                    <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                        <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
+                        <span>Compartir Resumen (texto)</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Estilo "Didi": tus ganancias por Día / Semana / Mes -->
+        <section class="glass-panel rounded-3xl p-5 space-y-3">
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-coins text-cyan-400"></i> TUS GANANCIAS
+            </h2>
+            <div class="flex bg-slate-900/80 rounded-2xl p-1 gap-1">
+                <button data-period="diario" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-cyan-500 text-slate-950">Diario</button>
+                <button data-period="semanal" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400">Semanal</button>
+                <button data-period="mensual" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400">Mensual</button>
+            </div>
+            <div class="text-center py-2">
+                <p id="period-total-label" class="text-[11px] text-slate-500 uppercase tracking-wide">Patrimonio Neto de hoy</p>
+                <p id="period-total-amount" class="text-3xl sm:text-4xl font-bold text-teal-300">$0</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-center border-t border-white/10 pt-3">
+                <div>
+                    <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Ingresos</p>
+                    <p id="period-income-amount" class="text-base font-bold text-cyan-400">$0</p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-rose-300 uppercase tracking-wide">Egresos</p>
+                    <p id="period-expense-amount" class="text-base font-bold text-rose-400">$0</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="space-y-3">
+            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-cyan-400"></i> RESULTADOS DEL MES
+            </h2>
+
+            <div class="glass-panel p-5 rounded-3xl space-y-3">
+                <p class="text-sm font-bold text-white">Tu mayor gasto y mayor ingreso del mes</p>
+                <div class="h-40">
+                    <canvas id="topMovementsChart"></canvas>
+                </div>
+                <div class="grid grid-cols-2 gap-3 text-center">
+                    <div>
+                        <p class="text-[10px] text-rose-300 uppercase tracking-wide">Mayor Gasto</p>
+                        <p id="top-expense-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-expense-amount" class="text-base font-bold text-rose-400">$0</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-cyan-300 uppercase tracking-wide">Mayor Ingreso</p>
+                        <p id="top-income-label" class="text-xs text-slate-300 truncate">—</p>
+                        <p id="top-income-amount" class="text-base font-bold text-cyan-400">$0</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="space-y-3">
+            <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-cyan-400 text-sm"></i>
+                        <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Ingresos y Egresos del Mes</h3>
+                    </div>
+                    <span id="chart-month-badge" class="text-[10px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                    <div class="h-48 md:h-56 relative flex items-center justify-center">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div class="md:col-span-2 space-y-3">
+                        <div>
+                            <p class="text-[11px] font-bold text-rose-300 uppercase tracking-wide mb-1.5">Egresos por Categoría</p>
+                            <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                        </div>
+                        <div class="border-t border-white/10 pt-3">
+                            <p class="text-[11px] font-bold text-cyan-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
+                            <div id="chart-legend-grid-ingresos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        </div> <!-- fin tab-panel-resumen (Mis Movimientos: Ingresos + Egresos + Resultados, todo unificado) -->
+
+
+        <!-- ==================== TAB: GASTOS DEL MES ==================== -->
+
+
+
 
 
 
@@ -1009,54 +1020,13 @@
     <!-- Aviso de que la prueba gratis está por terminar -->
     <div id="trial-ending-toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-amber-500/40 text-amber-200 px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold shadow-2xl z-40 max-w-[92%] text-center"></div>
 
-    <!-- Botón flotante de Acción Rápida (+): agregar un ingreso o egreso desde
-         cualquier pantalla, sin tener que abrir el menú primero. -->
+    <!-- Botón flotante de Acción Rápida: agregar un ingreso o egreso hablando,
+         desde cualquier pantalla, sin tener que abrir el menú primero. -->
     <div class="fixed bottom-6 left-5 z-30 flex flex-col items-start gap-2">
-        <div id="fab-quick-options" class="hidden flex-col gap-2">
-            <button onclick="openQuickAdd('ingreso')" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-4 py-2.5 rounded-2xl text-xs shadow-lg flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-building-columns"></i> Ingreso
-            </button>
-            <button onclick="openQuickAdd('egreso')" class="bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold px-4 py-2.5 rounded-2xl text-xs shadow-lg flex items-center gap-2 whitespace-nowrap">
-                <i class="fa-solid fa-bag-shopping"></i> Egreso
-            </button>
-        </div>
-        <button id="btn-fab-quick-add" title="Agregar rápido" class="bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)] flex items-center justify-center text-2xl active:scale-95 transition-all">
-            <i class="fa-solid fa-plus" id="fab-icon"></i>
+        <p id="fab-voice-status" class="hidden bg-slate-900 border border-amber-400/40 text-amber-200 text-xs font-semibold px-3 py-2 rounded-2xl rounded-bl-sm shadow-xl max-w-[200px]"></p>
+        <button id="btn-fab-quick-add" title="Agregar por voz" class="bg-gradient-to-br from-amber-400 to-amber-500 text-slate-950 w-14 h-14 rounded-full shadow-[0_0_20px_rgba(245,158,11,0.5)] flex items-center justify-center text-2xl active:scale-95 transition-all">
+            <i class="fa-solid fa-microphone" id="fab-icon"></i>
         </button>
-    </div>
-
-    <!-- Modal de carga rápida: nombre, monto, categoría — sin tener que ir a la pestaña -->
-    <div id="quick-add-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-        <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-amber-500/30">
-            <div class="flex items-center justify-between">
-                <h3 id="quick-add-title" class="font-bold text-white text-base">Agregar</h3>
-                <button onclick="closeQuickAdd()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <input type="text" id="quick-add-name" placeholder="Concepto (ej. Nafta, Sueldo...)"
-                class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-            <input type="number" id="quick-add-amount" placeholder="Monto ($)"
-                class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 font-bold">
-            <select id="quick-add-category" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500">
-                <option value="Belleza y Cuidado Personal">💄 Belleza y Cuidado Personal</option>
-                <option value="Limpieza del Hogar">🧼 Limpieza del Hogar</option>
-                <option value="Mecánica y Mantenimiento">🔧 Mecánica y Mantenimiento</option>
-                <option value="Transporte">⛽ Transporte</option>
-                <option value="Delivery">🛵 Delivery</option>
-                <option value="Apps">📱 Apps</option>
-                <option value="Servicios">💡 Servicios</option>
-                <option value="Almacén, Súper y Mayoristas">🌾 Almacén, Súper y Mayoristas</option>
-                <option value="Panadería">🥐 Panadería</option>
-                <option value="Salidas y Diversión">🍽️ Salidas y Diversión</option>
-                <option value="Farmacia">💊 Farmacia</option>
-                <option value="Librería y Capacitación">📚 Librería y Capacitación</option>
-                <option value="Juguetería y Bazar">🧸 Juguetería y Bazar</option>
-                <option value="Vestimenta">👕 Vestimenta</option>
-                <option value="Compras del Hogar y Electrónica">📺 Compras del Hogar y Electrónica</option>
-                <option value="Mascotas">🐾 Mascotas</option>
-                <option value="Otros">✍️ Otros</option>
-            </select>
-            <button id="btn-quick-add-save" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl text-sm">Guardar</button>
-        </div>
     </div>
 
     <!-- Botón flotante del Asistente Ressetia (visible en cualquier pestaña, se puede arrastrar) -->
@@ -2231,62 +2201,6 @@
             }
         }
 
-        // ============================================
-        // BOTÓN DE ACCIÓN RÁPIDA (+): agregar un ingreso o egreso desde cualquier
-        // pantalla, sin pasar por el menú ni las pestañas.
-        // ============================================
-        let quickAddType = 'egreso';
-
-        document.getElementById('btn-fab-quick-add').addEventListener('click', () => {
-            const options = document.getElementById('fab-quick-options');
-            const icon = document.getElementById('fab-icon');
-            const isOpen = options.classList.contains('flex');
-            if (isOpen) {
-                options.classList.add('hidden'); options.classList.remove('flex');
-                icon.className = 'fa-solid fa-plus';
-            } else {
-                options.classList.remove('hidden'); options.classList.add('flex');
-                icon.className = 'fa-solid fa-xmark';
-            }
-        });
-
-        function openQuickAdd(type) {
-            quickAddType = type;
-            document.getElementById('fab-quick-options').classList.add('hidden');
-            document.getElementById('fab-quick-options').classList.remove('flex');
-            document.getElementById('fab-icon').className = 'fa-solid fa-plus';
-
-            document.getElementById('quick-add-title').textContent = type === 'ingreso' ? 'Agregar Ingreso' : 'Agregar Egreso';
-            document.getElementById('quick-add-name').value = '';
-            document.getElementById('quick-add-amount').value = '';
-            document.getElementById('quick-add-modal').classList.remove('hidden');
-            document.getElementById('quick-add-modal').classList.add('flex');
-        }
-        function closeQuickAdd() {
-            document.getElementById('quick-add-modal').classList.add('hidden');
-            document.getElementById('quick-add-modal').classList.remove('flex');
-        }
-
-        document.getElementById('btn-quick-add-save').addEventListener('click', async () => {
-            const name = document.getElementById('quick-add-name').value.trim();
-            const amount = parseFloat(document.getElementById('quick-add-amount').value);
-            const categoryVal = document.getElementById('quick-add-category').value;
-
-            if (!name || !amount || amount <= 0) {
-                showToast('Completá el concepto y un monto válido', 'warning');
-                return;
-            }
-
-            await addTransactionRecord({
-                name, dateVal: todayDate, amount, categoryVal,
-                fuelTypeVal: categoryVal === 'Transporte' ? 'Nafta' : null,
-                typeVal: quickAddType
-            });
-
-            closeQuickAdd();
-            showToast(quickAddType === 'ingreso' ? '✅ Ingreso agregado' : '✅ Egreso agregado');
-        });
-
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
             const monthVal = dateVal.substring(0, 7);
             const iconVal = getEmoji(name, categoryVal, fuelTypeVal);
@@ -3157,12 +3071,45 @@
             syncInputDateToSelectedMonth();
         }
 
+        let currentMovementSubTab = 'ingresos';
+
+        // Cambia entre las pestañas internas de "Mis Movimientos" (Ingresos/Egresos)
+        function switchMovementSubTab(subTab) {
+            currentMovementSubTab = subTab;
+            document.querySelectorAll('.sub-tab-panel').forEach(panel => panel.classList.add('hidden'));
+            document.getElementById('sub-panel-' + subTab).classList.remove('hidden');
+
+            document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+                if (btn.dataset.subTab === subTab) {
+                    btn.classList.add('bg-cyan-500', 'text-slate-950', 'shadow-md');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('bg-cyan-500', 'text-slate-950', 'shadow-md');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            moveMovementsPanelTo(subTab === 'ingresos' ? 'ingreso' : 'egreso');
+        }
+
+        document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchMovementSubTab(btn.dataset.subTab));
+        });
+
         function switchTab(tabName) {
+            // "Ingresos" y "Egresos" ahora viven DENTRO de "Mis Movimientos" (resumen),
+            // como pestañas internas — si algo pide ir directo ahí (menú, asistente de
+            // IA, links viejos), lo mandamos a "resumen" y seleccionamos la sub-pestaña.
+            if (tabName === 'ingresos' || tabName === 'egresos') {
+                switchTab('resumen');
+                switchMovementSubTab(tabName);
+                return;
+            }
+
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
             document.getElementById('tab-panel-' + tabName).classList.remove('hidden');
 
-            if (tabName === 'ingresos') moveMovementsPanelTo('ingreso');
-            if (tabName === 'egresos') moveMovementsPanelTo('egreso');
+            if (tabName === 'resumen') switchMovementSubTab(currentMovementSubTab);
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 if (btn.dataset.tab === tabName) {
@@ -3369,6 +3316,98 @@
                 showToast('Tu navegador no permite cargar por voz. Probá con Chrome.', 'warning');
             });
         }
+
+
+        // ============================================
+        // BOTÓN FLOTANTE DE ACCIÓN RÁPIDA: agrega un ingreso o egreso hablando,
+        // desde cualquier pantalla — acá SÍ dejamos que la IA decida el tipo
+        // (ingreso o egreso), porque este botón no pertenece a ninguna pestaña.
+        // ============================================
+        async function addQuickTransactionFromParsed(parsed) {
+            const name = (parsed.concept || 'Movimiento por voz').trim();
+            const amount = parseFloat(parsed.amount) || 0;
+            const typeVal = parsed.type === 'ingreso' ? 'ingreso' : 'egreso';
+
+            let categoryVal = parsed.category || 'Otros';
+            let fuelTypeVal = null;
+            if (categoryVal === 'Transporte') {
+                fuelTypeVal = parsed.fuelType || 'Nafta';
+            } else if (categoryVal === 'Otros' && parsed.customCategory) {
+                categoryVal = parsed.customCategory;
+            }
+
+            if (amount <= 0) {
+                showToast('No se pudo entender el monto, probá de nuevo diciéndolo más claro', 'warning');
+                return;
+            }
+
+            const result = await addTransactionRecord({ name, dateVal: todayDate, amount, categoryVal, fuelTypeVal, typeVal });
+            if (result) {
+                showToast(`✅ "${name}" — ${typeVal === 'ingreso' ? '+' : ''}${formatMoney(amount)} en ${categoryVal}, agregado`);
+            }
+        }
+
+        let fabVoiceRecognition = null;
+        if (SpeechRecognitionAPI) {
+            fabVoiceRecognition = new SpeechRecognitionAPI();
+            fabVoiceRecognition.lang = 'es-AR';
+            fabVoiceRecognition.continuous = false;
+            fabVoiceRecognition.interimResults = false;
+
+            const fabStatus = document.getElementById('fab-voice-status');
+            const fabIcon = document.getElementById('fab-icon');
+
+            fabVoiceRecognition.onstart = () => {
+                fabIcon.className = 'fa-solid fa-microphone-lines animate-pulse';
+                fabStatus.textContent = 'Escuchando... decí tu gasto o ingreso';
+                fabStatus.classList.remove('hidden');
+            };
+
+            fabVoiceRecognition.onresult = async (event) => {
+                const transcript = event.results[0][0].transcript;
+                fabStatus.textContent = `Escuché: "${transcript}" — interpretando...`;
+
+                let parsed;
+                try {
+                    const resp = await fetch('/api/parse-voice-expense', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ transcript })
+                    });
+                    const respData = await resp.json();
+                    if (!resp.ok || respData.error) throw new Error(respData.error || 'Fallo la IA');
+                    parsed = respData;
+                } catch (err) {
+                    console.warn('No se pudo usar la IA, usando el detector simple como respaldo:', err);
+                    parsed = parseVoiceTranscript(transcript);
+                }
+
+                await addQuickTransactionFromParsed(parsed);
+                setTimeout(() => fabStatus.classList.add('hidden'), 3000);
+            };
+
+            fabVoiceRecognition.onerror = () => {
+                fabStatus.textContent = 'No te escuché bien, tocá de nuevo para intentar.';
+                setTimeout(() => fabStatus.classList.add('hidden'), 3000);
+            };
+
+            fabVoiceRecognition.onend = () => {
+                fabIcon.className = 'fa-solid fa-microphone';
+            };
+
+            document.getElementById('btn-fab-quick-add').addEventListener('click', () => {
+                if (!navigator.onLine) {
+                    showToast('📴 Sin acceso a internet — cargar por voz necesita conexión.', 'warning');
+                    return;
+                }
+                fabVoiceRecognition.start();
+            });
+        } else {
+            document.getElementById('btn-fab-quick-add').addEventListener('click', () => {
+                showToast('Tu navegador no permite cargar por voz. Probá con Chrome.', 'warning');
+            });
+        }
+
 
         // ============================================
         // CARGA POR FOTO DE TICKET Y POR PDF DE FACTURA
