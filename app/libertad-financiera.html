@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <!-- Mismo motivo que en index.html: asegura que los links de acá (de vuelta
          a Control Financiero) siempre resuelvan bien, sin importar la barra "/" final. -->
+    <!-- 🔒 NO TOCAR: misma solución del 404 de navegación. -->
     <base href="/app/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ressetia - Libertad Financiera</title>
@@ -14,6 +15,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        html { font-size: 16px; }
+        @media (max-width: 640px) {
+            html { font-size: 18px; }
+        }
         body {
             font-family: 'Outfit', sans-serif;
             background: linear-gradient(135deg, #090d16 0%, #111827 40%, #06201b 100%);
@@ -207,7 +212,8 @@
         </header>
 
         <!-- Navegación por pestañas -->
-        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
+        <!-- Oculta a propósito, navegación ahora solo por el menú lateral -->
+        <div class="hidden gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="saldo" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">PATRIMONIO NETO</button>
             <button data-tab="fondos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">FONDOS DE EMERGENCIA</button>
             <button data-tab="deudas" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">REGISTRAR DEUDAS</button>
