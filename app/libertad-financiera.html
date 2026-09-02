@@ -405,9 +405,7 @@
         </div>
 
 
-        </div>
-
-                <div id="sub-panel-lf-estrategia" class="sub-tab-panel-lf hidden space-y-5">
+        <div id="sub-panel-lf-estrategia" class="sub-tab-panel-lf hidden space-y-5">
 
         <!-- Ingresos Extras (movido acá desde "Pagar") -->
         <div class="rounded-3xl overflow-hidden border-2 border-amber-500/30 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
@@ -470,67 +468,155 @@
 
         <!-- Estrategia de Pago: calculadora de cuotas, adelantos y plazo de pago,
              pensada para préstamos prendarios / planes de ahorro tipo Rombo. -->
+        <!-- AUTOMOTRIZ -->
         <div class="rounded-3xl overflow-hidden border-2 border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
-            <button data-accordion-pd="calculadora" class="accordion-header-pd w-full flex items-center justify-between p-4 bg-purple-950/40 hover:bg-purple-950/60 transition-all">
+            <button data-accordion-pd="calc-automotriz" class="accordion-header-pd w-full flex items-center justify-between p-4 bg-purple-950/40 hover:bg-purple-950/60 transition-all">
                 <span class="font-bold text-purple-300 flex items-center gap-2 text-sm sm:text-base">
-                    <i class="fa-solid fa-calculator"></i> ESTRATEGIA DE PAGO
+                    <i class="fa-solid fa-car"></i> AUTOMOTRIZ
                 </span>
                 <i class="fa-solid fa-chevron-down accordion-chevron-pd text-purple-300 transition-transform duration-300"></i>
             </button>
-            <div id="accordion-body-pd-calculadora" class="accordion-body-pd hidden p-4 sm:p-5 space-y-3 bg-slate-950/50">
-                <p class="text-[11px] text-slate-500">Pensado para préstamos con cuotas fijas (prendario, plan de ahorro tipo Rombo) — calculá cuánto destinar por mes si querés adelantar cuotas, y en cuánto tiempo terminarías de pagar.</p>
+            <div id="accordion-body-pd-calc-automotriz" class="accordion-body-pd hidden p-4 sm:p-5 space-y-3 bg-slate-950/50">
+                <p class="text-[11px] text-slate-500">Pensado para préstamos con cuotas fijas (prendario, plan de ahorro tipo Rombo) — calculá cuánto destinar por mes si querés adelantar cuotas.</p>
                 <div>
                     <label>¿Qué vas a pagar?</label>
-                    <input type="text" id="stratDebtName" placeholder="Ej: Auto Renault - Plan de Ahorro">
+                    <input type="text" id="stratDebtName-automotriz" placeholder="Ej: Auto Renault - Plan de Ahorro">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label>Monto Total / Saldo a Cancelar ($)</label>
-                        <input type="number" id="stratTotalAmount" step="any" placeholder="Ej: 28000000">
+                        <input type="number" id="stratTotalAmount-automotriz" step="any" placeholder="Ej: 28000000">
                     </div>
                     <div>
                         <label>Cuota Mensual Normal ($)</label>
-                        <input type="number" id="stratMinCuota" step="any" placeholder="Ej: 500000">
+                        <input type="number" id="stratMinCuota-automotriz" step="any" placeholder="Ej: 500000">
                     </div>
                 </div>
                 <div>
                     <label>Cuotas Restantes</label>
-                    <select id="stratCuotasCount">
-                        <option value="3">3 cuotas</option>
-                        <option value="6">6 cuotas</option>
-                        <option value="9">9 cuotas</option>
-                        <option value="12">12 cuotas</option>
-                        <option value="15">15 cuotas</option>
-                        <option value="18">18 cuotas</option>
-                        <option value="21">21 cuotas</option>
-                        <option value="24">24 cuotas</option>
-                        <option value="30">30 cuotas</option>
-                        <option value="60">60 cuotas</option>
-                        <option value="72">72 cuotas</option>
-                        <option value="120">120 cuotas</option>
+                    <select id="stratCuotasCount-automotriz">
+                        <option value="3">3 cuotas</option><option value="6">6 cuotas</option><option value="9">9 cuotas</option>
+                        <option value="12">12 cuotas</option><option value="15">15 cuotas</option><option value="18">18 cuotas</option>
+                        <option value="21">21 cuotas</option><option value="24">24 cuotas</option><option value="30">30 cuotas</option>
+                        <option value="60">60 cuotas</option><option value="72">72 cuotas</option><option value="120">120 cuotas</option>
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label>Costo de Adelantar 1 Cuota ($)</label>
-                        <input type="number" id="stratAdvanceCost" step="any" placeholder="Ej: 250000">
+                        <input type="number" id="stratAdvanceCost-automotriz" step="any" placeholder="Ej: 250000">
                     </div>
                     <div>
-                        <label>¿Cuántas cuotas querés adelantar por mes?</label>
-                        <input type="number" id="stratAdvanceCount" step="1" min="0" placeholder="Ej: 2">
+                        <label>¿Cuántas cuotas adelantar por mes?</label>
+                        <input type="number" id="stratAdvanceCount-automotriz" step="1" min="0" placeholder="Ej: 2">
                     </div>
                 </div>
-                <button id="btnCalcStrategy" class="btn bg-purple-500 hover:bg-purple-400 text-slate-950">Calcular Estrategia</button>
+                <button id="btnCalcStrategy-automotriz" class="btn bg-purple-500 hover:bg-purple-400 text-slate-950">Calcular Estrategia</button>
 
-                <div id="stratResultBox" class="hidden bg-slate-900/70 border border-purple-500/30 rounded-2xl p-4 space-y-2 text-center">
+                <div id="stratResultBox-automotriz" class="hidden bg-slate-900/70 border border-purple-500/30 rounded-2xl p-4 space-y-2 text-center">
                     <div class="text-xs text-slate-400">Vas a destinar por mes</div>
-                    <div id="stratMonthlyTotal" class="text-2xl font-bold text-purple-300">$0</div>
-                    <div class="text-xs text-slate-400 mt-2">Terminarías de pagar en</div>
-                    <div id="stratTimeToFinish" class="text-lg font-bold text-white">—</div>
-                    <p id="stratComparisonText" class="text-[11px] text-slate-500 pt-1"></p>
+                    <div id="stratMonthlyTotal-automotriz" class="text-2xl font-bold text-purple-300">$0</div>
+                    <div class="text-xs text-slate-400 mt-2">Saldo restante</div>
+                    <div id="stratSaldoRestante-automotriz" class="text-xl font-bold text-white">$0</div>
+                    <div id="stratCuotasProgress-automotriz" class="text-[11px] text-slate-500">0 / 0 cuotas pagadas</div>
+                    <button id="btnPagarCuota-automotriz" onclick="payOneCuotaGeneric('automotriz')" class="w-full mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">
+                        <i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota
+                    </button>
+                    <p class="text-[10px] text-slate-600 pt-1">Al pagar, se descuenta de tu Patrimonio Neto en Control Financiero.</p>
                 </div>
             </div>
         </div>
+
+        <!-- TARJETA -->
+        <div class="rounded-3xl overflow-hidden border-2 border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.15)]">
+            <button data-accordion-pd="calc-tarjeta" class="accordion-header-pd w-full flex items-center justify-between p-4 bg-rose-950/40 hover:bg-rose-950/60 transition-all">
+                <span class="font-bold text-rose-300 flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-credit-card"></i> TARJETA
+                </span>
+                <i class="fa-solid fa-chevron-down accordion-chevron-pd text-rose-300 transition-transform duration-300"></i>
+            </button>
+            <div id="accordion-body-pd-calc-tarjeta" class="accordion-body-pd hidden p-4 sm:p-5 space-y-3 bg-slate-950/50">
+                <p class="text-[11px] text-slate-500">Para deudas de tarjeta de crédito en cuotas fijas.</p>
+                <div>
+                    <label>¿Qué tarjeta o compra es?</label>
+                    <input type="text" id="stratDebtName-tarjeta" placeholder="Ej: Tarjeta Visa">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label>Monto Total a Pagar ($)</label>
+                        <input type="number" id="stratTotalAmount-tarjeta" step="any" placeholder="Ej: 2100000">
+                    </div>
+                    <div>
+                        <label>Cuotas</label>
+                        <select id="stratCuotasCount-tarjeta">
+                            <option value="3">3 cuotas</option><option value="6">6 cuotas</option><option value="9">9 cuotas</option>
+                            <option value="12">12 cuotas</option><option value="15">15 cuotas</option><option value="18">18 cuotas</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="btnCalcStrategy-tarjeta" class="btn bg-rose-500 hover:bg-rose-400 text-slate-950">Calcular Estrategia</button>
+
+                <div id="stratResultBox-tarjeta" class="hidden bg-slate-900/70 border border-rose-500/30 rounded-2xl p-4 space-y-2 text-center">
+                    <div class="text-xs text-slate-400">Cuota mensual</div>
+                    <div id="stratMonthlyTotal-tarjeta" class="text-2xl font-bold text-rose-300">$0</div>
+                    <div class="text-xs text-slate-400 mt-2">Saldo restante</div>
+                    <div id="stratSaldoRestante-tarjeta" class="text-xl font-bold text-white">$0</div>
+                    <div id="stratCuotasProgress-tarjeta" class="text-[11px] text-slate-500">0 / 0 cuotas pagadas</div>
+                    <button id="btnPagarCuota-tarjeta" onclick="payOneCuotaGeneric('tarjeta')" class="w-full mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">
+                        <i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota
+                    </button>
+                    <p class="text-[10px] text-slate-600 pt-1">Al pagar, se descuenta de tu Patrimonio Neto en Control Financiero.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PERSONAL -->
+        <div class="rounded-3xl overflow-hidden border-2 border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
+            <button data-accordion-pd="calc-personal" class="accordion-header-pd w-full flex items-center justify-between p-4 bg-cyan-950/40 hover:bg-cyan-950/60 transition-all">
+                <span class="font-bold text-cyan-300 flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-people-arrows"></i> PERSONAL
+                </span>
+                <i class="fa-solid fa-chevron-down accordion-chevron-pd text-cyan-300 transition-transform duration-300"></i>
+            </button>
+            <div id="accordion-body-pd-calc-personal" class="accordion-body-pd hidden p-4 sm:p-5 space-y-3 bg-slate-950/50">
+                <p class="text-[11px] text-slate-500">Para plata que le debas a un familiar o amigo, en cuotas.</p>
+                <div>
+                    <label>¿A quién le debés?</label>
+                    <input type="text" id="stratDebtName-personal" placeholder="Ej: Mi hermana">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label>Monto Total a Pagar ($)</label>
+                        <input type="number" id="stratTotalAmount-personal" step="any" placeholder="Ej: 1300000">
+                    </div>
+                    <div>
+                        <label>Cuotas</label>
+                        <select id="stratCuotasCount-personal">
+                            <option value="3">3 cuotas</option><option value="6">6 cuotas</option><option value="9">9 cuotas</option>
+                            <option value="10">10 cuotas</option><option value="12">12 cuotas</option><option value="15">15 cuotas</option>
+                            <option value="18">18 cuotas</option>
+                        </select>
+                    </div>
+                </div>
+                <button id="btnCalcStrategy-personal" class="btn bg-cyan-500 hover:bg-cyan-400 text-slate-950">Calcular Estrategia</button>
+
+                <div id="stratResultBox-personal" class="hidden bg-slate-900/70 border border-cyan-500/30 rounded-2xl p-4 space-y-2 text-center">
+                    <div class="text-xs text-slate-400">Cuota mensual</div>
+                    <div id="stratMonthlyTotal-personal" class="text-2xl font-bold text-cyan-300">$0</div>
+                    <div class="text-xs text-slate-400 mt-2">Saldo restante</div>
+                    <div id="stratSaldoRestante-personal" class="text-xl font-bold text-white">$0</div>
+                    <div id="stratCuotasProgress-personal" class="text-[11px] text-slate-500">0 / 0 cuotas pagadas</div>
+                    <button id="btnPagarCuota-personal" onclick="payOneCuotaGeneric('personal')" class="w-full mt-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm">
+                        <i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota
+                    </button>
+                    <p class="text-[10px] text-slate-600 pt-1">Al pagar, se descuenta de tu Patrimonio Neto en Control Financiero.</p>
+                </div>
+            </div>
+        </div>
+
+        </div> <!-- fin sub-panel-lf-estrategia -->
+
+
 
         </div> <!-- fin sub-panel-lf-estrategia -->
 
@@ -2297,44 +2383,128 @@
     });
 
     // ============================================
-    // ESTRATEGIA DE PAGO: calculadora de cuotas + adelantos (prendario / plan de ahorro)
-    // Fórmula: cada mes se "liquidan" (1 + cantidad de cuotas adelantadas) cuotas del
-    // total pendiente. El monto a destinar por mes es la cuota normal + el costo de
-    // cada cuota adelantada, multiplicado por cuántas se adelanten.
+    // ESTRATEGIA DE PAGO: calculadora de cuotas por categoría (Automotriz / Tarjeta /
+    // Personal) — cada una guarda su propio progreso, y el botón "Pagar" descuenta
+    // de verdad del Patrimonio Neto en Control Financiero.
     // ============================================
-    document.getElementById('btnCalcStrategy').addEventListener('click', () => {
-        const cuotaMensual = parseFloat(document.getElementById('stratMinCuota').value) || 0;
-        const cuotasRestantes = parseInt(document.getElementById('stratCuotasCount').value) || 0;
-        const costoAdelanto = parseFloat(document.getElementById('stratAdvanceCost').value) || 0;
-        const cantAdelantos = parseInt(document.getElementById('stratAdvanceCount').value) || 0;
+    function getStrategyStateKey(cat) { return `strat_state_${cat}`; }
 
-        if (cuotaMensual <= 0 || cuotasRestantes <= 0) {
-            showLibertadToast('Completá al menos la cuota mensual y la cantidad de cuotas.');
+    ['automotriz', 'tarjeta', 'personal'].forEach(cat => {
+        const btn = document.getElementById(`btnCalcStrategy-${cat}`);
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            const totalAmount = parseFloat(document.getElementById(`stratTotalAmount-${cat}`).value) || 0;
+            const cuotasTotal = parseInt(document.getElementById(`stratCuotasCount-${cat}`).value) || 0;
+            const nameInput = document.getElementById(`stratDebtName-${cat}`);
+            const debtName = (nameInput.value.trim()) || (cat === 'automotriz' ? 'Vehículo' : cat === 'tarjeta' ? 'Tarjeta de Crédito' : 'Deuda Personal');
+
+            if (cuotasTotal <= 0) {
+                showLibertadToast('Elegí la cantidad de cuotas.');
+                return;
+            }
+
+            let cuotaAmount, montoMensualTotal, mesesParaTerminar;
+
+            if (cat === 'automotriz') {
+                // Automotriz: tiene cuota fija + posibilidad de adelantar cuotas a un costo aparte
+                cuotaAmount = parseFloat(document.getElementById('stratMinCuota-automotriz').value) || 0;
+                const costoAdelanto = parseFloat(document.getElementById('stratAdvanceCost-automotriz').value) || 0;
+                const cantAdelantos = parseInt(document.getElementById('stratAdvanceCount-automotriz').value) || 0;
+                if (cuotaAmount <= 0) {
+                    showLibertadToast('Completá la cuota mensual normal.');
+                    return;
+                }
+                const cuotasLiquidadasPorMes = 1 + cantAdelantos;
+                mesesParaTerminar = Math.ceil(cuotasTotal / cuotasLiquidadasPorMes);
+                montoMensualTotal = cuotaAmount + (cantAdelantos * costoAdelanto);
+            } else {
+                // Tarjeta / Personal: monto total repartido en cuotas iguales, sin adelantos
+                if (totalAmount <= 0) {
+                    showLibertadToast('Completá el monto total a pagar.');
+                    return;
+                }
+                cuotaAmount = totalAmount / cuotasTotal;
+                montoMensualTotal = cuotaAmount;
+                mesesParaTerminar = cuotasTotal;
+            }
+
+            const saldoInicial = cat === 'automotriz' ? (totalAmount || (cuotaAmount * cuotasTotal)) : totalAmount;
+
+            const state = {
+                debtName, cuotasTotal, cuotaAmount, montoMensualTotal, mesesParaTerminar,
+                cuotasPagadas: 0, saldoRestante: saldoInicial
+            };
+            localStorage.setItem(getStrategyStateKey(cat), JSON.stringify(state));
+            renderStrategyState(cat);
+        });
+    });
+
+    function renderStrategyState(cat) {
+        const raw = localStorage.getItem(getStrategyStateKey(cat));
+        if (!raw) return;
+        const state = JSON.parse(raw);
+
+        document.getElementById(`stratResultBox-${cat}`).classList.remove('hidden');
+        document.getElementById(`stratMonthlyTotal-${cat}`).textContent = `$${Math.round(state.montoMensualTotal).toLocaleString()}`;
+        document.getElementById(`stratSaldoRestante-${cat}`).textContent = `$${Math.round(state.saldoRestante).toLocaleString()}`;
+        document.getElementById(`stratCuotasProgress-${cat}`).textContent = `${state.cuotasPagadas} / ${state.cuotasTotal} cuotas pagadas`;
+
+        const btnPagar = document.getElementById(`btnPagarCuota-${cat}`);
+        if (state.saldoRestante <= 0) {
+            btnPagar.disabled = true;
+            btnPagar.innerHTML = '✅ Deuda saldada';
+            btnPagar.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            btnPagar.disabled = false;
+            btnPagar.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnPagar.innerHTML = `<i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota ($${Math.round(Math.min(state.montoMensualTotal, state.saldoRestante)).toLocaleString()})`;
+        }
+    }
+
+    // Al abrir cada acordeón, mostramos el progreso ya guardado (si existía)
+    ['automotriz', 'tarjeta', 'personal'].forEach(cat => renderStrategyState(cat));
+
+    // Pagar una cuota: registra el egreso en Control Financiero PRIMERO (así se
+    // descuenta de verdad del Patrimonio Neto), y solo si eso funciona, actualiza
+    // el saldo restante guardado.
+    async function payOneCuotaGeneric(cat) {
+        const raw = localStorage.getItem(getStrategyStateKey(cat));
+        if (!raw) return;
+        const state = JSON.parse(raw);
+        if (state.saldoRestante <= 0) return;
+
+        const payAmount = Math.min(state.montoMensualTotal, state.saldoRestante);
+
+        try {
+            const { error } = await sb.from('transactions').insert({
+                user_id: currentUser.id,
+                name: `Pago cuota - ${state.debtName}`,
+                date: new Date().toISOString().slice(0, 10),
+                month: new Date().toISOString().slice(0, 7),
+                qty_num: 1, unit: '', unit_price: payAmount, price: payAmount,
+                category: 'Servicios', fuel_type: null, type: 'egreso', icon: '💳', completed: false
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error('No se pudo registrar el pago en Control Financiero:', err);
+            await showAlertModal('No se pudo confirmar el pago ahora mismo. No se descontó nada, probá de nuevo en un momento.');
             return;
         }
 
-        const cuotasLiquidadasPorMes = 1 + cantAdelantos; // 1 de la cuota normal + las que adelante
-        const mesesParaTerminar = Math.ceil(cuotasRestantes / cuotasLiquidadasPorMes);
-        const montoMensualTotal = cuotaMensual + (cantAdelantos * costoAdelanto);
+        state.saldoRestante = Math.max(0, state.saldoRestante - payAmount);
+        state.cuotasPagadas += 1;
+        localStorage.setItem(getStrategyStateKey(cat), JSON.stringify(state));
 
-        const años = Math.floor(mesesParaTerminar / 12);
-        const mesesResto = mesesParaTerminar % 12;
-        let tiempoTexto = '';
-        if (años > 0) tiempoTexto += `${años} año${años !== 1 ? 's' : ''}`;
-        if (mesesResto > 0) tiempoTexto += `${años > 0 ? ' y ' : ''}${mesesResto} mes${mesesResto !== 1 ? 'es' : ''}`;
-        if (!tiempoTexto) tiempoTexto = 'menos de 1 mes';
+        await fetchExternalPatrimonioNeto(); // se registró un egreso nuevo, refrescamos
+        render();
+        renderStrategyState(cat);
 
-        document.getElementById('stratMonthlyTotal').textContent = `$${montoMensualTotal.toLocaleString()}`;
-        document.getElementById('stratTimeToFinish').textContent = tiempoTexto;
-
-        const mesesSinAdelanto = cuotasRestantes;
-        const comparación = cantAdelantos > 0
-            ? `Sin adelantar ninguna cuota, tardarías ${mesesSinAdelanto} meses. Adelantando ${cantAdelantos} por mes, lo reducís a ${mesesParaTerminar} meses.`
-            : 'Agregá cuotas a adelantar por mes para ver cuánto podés acortar el plazo.';
-        document.getElementById('stratComparisonText').textContent = comparación;
-
-        document.getElementById('stratResultBox').classList.remove('hidden');
-    });
+        if (state.saldoRestante <= 0) {
+            await showAlertModal(`🎉 ¡Felicidades! Terminaste de pagar: ${state.debtName}`);
+        } else {
+            showLibertadToast(`✅ Pagaste $${Math.round(payAmount).toLocaleString()} de "${state.debtName}". Te falta $${Math.round(state.saldoRestante).toLocaleString()}.`);
+        }
+    }
 
     function switchLfTab(tabName) {
         // "Registrar Deudas" ahora es una sub-pestaña DENTRO de "Deudas"
