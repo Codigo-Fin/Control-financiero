@@ -3076,6 +3076,79 @@
     document.getElementById('assistant-input-lf').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') sendAssistantMessageLF();
     });
+<!-- ... aquí viene todo tu código JS anterior que ya tenías ... -->
+
+
+    // ==========================================
+    // MÓDULO DE ESTRATEGIA DE PAGO DE DEUDAS
+    // ==========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnEstrategia = document.getElementById('btn-estrategia') || document.querySelector('.btn-estrategia');
+      const contenedorEstrategia = document.getElementById('resultado-estrategia');
+
+      if (!btnEstrategia) return;
+
+      btnEstrategia.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        const listaDeudas = window.deudas || obtenerDeudasDeTabla();
+
+        if (!listaDeudas || listaDeudas.length === 0) {
+          alert('Por favor, ingresa al menos una deuda para calcular la estrategia.');
+          return;
+        }
+
+        const deudasOrdenadas = [...listaDeudas].sort((a, b) => parseFloat(a.monto) - parseFloat(b.monto));
+
+        let htmlEstrategia = `
+          <div class="card-estrategia" style="margin-top: 20px; padding: 15px; border-left: 4px solid #2ea44f; background: #f6f8fa;">
+            <h3>Estrategia Recomendada: Método Bola de Nieve</h3>
+            <p><small>Enfócate en liquidar la deuda más pequeña primero para ganar impulso financiero.</small></p>
+            <ol style="padding-left: 20px;">
+        `;
+
+        deudasOrdenadas.forEach((deuda, index) => {
+          const montoFormateado = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(deuda.monto);
+          if (index === 0) {
+            htmlEstrategia += `<li><strong>¡PRIORIDAD ALTA!</strong> Pagar extra a: <strong>${deuda.nombre || 'Deuda ' + (index + 1)}</strong> — Saldo: ${montoFormateado}</li>`;
+          } else {
+            htmlEstrategia += `<li>Mantener pago mínimo en: <strong>${deuda.nombre || 'Deuda ' + (index + 1)}</strong> — Saldo: ${montoFormateado}</li>`;
+          }
+        });
+
+        htmlEstrategia += `</ol></div>`;
+
+        if (contenedorEstrategia) {
+          contenedorEstrategia.innerHTML = htmlEstrategia;
+          contenedorEstrategia.style.display = 'block';
+        } else {
+          btnEstrategia.insertAdjacentHTML('afterend', htmlEstrategia);
+        }
+      });
+    });
+
+    function obtenerDeudasDeTabla() {
+      const filas = document.querySelectorAll('#tabla-deudas tbody tr');
+      const deudas = [];
+      filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('td');
+        if (celdas.length >= 2) {
+          const nombre = celdas[0].innerText.trim();
+          const montoTexto = celdas[1].innerText.replace(/[^0-9.-]+/g, "");
+          const monto = parseFloat(montoTexto);
+          if (!isNaN(monto) && monto > 0) {
+            deudas.push({ nombre, monto });
+          }
+        }
+      });
+      return deudas;
+    }
+
+  </script>
+</body>
+</html>
+
+    
 </script>
 
 
