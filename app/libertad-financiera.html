@@ -984,9 +984,10 @@
     async function fetchExternalPatrimonioNeto() {
         try {
             const currentMonth = new Date().toISOString().slice(0, 7);
-            // Traemos TODOS los movimientos (no solo el mes actual), para sumar el
-            // Patrimonio Neto acumulado de cada mes, no solo el de hoy.
-            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id);
+            const currentYear = currentMonth.slice(0, 4);
+            // Traemos los movimientos del AÑO en curso (no de toda la historia, y no
+            // solo del mes actual), para sumar el Patrimonio Neto acumulado del año.
+            const { data: txs } = await sb.from('transactions').select('price, type, month').eq('user_id', currentUser.id).like('month', `${currentYear}-%`);
 
             const byMonth = {};
             (txs || []).forEach(t => {
