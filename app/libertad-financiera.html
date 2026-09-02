@@ -2576,23 +2576,27 @@
     const SECTION_LABELS_LF = {
         cuadrante: 'Ir a Control Financiero → Cuadrante de Flujo',
         ingresos: 'Ir a Control Financiero → Ingresos',
-        egresos: 'Ir a Control Financiero → Egresos',
+        egresos: 'Ir a Control Financiero → Gastos',
         resumen: 'Ir a Control Financiero → Mis Movimientos',
         lf_saldo: 'Ir a Patrimonio Neto',
         lf_fondos: 'Ir a Fondos de Emergencia',
-        lf_deudas: 'Ir a Registrar Deudas',
-        lf_emergencia: 'Ir a Pagar Deudas',
-        lf_inversiones: 'Ir a Inversiones'
+        lf_deudas: 'Ir a Deudas (Registrar)',
+        lf_emergencia: 'Ir a Deudas (Pagar)',
+        lf_inversiones: 'Ir a Inversiones',
+        suscripcion: 'Ir a Control Financiero → Suscripción',
+        perfil: 'Ir a Control Financiero → Mi Perfil y Soporte'
     };
 
     function navigateToSuggestedSectionLF(section) {
         if (!section.startsWith('lf_')) {
-            window.open('index.html', '_blank');
+            // Llevamos directo a la pestaña específica en Control Financiero
+            // (antes solo abría la página sin ir al lugar exacto).
+            window.open(`index.html?goto=${section}`, '_blank');
             return;
         }
         document.getElementById('btn-close-assistant-lf').click();
-        const tabMap = { lf_saldo: 'saldo', lf_deudas: 'deudas', lf_emergencia: 'emergencia', lf_inversiones: 'inversiones' };
-        switchLfTab(tabMap[section]);
+        const tabMap = { lf_saldo: 'saldo', lf_fondos: 'fondos', lf_deudas: 'deudas', lf_emergencia: 'emergencia', lf_inversiones: 'inversiones' };
+        switchLfTab(tabMap[section] || 'saldo');
     }
 
     function addAssistantMessageLF(text, isUser, suggestedSection) {
