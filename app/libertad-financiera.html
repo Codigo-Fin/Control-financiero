@@ -154,7 +154,7 @@
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </a>
                 <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
-                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Bola de Nieve
+                    <i class="fa-solid fa-link w-5 text-center"></i> Deudas
                 </button>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
@@ -309,7 +309,7 @@
         <!-- ==================== TAB: PAGAR DEUDAS ==================== -->
         <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
 
-        <!-- Pestañas internas: Registrar / Pagar, todo dentro de "Bola de Nieve" -->
+        <!-- Pestañas internas: Registrar / Pagar, todo dentro de "Deudas" -->
         <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5">
             <button data-sub-tab-lf="registrar" class="sub-tab-btn-lf flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
                 <i class="fa-solid fa-file-invoice-dollar"></i> REGISTRAR
@@ -506,7 +506,7 @@
 
         </div>
 
-        </div> <!-- fin lf-tab-emergencia (Bola de Nieve: Registrar + Pagar, unificado) -->
+        </div> <!-- fin lf-tab-emergencia (Deudas: Registrar + Pagar, unificado) -->
 
 
         <!-- ==================== TAB: INVERSIONES ==================== -->
@@ -2148,7 +2148,7 @@
     // ============================================
     let currentDebtSubTab = 'registrar';
 
-    // Cambia entre las pestañas internas de "Bola de Nieve" (Registrar/Pagar)
+    // Cambia entre las pestañas internas de "Deudas" (Registrar/Pagar)
     function switchDebtSubTab(subTab) {
         currentDebtSubTab = subTab;
         document.querySelectorAll('.sub-tab-panel-lf').forEach(panel => panel.classList.add('hidden'));
@@ -2169,7 +2169,7 @@
     });
 
     function switchLfTab(tabName) {
-        // "Registrar Deudas" ahora es una sub-pestaña DENTRO de "Bola de Nieve"
+        // "Registrar Deudas" ahora es una sub-pestaña DENTRO de "Deudas"
         // (antes "Pagar Deudas") — cualquier link viejo que pida "deudas" lo mandamos ahí.
         if (tabName === 'deudas') {
             switchLfTab('emergencia');
@@ -2225,7 +2225,7 @@
         const goto = params.get('goto');
         if (!goto) return;
         // "deudas" ya no es una pestaña propia, ahora es la sub-pestaña "Registrar"
-        // dentro de "Bola de Nieve" — switchLfTab ya sabe redirigir esto solo.
+        // dentro de "Deudas" — switchLfTab ya sabe redirigir esto solo.
         if (goto === 'deudas' || document.getElementById('lf-tab-' + goto)) {
             switchLfTab(goto);
             window.history.replaceState({}, '', window.location.pathname);
