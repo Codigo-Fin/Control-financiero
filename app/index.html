@@ -216,7 +216,7 @@
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </button>
                 <a href="libertad-financiera.html?goto=emergencia" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
-                    <i class="fa-solid fa-snowflake w-5 text-center"></i> Bola de Nieve
+                    <i class="fa-solid fa-link w-5 text-center"></i> Deudas
                 </a>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
@@ -307,7 +307,7 @@
         <div class="hidden gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5 overflow-x-auto">
             <button data-tab="cuadrante" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">CUADRANTE DE FLUJO</button>
             <button data-tab="ingresos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INGRESOS</button>
-            <button data-tab="egresos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">EGRESOS</button>
+            <button data-tab="egresos" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">GASTOS</button>
             <button data-tab="resumen" class="tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS MOVIMIENTOS</button>
         </div>
 
@@ -428,17 +428,16 @@
         </header>
 
 
-        <!-- Pestañas internas: Ingresos / Egresos, todo dentro de "Mis Movimientos" -->
-        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5">
-            <button data-sub-tab="ingresos" class="sub-tab-btn flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
-                <i class="fa-solid fa-building-columns"></i> INGRESOS
+        <!-- Acordeón: Ingresos / Gastos / Ganancias — solo uno abierto a la vez,
+             con cajas de estilo neón, para que no sea un "choclo" de todo junto. -->
+        <div class="rounded-3xl overflow-hidden border-2 border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
+            <button data-accordion="ingresos" class="accordion-header w-full flex items-center justify-between p-4 bg-cyan-950/40 hover:bg-cyan-950/60 transition-all">
+                <span class="font-bold text-cyan-300 flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-building-columns"></i> INGRESOS
+                </span>
+                <i class="fa-solid fa-chevron-down accordion-chevron text-cyan-300 transition-transform duration-300"></i>
             </button>
-            <button data-sub-tab="egresos" class="sub-tab-btn flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
-                <i class="fa-solid fa-bag-shopping"></i> EGRESOS
-            </button>
-        </div>
-
-        <div id="sub-panel-ingresos" class="sub-tab-panel space-y-5">
+            <div id="accordion-body-ingresos" class="accordion-body hidden p-4 sm:p-5 space-y-5 bg-slate-950/50">
 
         <div class="flex justify-end">
             <button onclick="openSalaryModal()" class="bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
@@ -590,16 +589,22 @@
                 <div id="movimientos-ingresos-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
             </div>
         </div>
-
-
+            </div>
         </div>
 
-        <div id="sub-panel-egresos" class="sub-tab-panel hidden space-y-5">
+        <div class="rounded-3xl overflow-hidden border-2 border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.15)]">
+            <button data-accordion="egresos" class="accordion-header w-full flex items-center justify-between p-4 bg-rose-950/40 hover:bg-rose-950/60 transition-all">
+                <span class="font-bold text-rose-300 flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-bag-shopping"></i> GASTOS
+                </span>
+                <i class="fa-solid fa-chevron-down accordion-chevron text-rose-300 transition-transform duration-300"></i>
+            </button>
+            <div id="accordion-body-egresos" class="accordion-body hidden p-4 sm:p-5 space-y-5 bg-slate-950/50">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="bg-rose-950/40 p-4 rounded-2xl border-2 border-rose-500/30">
                 <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-rose-300 uppercase tracking-wider">🛍️ Egresos del Mes</span>
+                <span class="text-xs font-bold text-rose-300 uppercase tracking-wider">🛍️ Gastos del Mes</span>
                 <div class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs">
                     <i class="fa-solid fa-bag-shopping"></i>
                 </div>
@@ -632,7 +637,7 @@
         <div class="glass-panel rounded-2xl overflow-hidden">
             <button type="button" id="toggle-egresos-btn" class="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors">
                 <span class="text-sm font-bold text-rose-400 uppercase tracking-wide flex items-center gap-1.5">
-                    <i class="fa-solid fa-bag-shopping"></i> Movimientos de Egresos
+                    <i class="fa-solid fa-bag-shopping"></i> Movimientos de Gastos
                     <span id="egresos-summary" class="text-[10px] text-slate-400 font-normal normal-case"></span>
                 </span>
                 <i id="toggle-egresos-icon" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
@@ -642,68 +647,17 @@
                 <div id="movimientos-egresos-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
             </div>
         </div>
-
-
+            </div>
         </div>
 
-
-        <!-- Mismo navegador de mes que en Ingresos y Egresos, duplicado acá para no tener
-             que saltar de pestaña para cambiar de mes. -->
-        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
-            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
-                <div class="flex flex-wrap items-center gap-2">
-                    <div class="flex items-center bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-1 gap-1 shadow-inner">
-                        <button id="prev-month-btn-2" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
-                            <i class="fa-solid fa-chevron-left text-xs"></i>
-                        </button>
-                        <div class="flex items-center gap-1.5 px-2">
-                            <i class="fa-regular fa-calendar-days text-cyan-400 text-xs"></i>
-                            <select id="header-month-select-2" class="bg-transparent text-cyan-300 font-bold text-sm focus:outline-none cursor-pointer py-1"></select>
-                        </div>
-                        <button id="next-month-btn-2" title="Mes Siguiente" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
-                            <i class="fa-solid fa-chevron-right text-xs"></i>
-                        </button>
-                    </div>
-
-                    <button onclick="toggleMonthDrawer(2)" class="bg-slate-800/80 hover:bg-slate-700/80 border border-white/10 text-slate-300 px-3 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-layer-group text-cyan-400"></i>
-                        <span id="drawer-toggle-text-2">Ver Calendario Anual</span>
-                        <i id="drawer-arrow-2" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
-                    </button>
-                </div>
-            </div>
-
-            <div id="month-drawer-2" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Patrimonio Neto por Mes</span>
-                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
-                </div>
-                <div id="annual-months-grid-2" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
-            </div>
-
-            <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
-                <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-share-nodes text-cyan-400"></i>
-                    <span>Comprobante Mensual:</span>
+        <div class="rounded-3xl overflow-hidden border-2 border-teal-500/30 shadow-[0_0_20px_rgba(20,184,166,0.15)]">
+            <button data-accordion="ganancias" class="accordion-header w-full flex items-center justify-between p-4 bg-teal-950/40 hover:bg-teal-950/60 transition-all">
+                <span class="font-bold text-teal-300 flex items-center gap-2 text-sm sm:text-base">
+                    <i class="fa-solid fa-coins"></i> TUS GANANCIAS
                 </span>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-invoice text-rose-300"></i>
-                        <span>Comprobante PDF a WhatsApp</span>
-                    </button>
-                    <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
-                        <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
-                        <span>Compartir Resumen (texto)</span>
-                    </button>
-                </div>
-            </div>
-        </header>
-
-        <!-- Estilo "Didi": tus ganancias por Día / Semana / Mes -->
-        <section class="glass-panel rounded-3xl p-5 space-y-3">
-            <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
-                <i class="fa-solid fa-coins text-cyan-400"></i> TUS GANANCIAS
-            </h2>
+                <i class="fa-solid fa-chevron-down accordion-chevron text-teal-300 transition-transform duration-300"></i>
+            </button>
+            <div id="accordion-body-ganancias" class="accordion-body hidden p-4 sm:p-5 space-y-3 bg-slate-950/50">
             <div class="flex bg-slate-900/80 rounded-2xl p-1 gap-1">
                 <button data-period="diario" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-cyan-500 text-slate-950">Diario</button>
                 <button data-period="semanal" class="period-btn flex-1 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-400">Semanal</button>
@@ -723,7 +677,17 @@
                     <p id="period-expense-amount" class="text-base font-bold text-rose-400">$0</p>
                 </div>
             </div>
-        </section>
+            </div>
+        </div>
+
+
+
+
+
+
+
+
+
 
         <section class="space-y-3">
             <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-wide flex items-center gap-2">
@@ -2600,7 +2564,7 @@
                             <div style="font-size:16px; font-weight:bold; color:#111;">${formatMoney(totalIncome)}</div>
                         </td>
                         <td style="padding:8px; background:#fef2f2;">
-                            <div style="font-size:11px; color:#e11d48; font-weight:bold;">EGRESOS TOTALES</div>
+                            <div style="font-size:11px; color:#e11d48; font-weight:bold;">GASTOS TOTALES</div>
                             <div style="font-size:16px; font-weight:bold; color:#111;">${formatMoney(totalExpenses)}</div>
                         </td>
                         <td style="padding:8px; background:#f0fdfa; border-radius:0 6px 6px 0;">
@@ -2829,20 +2793,6 @@
             if (idx > 0) { selectedMonthFilter = yearMonths[idx - 1]; syncInputDateToSelectedMonth(); renderApp(); }
         });
         document.getElementById('next-month-btn').addEventListener('click', () => {
-            const yearMonths = generateFullYearMonths(activeYear);
-            const idx = yearMonths.indexOf(selectedMonthFilter);
-            if (idx < yearMonths.length - 1) { selectedMonthFilter = yearMonths[idx + 1]; syncInputDateToSelectedMonth(); renderApp(); }
-        });
-
-        // Mismos eventos, para el navegador duplicado en "Mis Movimientos"
-        const headerMonthSelect2 = document.getElementById('header-month-select-2');
-        headerMonthSelect2.addEventListener('change', (e) => { selectedMonthFilter = e.target.value; syncInputDateToSelectedMonth(); renderApp(); });
-        document.getElementById('prev-month-btn-2').addEventListener('click', () => {
-            const yearMonths = generateFullYearMonths(activeYear);
-            const idx = yearMonths.indexOf(selectedMonthFilter);
-            if (idx > 0) { selectedMonthFilter = yearMonths[idx - 1]; syncInputDateToSelectedMonth(); renderApp(); }
-        });
-        document.getElementById('next-month-btn-2').addEventListener('click', () => {
             const yearMonths = generateFullYearMonths(activeYear);
             const idx = yearMonths.indexOf(selectedMonthFilter);
             if (idx < yearMonths.length - 1) { selectedMonthFilter = yearMonths[idx + 1]; syncInputDateToSelectedMonth(); renderApp(); }
@@ -3080,44 +3030,55 @@
         }
 
         let currentMovementSubTab = 'ingresos';
+        const ACCORDION_SECTIONS = ['ingresos', 'egresos', 'ganancias'];
 
-        // Cambia entre las pestañas internas de "Mis Movimientos" (Ingresos/Egresos)
-        function switchMovementSubTab(subTab) {
-            currentMovementSubTab = subTab;
-            document.querySelectorAll('.sub-tab-panel').forEach(panel => panel.classList.add('hidden'));
-            document.getElementById('sub-panel-' + subTab).classList.remove('hidden');
+        // Abre una sección del acordeón de "Mis Movimientos" y cierra las demás.
+        // Si se toca la que ya está abierta, se cierra (comportamiento de acordeón real).
+        function openMovementSection(section, allowToggleClose) {
+            const body = document.getElementById('accordion-body-' + section);
+            const alreadyOpen = !body.classList.contains('hidden');
 
-            document.querySelectorAll('.sub-tab-btn').forEach(btn => {
-                if (btn.dataset.subTab === subTab) {
-                    btn.classList.add('bg-cyan-500', 'text-slate-950', 'shadow-md');
-                    btn.classList.remove('text-slate-400');
-                } else {
-                    btn.classList.remove('bg-cyan-500', 'text-slate-950', 'shadow-md');
-                    btn.classList.add('text-slate-400');
-                }
+            ACCORDION_SECTIONS.forEach(s => {
+                const b = document.getElementById('accordion-body-' + s);
+                const header = document.querySelector(`[data-accordion="${s}"]`);
+                const chevron = header ? header.querySelector('.accordion-chevron') : null;
+                b.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
             });
 
-            moveMovementsPanelTo(subTab === 'ingresos' ? 'ingreso' : 'egreso');
+            if (allowToggleClose && alreadyOpen) {
+                // ya estaba abierta y la volvieron a tocar: queda todo cerrado
+                return;
+            }
+
+            currentMovementSubTab = section;
+            body.classList.remove('hidden');
+            const header = document.querySelector(`[data-accordion="${section}"]`);
+            const chevron = header ? header.querySelector('.accordion-chevron') : null;
+            if (chevron) chevron.classList.add('rotate-180');
+
+            if (section === 'ingresos') moveMovementsPanelTo('ingreso');
+            if (section === 'egresos') moveMovementsPanelTo('egreso');
         }
 
-        document.querySelectorAll('.sub-tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => switchMovementSubTab(btn.dataset.subTab));
+        document.querySelectorAll('.accordion-header').forEach(btn => {
+            btn.addEventListener('click', () => openMovementSection(btn.dataset.accordion, true));
         });
 
         function switchTab(tabName) {
             // "Ingresos" y "Egresos" ahora viven DENTRO de "Mis Movimientos" (resumen),
-            // como pestañas internas — si algo pide ir directo ahí (menú, asistente de
-            // IA, links viejos), lo mandamos a "resumen" y seleccionamos la sub-pestaña.
+            // como secciones del acordeón — si algo pide ir directo ahí (menú, asistente
+            // de IA, links viejos), lo mandamos a "resumen" y abrimos esa sección.
             if (tabName === 'ingresos' || tabName === 'egresos') {
                 switchTab('resumen');
-                switchMovementSubTab(tabName);
+                openMovementSection(tabName, false);
                 return;
             }
 
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
             document.getElementById('tab-panel-' + tabName).classList.remove('hidden');
 
-            if (tabName === 'resumen') switchMovementSubTab(currentMovementSubTab);
+            if (tabName === 'resumen') openMovementSection(currentMovementSubTab, false);
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 if (btn.dataset.tab === tabName) {
