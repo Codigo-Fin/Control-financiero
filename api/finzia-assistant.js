@@ -27,15 +27,17 @@ Tenés que responder SIEMPRE con un JSON, sin texto adicional afuera, con este f
 }
 
 Códigos válidos para "suggestedSection" (usá el que más se relacione con tu respuesta; si mencionás una sección de la app, SIEMPRE completá este campo con su código):
-- "cuadrante" → pestaña "Cuadrante de Flujo" (ahí está la Suscripción Premium y el "Reparto de mi Dinero")
-- "ingresos" → pestaña "Ingresos" (cargar ingresos/sueldo — voz, foto, PDF o a mano)
-- "egresos" → pestaña "Gastos" (cargar gastos — voz, foto, PDF o a mano)
-- "resumen" → pestaña "Mis Movimientos" (ver categorías y resultados del mes)
+- "cuadrante" → pestaña "Cuadrante de Flujo" (ahí está el "Reparto de mi Dinero")
+- "ingresos" → dentro de "Mis Movimientos", la sección desplegable "Ingresos" (cargar ingresos/sueldo — voz, foto, PDF o a mano)
+- "egresos" → dentro de "Mis Movimientos", la sección desplegable "Gastos" (cargar gastos — voz, foto, PDF o a mano)
+- "resumen" → pestaña "Mis Movimientos" (ahí adentro se despliegan Ingresos, Gastos, y Tus Ganancias, cada una en su propio cuadro — se abre uno solo a la vez)
 - "lf_saldo" → dentro de Libertad Financiera, pestaña "Patrimonio Neto"
 - "lf_fondos" → dentro de Libertad Financiera, pestaña "Fondos de Emergencia" (fondo básico de 1000 USD y el de 3-6 sueldos)
-- "lf_deudas" → dentro de Control de mis Finanzas, pestaña "Deudas" (sub-pestaña "Registrar")
-- "lf_emergencia" → dentro de Control de mis Finanzas, pestaña "Deudas" (sub-pestaña "Pagar", con Prioridad de Pago e Ingresos Extras)
+- "lf_deudas" → pestaña "Deudas" (sub-pestaña "Registrar", para cargar una deuda nueva)
+- "lf_emergencia" → pestaña "Deudas" (sub-pestaña "Pagar" — ahí adentro se despliegan Prioridad de Pago Sugerido, Ingresos Extras, Deudas Liquidadas, e Historial, cada uno en su propio cuadro)
 - "lf_inversiones" → dentro de Libertad Financiera, pestaña "Inversiones"
+- "suscripcion" → pestaña "Suscripción" (cambiar de plan, cancelar, ver el precio)
+- "perfil" → pestaña "Mi Perfil y Soporte" (cambiar contraseña, contactar soporte por un problema de cobro)
 
 REGLAS ESTRICTAS QUE TENÉS QUE SEGUIR SIEMPRE (aplican al contenido de "answer"):
 1. Tu único tema es la situación financiera de la persona, usando EXCLUSIVAMENTE los datos que te paso abajo en "DATOS FINANCIEROS ACTUALES". No inventes números que no estén ahí.
@@ -117,8 +119,16 @@ ${debtStatusLine}
     try {
       parsed = JSON.parse(cleaned);
     } catch (e) {
-      // Si por algún motivo no vino en JSON, lo usamos igual como texto plano de respaldo
-      parsed = { answer: rawText, suggestedSection: null };
+      // Si no vino en JSON válido, intentamos rescatar SOLO el texto de la
+      // respuesta con una expresión regular, para no mostrarle a la persona
+      // el JSON crudo con llaves y comillas mezclado en el chat.
+      const answerMatch = cleaned.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      if (answerMatch) {
+        parsed = { answer: answerMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'), suggestedSection: null };
+      } else {
+        console.warn('No se pudo interpretar la respuesta de la IA como JSON:', rawText);
+        parsed = { answer: 'Perdón, no pude entender bien tu pregunta. ¿Podés reformularla?', suggestedSection: null };
+      }
     }
 
     return res.status(200).json({ answer: parsed.answer || 'No pude generar una respuesta ahora.', suggestedSection: parsed.suggestedSection || null });
