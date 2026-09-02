@@ -45,7 +45,7 @@ REGLAS ESTRICTAS QUE TENÉS QUE SEGUIR SIEMPRE (aplican al contenido de "answer"
 3. Cuando te pidan un diagnóstico o cómo mejorar/salir de una deuda, respondé SIEMPRE con esta estructura:
    - Un diagnóstico corto (2-3 líneas) de la situación, usando los números reales.
    - Pasos numerados y concretos (Paso 1, Paso 2, Paso 3...), máximo 4 pasos, cada uno accionable (algo que la persona pueda hacer hoy o esta semana), no consejos genéricos vagos.
-4. Sé conciso y preciso: andá directo a lo que te preguntan, sin vueltas ni relleno. Nunca más de 100 palabras por respuesta (salvo en diagnósticos de deuda completos, donde podés usar hasta 150 palabras para cubrir bien los pasos y la idea de ingreso extra), salvo que te pidan explícitamente más detalle. Priorizá entender bien el contexto puntual de la pregunta antes de responder, para no dar información de más que no te pidieron.
+4. Sé conciso y preciso: andá directo a lo que te preguntan, sin vueltas ni relleno. Nunca más de 100 palabras por respuesta (salvo en diagnósticos de deuda completos, donde podés usar hasta 220 palabras para cubrir bien el orden de prioridad, los pasos, y el cierre motivador), salvo que te pidan explícitamente más detalle. Priorizá entender bien el contexto puntual de la pregunta antes de responder, para no dar información de más que no te pidieron.
 5. No des consejos de inversión específicos de qué comprar (acciones, cripto, etc.) — podés hablar de conceptos generales (diversificar, fondo de emergencia, prioridad de pago de deudas), pero no recomendaciones de instrumentos concretos.
 6. Nunca digas que sos "asesor financiero" ni des la impresión de ser un profesional matriculado — sos una guía dentro de la app, no un asesor. Si preguntan algo que requiera asesoramiento profesional puntual (impositivo, legal, inversión específica), aclará que para eso conviene un profesional matriculado.
 7. Cuando sea relevante, guiá a la persona a usar las funciones que YA existen en la app en vez de solo dar consejo teórico — por ejemplo, si hablan de deudas, mencioná la sección "Deudas" (con su Prioridad de Pago Sugerido y Fondo de Emergencia); si hablan de metas de ahorro, mencioná la "Regla de Reparto"; si hablan de gastos, mencioná que pueden cargarlos en la pestaña "Gastos" (o "Ingresos" si es plata que cobraron).
@@ -117,7 +117,7 @@ ${debtStatusLine}
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 500,
+        max_tokens: 900,
         system: systemPrompt,
         messages: messages
       })
@@ -136,15 +136,22 @@ ${debtStatusLine}
     try {
       parsed = JSON.parse(cleaned);
     } catch (e) {
-      // Si no vino en JSON válido, intentamos rescatar SOLO el texto de la
-      // respuesta con una expresión regular, para no mostrarle a la persona
-      // el JSON crudo con llaves y comillas mezclado en el chat.
-      const answerMatch = cleaned.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      // Si no vino en JSON válido (a veces por quedar cortada a mitad de camino),
+      // intentamos rescatar el texto de la respuesta con una expresión regular,
+      // aunque haya quedado incompleta — mejor una respuesta cortada que un
+      // mensaje genérico de "no entendí", que confunde sin necesidad.
+      let answerMatch = cleaned.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+      if (!answerMatch) {
+        // La respuesta se cortó ANTES de cerrar la comilla — igual rescatamos
+        // todo lo que se llegó a escribir después de "answer":
+        answerMatch = cleaned.match(/"answer"\s*:\s*"((?:[^"\\]|\\.)*)$/);
+      }
       if (answerMatch) {
-        parsed = { answer: answerMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"'), suggestedSection: null };
+        let recovered = answerMatch[1].replace(/\\n/g, '\n').replace(/\\"/g, '"');
+        parsed = { answer: recovered, suggestedSection: null };
       } else {
         console.warn('No se pudo interpretar la respuesta de la IA como JSON:', rawText);
-        parsed = { answer: 'Perdón, no pude entender bien tu pregunta. ¿Podés reformularla?', suggestedSection: null };
+        parsed = { answer: 'Perdón, se cortó la respuesta a mitad de camino. ¿Podés preguntarlo de nuevo?', suggestedSection: null };
       }
     }
 
