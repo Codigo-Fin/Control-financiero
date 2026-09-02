@@ -3064,7 +3064,7 @@
             addAssistantMessageLF(data.answer, false, data.suggestedSection);
             assistantConversationLF.push({ role: 'user', content: question });
             assistantConversationLF.push({ role: 'assistant', content: data.answer, suggestedSection: data.suggestedSection });
-            if (assistantConversationLF.length > 20) assistantConversationLF = assistantConversationLF.slice(-20);
+           if (assistantConversationLF.length > 20) assistantConversationLF = assistantConversationLF.slice(-20);
             saveAssistantConversationLF();
         } catch (err) {
             loadingBubble.remove();
@@ -3076,8 +3076,6 @@
     document.getElementById('assistant-input-lf').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') sendAssistantMessageLF();
     });
-<!-- ... aquí viene todo tu código JS anterior que ya tenías ... -->
-
 
     // ==========================================
     // MÓDULO DE ESTRATEGIA DE PAGO DE DEUDAS
@@ -3145,13 +3143,5 @@
     }
 
   </script>
-</body>
-</html>
-
-    
-</script>
-
-
-
 </body>
 </html>
