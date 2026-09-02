@@ -2356,14 +2356,16 @@
     // Acordeón dentro de "Pagar": Prioridad de Pago / Ingresos Extras / Liquidadas /
     // Historial — solo uno abierto a la vez, igual que en "Mis Movimientos".
     let currentDebtAccordionSection = 'prioridad';
-    const DEBT_ACCORDION_SECTIONS = ['prioridad', 'extras', 'liquidadas', 'historial', 'calculadora'];
+    const DEBT_ACCORDION_SECTIONS = ['prioridad', 'extras', 'liquidadas', 'historial', 'calc-automotriz', 'calc-tarjeta', 'calc-personal'];
 
     function openDebtAccordionSection(section, allowToggleClose) {
         const body = document.getElementById('accordion-body-pd-' + section);
+        if (!body) { console.warn('Sección de acordeón inexistente:', section); return; }
         const alreadyOpen = !body.classList.contains('hidden');
 
         DEBT_ACCORDION_SECTIONS.forEach(s => {
             const b = document.getElementById('accordion-body-pd-' + s);
+            if (!b) return; // si alguna sección de la lista ya no existe, la salteamos sin romper el resto
             const header = document.querySelector(`[data-accordion-pd="${s}"]`);
             const chevron = header ? header.querySelector('.accordion-chevron-pd') : null;
             b.classList.add('hidden');
