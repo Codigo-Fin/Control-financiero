@@ -3954,13 +3954,15 @@
         const SECTION_LABELS = {
             cuadrante: 'Ir a Cuadrante de Flujo',
             ingresos: 'Ir a Ingresos',
-            egresos: 'Ir a Egresos',
+            egresos: 'Ir a Gastos',
             resumen: 'Ir a Mis Movimientos',
             lf_saldo: 'Ir a Libertad Financiera → Patrimonio Neto',
             lf_fondos: 'Ir a Libertad Financiera → Fondos de Emergencia',
-            lf_deudas: 'Ir a Libertad Financiera → Registrar Deudas',
-            lf_emergencia: 'Ir a Libertad Financiera → Pagar Deudas',
-            lf_inversiones: 'Ir a Libertad Financiera → Inversiones'
+            lf_deudas: 'Ir a Deudas (Registrar)',
+            lf_emergencia: 'Ir a Deudas (Pagar)',
+            lf_inversiones: 'Ir a Libertad Financiera → Inversiones',
+            suscripcion: 'Ir a Suscripción',
+            perfil: 'Ir a Mi Perfil y Soporte'
         };
 
         function addAssistantMessage(text, isUser, suggestedSection) {
@@ -4205,7 +4207,17 @@
 
         function navigateToSuggestedSection(section) {
             if (section.startsWith('lf_')) {
-                window.open('libertad-financiera.html', '_blank');
+                // Mapeamos el código interno al nombre real de pestaña, para llevar
+                // directo ahí (antes solo abría la página sin ir al lugar específico).
+                const lfTabMap = {
+                    lf_saldo: 'saldo',
+                    lf_fondos: 'fondos',
+                    lf_deudas: 'deudas',
+                    lf_emergencia: 'emergencia',
+                    lf_inversiones: 'inversiones'
+                };
+                const target = lfTabMap[section] || 'saldo';
+                window.open(`libertad-financiera.html?goto=${target}`, '_blank');
                 return;
             }
             document.getElementById('btn-close-assistant').click();
