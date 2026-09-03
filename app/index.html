@@ -211,23 +211,31 @@
                     <span class="ml-auto text-[9px] bg-sky-400 text-slate-950 font-extrabold px-1.5 py-0.5 rounded-full">ASISTENTE</span>
                 </button>
 
-                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Control de mis Finanzas</p>
-                <button data-menu-tab="resumen" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                <p class="text-[10px] uppercase tracking-wider text-rose-400 font-bold px-3 pt-4 pb-1">🔴 Estadio 1: Control</p>
+                <button data-menu-tab="resumen" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all border-l-4 border-rose-500/60">
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </button>
-                <a href="libertad-financiera.html?goto=emergencia" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+
+                <p class="text-[10px] uppercase tracking-wider text-amber-400 font-bold px-3 pt-4 pb-1">🟡 Estadio 2: Elimina y Construye</p>
+                <a href="libertad-financiera.html?goto=emergencia" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all border-l-4 border-amber-500/60">
                     <i class="fa-solid fa-link w-5 text-center"></i> Deudas
                 </a>
-
-                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
-                <a href="libertad-financiera.html?goto=saldo" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
-                </a>
-                <a href="libertad-financiera.html?goto=fondos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                <a href="libertad-financiera.html?goto=fondos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-amber-500/60">
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
                 </a>
-                <a href="libertad-financiera.html?goto=inversiones" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+
+                <p class="text-[10px] uppercase tracking-wider text-emerald-400 font-bold px-3 pt-4 pb-1">🟢 Estadio 3: Genera Riqueza</p>
+                <a href="libertad-financiera.html?goto=saldo" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
+                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
+                </a>
+                <a href="libertad-financiera.html?goto=inversiones" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
+                </a>
+                <a href="libertad-financiera.html?goto=proyectos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
+                    <i class="fa-solid fa-rocket w-5 text-center"></i> Mis Proyectos
+                </a>
+                <a href="libertad-financiera.html?goto=suenos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
+                    <i class="fa-solid fa-star-of-life w-5 text-center"></i> Mis Sueños
                 </a>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
@@ -3961,6 +3969,8 @@
             lf_deudas: 'Ir a Deudas (Registrar)',
             lf_emergencia: 'Ir a Deudas (Pagar)',
             lf_inversiones: 'Ir a Libertad Financiera → Inversiones',
+            lf_proyectos: 'Ir a Libertad Financiera → Mis Proyectos',
+            lf_suenos: 'Ir a Libertad Financiera → Mis Sueños',
             suscripcion: 'Ir a Suscripción',
             perfil: 'Ir a Mi Perfil y Soporte'
         };
@@ -4214,7 +4224,9 @@
                     lf_fondos: 'fondos',
                     lf_deudas: 'deudas',
                     lf_emergencia: 'emergencia',
-                    lf_inversiones: 'inversiones'
+                    lf_inversiones: 'inversiones',
+                    lf_proyectos: 'proyectos',
+                    lf_suenos: 'suenos'
                 };
                 const target = lfTabMap[section] || 'saldo';
                 window.open(`libertad-financiera.html?goto=${target}`, '_blank');
