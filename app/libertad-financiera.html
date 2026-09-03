@@ -149,23 +149,31 @@
                 <a href="index.html?goto=cuadrante" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
                     <i class="fa-solid fa-house w-5 text-center"></i> Inicio
                 </a>
-                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-3 pb-1">Control de mis Finanzas</p>
-                <a href="index.html?goto=resumen" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+                <p class="text-[10px] uppercase tracking-wider text-rose-400 font-bold px-3 pt-3 pb-1">🔴 Estadio 1: Control</p>
+                <a href="index.html?goto=resumen" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all border-l-4 border-rose-500/60">
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </a>
-                <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
+
+                <p class="text-[10px] uppercase tracking-wider text-amber-400 font-bold px-3 pt-4 pb-1">🟡 Estadio 2: Elimina y Construye</p>
+                <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all border-l-4 border-amber-500/60">
                     <i class="fa-solid fa-link w-5 text-center"></i> Deudas
                 </button>
-
-                <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Libertad Financiera</p>
-                <button data-menu-lf-tab="saldo" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
-                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
-                </button>
-                <button data-menu-lf-tab="fondos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+                <button data-menu-lf-tab="fondos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-amber-500/60">
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
                 </button>
-                <button data-menu-lf-tab="inversiones" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all">
+
+                <p class="text-[10px] uppercase tracking-wider text-emerald-400 font-bold px-3 pt-4 pb-1">🟢 Estadio 3: Genera Riqueza</p>
+                <button data-menu-lf-tab="saldo" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
+                    <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
+                </button>
+                <button data-menu-lf-tab="inversiones" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
                     <i class="fa-solid fa-chart-line w-5 text-center"></i> Inversiones
+                </button>
+                <button data-menu-lf-tab="proyectos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
+                    <i class="fa-solid fa-rocket w-5 text-center"></i> Mis Proyectos
+                </button>
+                <button data-menu-lf-tab="suenos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
+                    <i class="fa-solid fa-star-of-life w-5 text-center"></i> Mis Sueños
                 </button>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
@@ -209,6 +217,8 @@
             <button data-tab="fondos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">FONDOS DE EMERGENCIA</button>
             <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">BOLA DE NIEVE</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
+            <button data-tab="proyectos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS PROYECTOS</button>
+            <button data-tab="suenos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS SUEÑOS</button>
         </div>
 
         <!-- ==================== TAB: SALDO A FAVOR ==================== -->
@@ -425,6 +435,12 @@
                     <p id="voice-extra-status" class="text-[10px] text-slate-400">Ej: "Vendí un curso por 50000 pesos"</p>
                 </div>
                 <form id="extraForm" class="space-y-3">
+                    <div>
+                        <label>¿Es de alguno de tus Proyectos? (opcional)</label>
+                        <select id="extraProjectLink">
+                            <option value="">— Ninguno / venta suelta —</option>
+                        </select>
+                    </div>
                     <div>
                         <label>Categoría del Ingreso</label>
                         <select id="extraSourceCategory" required>
@@ -819,6 +835,83 @@
         </div>
 
         </div> <!-- fin lf-tab-inversiones -->
+
+        <!-- ==================== TAB: MIS PROYECTOS ==================== -->
+        <div id="lf-tab-proyectos" class="lf-tab-panel hidden space-y-5">
+            <div class="glass-panel neon-card neon-teal rounded-3xl p-5 sm:p-7 space-y-3">
+                <h2 class="font-bold text-base sm:text-lg text-teal-300 flex items-center gap-2">
+                    <i class="fa-solid fa-rocket"></i> Mis Proyectos
+                </h2>
+                <p class="text-[11px] text-slate-500">Un proyecto es algo que resuelve un problema real y le podés vender a alguien — desde vender algo puntual, hasta armar un sistema que genere ingresos solo, sin que vuelvas a hacer el mismo trabajo cada vez.</p>
+
+                <form id="projectForm" class="space-y-3">
+                    <div>
+                        <label>Nombre del Proyecto</label>
+                        <input type="text" id="projectName" placeholder="Ej: Curso de Excel online" required>
+                    </div>
+                    <div>
+                        <label>¿Qué problema le resuelve a la gente?</label>
+                        <input type="text" id="projectProblem" placeholder="Ej: Aprender Excel rápido sin perder tiempo" required>
+                    </div>
+                    <div>
+                        <label>Estado</label>
+                        <select id="projectStatus">
+                            <option value="idea">💡 Idea</option>
+                            <option value="vendiendo">🛒 Vendiendo (validando)</option>
+                            <option value="sistema">⚙️ Generando ingresos solo</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn bg-teal-500 hover:bg-teal-400 text-slate-950">Agregar Proyecto</button>
+                </form>
+            </div>
+
+            <div id="projectsList" class="space-y-3"></div>
+        </div> <!-- fin lf-tab-proyectos -->
+
+        <!-- ==================== TAB: MIS SUEÑOS ==================== -->
+        <div id="lf-tab-suenos" class="lf-tab-panel hidden space-y-5">
+            <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-3">
+                <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
+                    <i class="fa-solid fa-star-of-life"></i> Mis Sueños
+                </h2>
+                <p class="text-[11px] text-slate-500">Una meta de ahorro con nombre propio — una bici, un viaje, un auto. Cada aporte que hagas sale de tu Patrimonio Neto.</p>
+
+                <button id="btn-toggle-new-goal" class="w-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-sm transition-all">
+                    <i class="fa-solid fa-plus"></i> Nueva Meta
+                </button>
+
+                <form id="goalForm" class="hidden space-y-3 pt-2">
+                    <div>
+                        <label>¿Cuál es tu sueño?</label>
+                        <input type="text" id="goalName" placeholder="Ej: Bicicleta nueva" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label>Monto Total ($)</label>
+                            <input type="number" id="goalAmount" step="any" placeholder="Ej: 300000" required>
+                        </div>
+                        <div>
+                            <label>Fecha Objetivo</label>
+                            <input type="date" id="goalDate">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn bg-amber-400 hover:bg-amber-300 text-slate-950">Crear Meta</button>
+                </form>
+            </div>
+
+            <!-- Cuadro fijo con la lista desplegable de sueños acumulados -->
+            <div class="rounded-3xl overflow-hidden border-2 border-amber-500/30 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
+                <button id="btn-toggle-goals-list" class="w-full flex items-center justify-between p-4 bg-amber-950/40 hover:bg-amber-950/60 transition-all">
+                    <span class="font-bold text-amber-300 flex items-center gap-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-list"></i> MIS METAS (<span id="goalsCount">0</span>)
+                    </span>
+                    <i class="fa-solid fa-chevron-down text-amber-300 transition-transform duration-300" id="goals-list-chevron"></i>
+                </button>
+                <div id="goalsListBody" class="hidden p-4 sm:p-5 space-y-3 bg-slate-950/50">
+                    <div id="goalsList" class="space-y-3"></div>
+                </div>
+            </div>
+        </div> <!-- fin lf-tab-suenos -->
 
     </div>
 
@@ -1773,6 +1866,12 @@
         }
 
         resetExtraForm();
+
+        // Además de lo de arriba (que ya funcionaba y no se tocó), si la persona
+        // eligió un proyecto, registramos el ingreso también en Control Financiero
+        // etiquetado con ese proyecto — así "Mis Proyectos" puede contar cuántas
+        // veces cobró cada uno.
+        await tagIncomeWithProjectIfSelected(amount, category, detail);
     });
 
     // Botón "Mantener Dinero Extra" — va directo al Saldo a Favor, sin tocar deudas
@@ -1799,7 +1898,29 @@
         }
 
         resetExtraForm();
+        await tagIncomeWithProjectIfSelected(amount, category, detail);
     });
+
+    // Registra el ingreso en Control Financiero, etiquetado con el proyecto elegido
+    // (si eligió alguno) — no afecta nada de lo que ya pasó arriba, es adicional.
+    async function tagIncomeWithProjectIfSelected(amount, category, detail) {
+        const projectId = document.getElementById('extraProjectLink').value;
+        if (!projectId) return;
+        try {
+            await sb.from('transactions').insert({
+                user_id: currentUser.id,
+                name: detail || category,
+                date: new Date().toISOString().slice(0, 10),
+                month: new Date().toISOString().slice(0, 7),
+                qty_num: 1, unit: '', unit_price: amount, price: amount,
+                category: 'Otros', fuel_type: null, type: 'ingreso', icon: '🚀', completed: false,
+                project_id: projectId
+            });
+            document.getElementById('extraProjectLink').value = '';
+        } catch (err) {
+            console.warn('No se pudo etiquetar el ingreso con el proyecto:', err);
+        }
+    }
 
     function updateChart() {
         const activeDebts = debts.filter(d => !d.cleared && d.amount > 0);
@@ -2518,6 +2639,8 @@
         document.getElementById('lf-tab-' + tabName).classList.remove('hidden');
 
         if (tabName === 'emergencia') switchDebtSubTab(currentDebtSubTab);
+        if (tabName === 'proyectos') loadProjects();
+        if (tabName === 'suenos') loadSavingsGoals();
 
         document.querySelectorAll('.lf-tab-btn').forEach(btn => {
             if (btn.dataset.tab === tabName) {
@@ -2533,6 +2656,224 @@
     document.querySelectorAll('.lf-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchLfTab(btn.dataset.tab));
     });
+
+    // ============================================
+    // MIS PROYECTOS (Hormozi: resolvé un problema real / DeMarco: convertilo
+    // en un sistema que ya no dependa de que vos hagas el mismo trabajo).
+    // ============================================
+    document.getElementById('projectForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('projectName').value.trim();
+        const problem = document.getElementById('projectProblem').value.trim();
+        const status = document.getElementById('projectStatus').value;
+        if (!name || !problem) return;
+
+        try {
+            const { error } = await sb.from('projects').insert({ user_id: currentUser.id, name, problem_solved: problem, status });
+            if (error) throw error;
+            document.getElementById('projectForm').reset();
+            await loadProjects();
+            showLibertadToast('✅ Proyecto agregado');
+        } catch (err) {
+            console.error('No se pudo guardar el proyecto:', err);
+            showLibertadToast('No se pudo guardar. Probá de nuevo.');
+        }
+    });
+
+    async function loadProjects() {
+        try {
+            const { data: projects, error } = await sb.from('projects').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            if (error) throw error;
+
+            // Traemos también los Ingresos Extras etiquetados, para contar cuántas
+            // veces cobró cada proyecto (la señal de que ya es un sistema, no venta suelta)
+            const { data: taggedIncomes } = await sb.from('transactions').select('project_id, price').eq('user_id', currentUser.id).not('project_id', 'is', null);
+
+            const projectsList = document.getElementById('projectsList');
+            const projectLinkSelect = document.getElementById('extraProjectLink');
+
+            projectLinkSelect.innerHTML = '<option value="">— Ninguno / venta suelta —</option>';
+            (projects || []).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.name;
+                projectLinkSelect.appendChild(opt);
+            });
+
+            if (!projects || projects.length === 0) {
+                projectsList.innerHTML = '<p class="text-center text-slate-500 text-xs py-2">Todavía no cargaste ningún proyecto.</p>';
+                return;
+            }
+
+            const statusLabels = { idea: '💡 Idea', vendiendo: '🛒 Vendiendo (validando)', sistema: '⚙️ Generando ingresos solo' };
+            const statusColors = { idea: 'text-slate-400', vendiendo: 'text-amber-400', sistema: 'text-emerald-400' };
+
+            projectsList.innerHTML = projects.map(p => {
+                const cobros = (taggedIncomes || []).filter(t => t.project_id === p.id);
+                const totalGenerado = cobros.reduce((acc, t) => acc + parseFloat(t.price || 0), 0);
+                const cantCobros = cobros.length;
+                const esSistema = cantCobros >= 3;
+
+                return `
+                    <div class="glass-panel rounded-2xl p-4 space-y-2 border border-white/10">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-white text-sm">${p.name}</h3>
+                            <span class="text-[10px] font-bold ${statusColors[p.status] || 'text-slate-400'}">${statusLabels[p.status] || p.status}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500">${p.problem_solved}</p>
+                        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-white/10">
+                            <span>${cantCobros} cobro${cantCobros !== 1 ? 's' : ''} registrado${cantCobros !== 1 ? 's' : ''}</span>
+                            <span class="font-bold text-teal-300">$${Math.round(totalGenerado).toLocaleString()}</span>
+                        </div>
+                        ${esSistema ? `
+                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 text-[11px] text-emerald-300">
+                            <i class="fa-solid fa-gears"></i> Esto ya no es una venta suelta, es un sistema — pensá cómo escalarlo sin que dependa de vos.
+                        </div>` : ''}
+                        <button onclick="deleteProject('${p.id}')" class="text-rose-400 hover:text-rose-300 text-[11px]"><i class="fa-solid fa-trash-can"></i> Borrar</button>
+                    </div>`;
+            }).join('');
+        } catch (err) {
+            console.error('Error al cargar proyectos:', err);
+        }
+    }
+
+    async function deleteProject(id) {
+        if (!(await showConfirmModal('¿Borrar este proyecto? Los ingresos que cargaste no se borran, solo dejan de estar etiquetados.', true))) return;
+        try {
+            await sb.from('projects').delete().eq('id', id);
+            await loadProjects();
+        } catch (err) {
+            console.error('No se pudo borrar el proyecto:', err);
+        }
+    }
+
+    // ============================================
+    // MIS SUEÑOS (metas de ahorro con nombre propio — "Choose your dream")
+    // ============================================
+    document.getElementById('btn-toggle-new-goal').addEventListener('click', () => {
+        document.getElementById('goalForm').classList.toggle('hidden');
+    });
+
+    document.getElementById('btn-toggle-goals-list').addEventListener('click', () => {
+        const body = document.getElementById('goalsListBody');
+        const chevron = document.getElementById('goals-list-chevron');
+        body.classList.toggle('hidden');
+        chevron.classList.toggle('rotate-180');
+    });
+
+    document.getElementById('goalForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('goalName').value.trim();
+        const targetAmount = parseFloat(document.getElementById('goalAmount').value) || 0;
+        const targetDate = document.getElementById('goalDate').value || null;
+        if (!name || targetAmount <= 0) return;
+
+        try {
+            const { error } = await sb.from('savings_goals').insert({ user_id: currentUser.id, name, target_amount: targetAmount, saved_amount: 0, target_date: targetDate });
+            if (error) throw error;
+            document.getElementById('goalForm').reset();
+            document.getElementById('goalForm').classList.add('hidden');
+            await loadSavingsGoals();
+            showLibertadToast('✅ Meta creada');
+        } catch (err) {
+            console.error('No se pudo crear la meta:', err);
+            showLibertadToast('No se pudo guardar. Probá de nuevo.');
+        }
+    });
+
+    async function loadSavingsGoals() {
+        try {
+            const { data: goals, error } = await sb.from('savings_goals').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+            if (error) throw error;
+
+            document.getElementById('goalsCount').textContent = (goals || []).length;
+            const goalsList = document.getElementById('goalsList');
+
+            if (!goals || goals.length === 0) {
+                goalsList.innerHTML = '<p class="text-center text-slate-500 text-xs py-2">Todavía no creaste ninguna meta.</p>';
+                return;
+            }
+
+            goalsList.innerHTML = goals.map(g => {
+                const pct = Math.min(100, Math.round((g.saved_amount / g.target_amount) * 100));
+                const cumplida = g.saved_amount >= g.target_amount;
+                return `
+                    <div class="bg-slate-900/60 rounded-2xl p-4 space-y-2 border border-white/10">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-white text-sm">${g.name}</h3>
+                            <button onclick="deleteSavingsGoal('${g.id}')" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div class="h-2.5 rounded-full bg-amber-400 transition-all" style="width:${pct}%"></div>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>$${Math.round(g.saved_amount).toLocaleString()} de $${Math.round(g.target_amount).toLocaleString()}</span>
+                            <span>${pct}%</span>
+                        </div>
+                        ${g.target_date ? `<p class="text-[10px] text-slate-500">Meta para: ${new Date(g.target_date + 'T00:00:00').toLocaleDateString()}</p>` : ''}
+                        ${cumplida
+                            ? `<p class="text-center text-emerald-400 text-xs font-bold pt-1">🎉 ¡Meta cumplida!</p>`
+                            : `<button onclick="promptAportarMeta('${g.id}')" class="w-full bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-2 rounded-xl text-xs mt-1">
+                                <i class="fa-solid fa-piggy-bank"></i> Aportar a esta meta
+                               </button>`}
+                    </div>`;
+            }).join('');
+        } catch (err) {
+            console.error('Error al cargar metas:', err);
+        }
+    }
+
+    async function promptAportarMeta(goalId) {
+        const monto = prompt('¿Cuánto querés aportar a esta meta?');
+        const amount = parseFloat(monto);
+        if (!amount || amount <= 0) return;
+        await aportarAMeta(goalId, amount);
+    }
+
+    // Aportar a una meta: se registra como egreso en Control Financiero (sale del
+    // Patrimonio Neto), y solo si eso funciona, se suma el progreso de la meta.
+    async function aportarAMeta(goalId, amount) {
+        try {
+            const { data: goal } = await sb.from('savings_goals').select('*').eq('id', goalId).single();
+            if (!goal) return;
+
+            const { error: txError } = await sb.from('transactions').insert({
+                user_id: currentUser.id,
+                name: `Aporte a meta - ${goal.name}`,
+                date: new Date().toISOString().slice(0, 10),
+                month: new Date().toISOString().slice(0, 7),
+                qty_num: 1, unit: '', unit_price: amount, price: amount,
+                category: 'Otros', fuel_type: null, type: 'egreso', icon: '⭐', completed: false
+            });
+            if (txError) throw txError;
+
+            const nuevoSaved = Math.min(goal.target_amount, parseFloat(goal.saved_amount) + amount);
+            await sb.from('savings_goals').update({ saved_amount: nuevoSaved }).eq('id', goalId);
+
+            await fetchExternalPatrimonioNeto();
+            render();
+            await loadSavingsGoals();
+
+            if (nuevoSaved >= goal.target_amount) {
+                await showAlertModal(`🎉 ¡Felicidades! Cumpliste tu meta: ${goal.name}`);
+            } else {
+                showLibertadToast(`✅ Aportaste $${Math.round(amount).toLocaleString()} a "${goal.name}"`);
+            }
+        } catch (err) {
+            console.error('No se pudo registrar el aporte:', err);
+            await showAlertModal('No se pudo confirmar el aporte ahora mismo. Probá de nuevo en un momento.');
+        }
+    }
+
+    async function deleteSavingsGoal(id) {
+        if (!(await showConfirmModal('¿Borrar esta meta? Esto no te devuelve la plata ya aportada.', true))) return;
+        try {
+            await sb.from('savings_goals').delete().eq('id', id);
+            await loadSavingsGoals();
+        } catch (err) {
+            console.error('No se pudo borrar la meta:', err);
+        }
+    }
 
     // ============================================
     // MENÚ LATERAL
@@ -2869,6 +3210,8 @@
         lf_deudas: 'Ir a Deudas (Registrar)',
         lf_emergencia: 'Ir a Deudas (Pagar)',
         lf_inversiones: 'Ir a Inversiones',
+        lf_proyectos: 'Ir a Mis Proyectos',
+        lf_suenos: 'Ir a Mis Sueños',
         suscripcion: 'Ir a Control Financiero → Suscripción',
         perfil: 'Ir a Control Financiero → Mi Perfil y Soporte'
     };
@@ -2881,7 +3224,7 @@
             return;
         }
         document.getElementById('btn-close-assistant-lf').click();
-        const tabMap = { lf_saldo: 'saldo', lf_fondos: 'fondos', lf_deudas: 'deudas', lf_emergencia: 'emergencia', lf_inversiones: 'inversiones' };
+        const tabMap = { lf_saldo: 'saldo', lf_fondos: 'fondos', lf_deudas: 'deudas', lf_emergencia: 'emergencia', lf_inversiones: 'inversiones', lf_proyectos: 'proyectos', lf_suenos: 'suenos' };
         switchLfTab(tabMap[section] || 'saldo');
     }
 
