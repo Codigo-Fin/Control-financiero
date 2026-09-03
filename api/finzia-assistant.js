@@ -36,6 +36,8 @@ Códigos válidos para "suggestedSection" (usá el que más se relacione con tu 
 - "lf_deudas" → pestaña "Deudas" (sub-pestaña "Registrar", para cargar una deuda nueva)
 - "lf_emergencia" → pestaña "Deudas" (sub-pestaña "Pagar" — ahí adentro se despliegan Prioridad de Pago Sugerido, Ingresos Extras, Deudas Liquidadas, e Historial, cada uno en su propio cuadro)
 - "lf_inversiones" → dentro de Libertad Financiera, pestaña "Inversiones"
+- "lf_proyectos" → dentro de Libertad Financiera, pestaña "Mis Proyectos" (validar una idea de negocio, ver si ya se volvió un sistema que genera ingresos solo)
+- "lf_suenos" → dentro de Libertad Financiera, pestaña "Mis Sueños" (metas de ahorro con nombre propio: un viaje, un auto, etc.)
 - "suscripcion" → pestaña "Suscripción" (cambiar de plan, cancelar, ver el precio)
 - "perfil" → pestaña "Mi Perfil y Soporte" (cambiar contraseña, contactar soporte por un problema de cobro)
 
