@@ -149,12 +149,12 @@
                 <a href="index.html?goto=cuadrante" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all">
                     <i class="fa-solid fa-house w-5 text-center"></i> Inicio
                 </a>
-                <p class="text-[10px] uppercase tracking-wider text-rose-400 font-bold px-3 pt-3 pb-1">🔴 Estadio 1: Control</p>
+                <p class="text-[10px] uppercase tracking-wider text-rose-400 font-bold px-3 pt-3 pb-1">🔴 Etapa 1: Control</p>
                 <a href="index.html?goto=resumen" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all border-l-4 border-rose-500/60">
                     <i class="fa-solid fa-list-check w-5 text-center"></i> Mis Movimientos
                 </a>
 
-                <p class="text-[10px] uppercase tracking-wider text-amber-400 font-bold px-3 pt-4 pb-1">🟡 Estadio 2: Elimina y Construye</p>
+                <p class="text-[10px] uppercase tracking-wider text-amber-400 font-bold px-3 pt-4 pb-1">🟡 Etapa 2: Elimina y Construye</p>
                 <button data-menu-lf-tab="emergencia" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-cyan-500/10 hover:text-cyan-300 transition-all border-l-4 border-amber-500/60">
                     <i class="fa-solid fa-link w-5 text-center"></i> Deudas
                 </button>
@@ -162,7 +162,7 @@
                     <i class="fa-solid fa-shield-halved w-5 text-center"></i> Fondos de Emergencia
                 </button>
 
-                <p class="text-[10px] uppercase tracking-wider text-emerald-400 font-bold px-3 pt-4 pb-1">🟢 Estadio 3: Genera Riqueza</p>
+                <p class="text-[10px] uppercase tracking-wider text-emerald-400 font-bold px-3 pt-4 pb-1">🟢 Etapa 3: Genera Riqueza</p>
                 <button data-menu-lf-tab="saldo" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
                     <i class="fa-solid fa-scale-balanced w-5 text-center"></i> Patrimonio Neto
                 </button>
@@ -436,9 +436,10 @@
                 </div>
                 <form id="extraForm" class="space-y-3">
                     <div>
-                        <label>¿Es de alguno de tus Proyectos? (opcional)</label>
+                        <label>¿Este ingreso viene de uno de tus Proyectos? (opcional)</label>
+                        <p class="text-[10px] text-slate-500 -mt-1 mb-1">Si tenés un proyecto cargado en "Mis Proyectos" y este cobro es de ahí, elegilo acá para que quede sumado a ese proyecto. Si es una venta suelta sin proyecto, dejalo en "Ninguno".</p>
                         <select id="extraProjectLink">
-                            <option value="">— Ninguno / venta suelta —</option>
+                            <option value="">Ninguno / venta suelta</option>
                         </select>
                     </div>
                     <div>
@@ -540,6 +541,15 @@
                         <i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota
                     </button>
                     <p class="text-[10px] text-slate-600 pt-1">Al pagar, se descuenta de tu Patrimonio Neto en Control Financiero.</p>
+                    <button onclick="borrarEstrategia('personal')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
+                        <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
+                    </button>
+                    <button onclick="borrarEstrategia('tarjeta')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
+                        <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
+                    </button>
+                    <button onclick="borrarEstrategia('automotriz')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
+                        <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
+                    </button>
                 </div>
             </div>
         </div>
@@ -2465,7 +2475,10 @@
 
         // Si entramos a "Pagar" o "Estrategia", abrimos la primera sección del acordeón interno
         if (subTab === 'pagar') openDebtAccordionSection(currentDebtAccordionSection, false);
-        if (subTab === 'estrategia') openDebtAccordionSection('extras', false);
+        if (subTab === 'estrategia') {
+            openDebtAccordionSection('extras', false);
+            loadProjects(); // llena el desplegable "¿Es de alguno de tus Proyectos?"
+        }
     }
     document.querySelectorAll('.sub-tab-btn-lf').forEach(btn => {
         btn.addEventListener('click', () => switchDebtSubTab(btn.dataset.subTabLf));
@@ -2523,35 +2536,34 @@
                 return;
             }
 
-            let cuotaAmount, montoMensualTotal, mesesParaTerminar;
+            let cuotaAmount, costoAdelanto, cantAdelantosDefault, montoMensualTotal, saldoInicial;
 
             if (cat === 'automotriz') {
-                // Automotriz: tiene cuota fija + posibilidad de adelantar cuotas a un costo aparte
                 cuotaAmount = parseFloat(document.getElementById('stratMinCuota-automotriz').value) || 0;
-                const costoAdelanto = parseFloat(document.getElementById('stratAdvanceCost-automotriz').value) || 0;
-                const cantAdelantos = parseInt(document.getElementById('stratAdvanceCount-automotriz').value) || 0;
+                costoAdelanto = parseFloat(document.getElementById('stratAdvanceCost-automotriz').value) || 0;
+                cantAdelantosDefault = parseInt(document.getElementById('stratAdvanceCount-automotriz').value) || 0;
                 if (cuotaAmount <= 0) {
                     showLibertadToast('Completá la cuota mensual normal.');
                     return;
                 }
-                const cuotasLiquidadasPorMes = 1 + cantAdelantos;
-                mesesParaTerminar = Math.ceil(cuotasTotal / cuotasLiquidadasPorMes);
-                montoMensualTotal = cuotaAmount + (cantAdelantos * costoAdelanto);
+                montoMensualTotal = cuotaAmount + (cantAdelantosDefault * costoAdelanto);
+                // El saldo en $ es la referencia real; si no lo cargaron, lo estimamos
+                // con cuota × cuotas restantes.
+                saldoInicial = totalAmount || (cuotaAmount * cuotasTotal);
             } else {
-                // Tarjeta / Personal: monto total repartido en cuotas iguales, sin adelantos
                 if (totalAmount <= 0) {
                     showLibertadToast('Completá el monto total a pagar.');
                     return;
                 }
                 cuotaAmount = totalAmount / cuotasTotal;
+                costoAdelanto = cuotaAmount; // sin adelantos especiales, cada cuota vale lo mismo
+                cantAdelantosDefault = 0;
                 montoMensualTotal = cuotaAmount;
-                mesesParaTerminar = cuotasTotal;
+                saldoInicial = totalAmount;
             }
 
-            const saldoInicial = cat === 'automotriz' ? (totalAmount || (cuotaAmount * cuotasTotal)) : totalAmount;
-
             const state = {
-                debtName, cuotasTotal, cuotaAmount, montoMensualTotal, mesesParaTerminar,
+                debtName, cuotaAmount, costoAdelanto, cantAdelantosDefault, montoMensualTotal,
                 cuotasPagadas: 0, saldoRestante: saldoInicial
             };
             localStorage.setItem(getStrategyStateKey(cat), JSON.stringify(state));
@@ -2559,15 +2571,36 @@
         });
     });
 
+    // Calcula, a partir del saldo restante en $, cuántas "cuotas equivalentes" faltan
+    // y en cuánto tiempo terminaría si sigue pagando al ritmo de su último pago.
+    function calcularProyeccion(state) {
+        const valorPorCuota = state.costoAdelanto > 0 ? state.costoAdelanto : state.cuotaAmount;
+        const cuotasRestantesAprox = valorPorCuota > 0 ? Math.ceil(state.saldoRestante / valorPorCuota) : 0;
+        const ritmoMensual = state.montoMensualTotal > 0 ? state.montoMensualTotal : state.cuotaAmount;
+        const mesesParaTerminar = ritmoMensual > 0 ? Math.ceil(state.saldoRestante / ritmoMensual) : 0;
+
+        const años = Math.floor(mesesParaTerminar / 12);
+        const mesesResto = mesesParaTerminar % 12;
+        let tiempoTexto = '';
+        if (años > 0) tiempoTexto += `${años} año${años !== 1 ? 's' : ''}`;
+        if (mesesResto > 0) tiempoTexto += `${años > 0 ? ' y ' : ''}${mesesResto} mes${mesesResto !== 1 ? 'es' : ''}`;
+        if (!tiempoTexto) tiempoTexto = state.saldoRestante <= 0 ? '¡Ya terminaste!' : 'menos de 1 mes';
+
+        return { cuotasRestantesAprox, tiempoTexto };
+    }
+
     function renderStrategyState(cat) {
         const raw = localStorage.getItem(getStrategyStateKey(cat));
-        if (!raw) return;
+        const resultBox = document.getElementById(`stratResultBox-${cat}`);
+        if (!raw) { resultBox.classList.add('hidden'); return; }
         const state = JSON.parse(raw);
+        const { cuotasRestantesAprox, tiempoTexto } = calcularProyeccion(state);
 
-        document.getElementById(`stratResultBox-${cat}`).classList.remove('hidden');
+        resultBox.classList.remove('hidden');
         document.getElementById(`stratMonthlyTotal-${cat}`).textContent = `$${Math.round(state.montoMensualTotal).toLocaleString()}`;
         document.getElementById(`stratSaldoRestante-${cat}`).textContent = `$${Math.round(state.saldoRestante).toLocaleString()}`;
-        document.getElementById(`stratCuotasProgress-${cat}`).textContent = `${state.cuotasPagadas} / ${state.cuotasTotal} cuotas pagadas`;
+        document.getElementById(`stratCuotasProgress-${cat}`).textContent =
+            `${state.cuotasPagadas} pago${state.cuotasPagadas !== 1 ? 's' : ''} hecho${state.cuotasPagadas !== 1 ? 's' : ''} — quedan aprox. ${cuotasRestantesAprox} cuota${cuotasRestantesAprox !== 1 ? 's' : ''} · Terminarías en ${tiempoTexto}`;
 
         const btnPagar = document.getElementById(`btnPagarCuota-${cat}`);
         if (state.saldoRestante <= 0) {
@@ -2584,16 +2617,34 @@
     // Al abrir cada acordeón, mostramos el progreso ya guardado (si existía)
     ['automotriz', 'tarjeta', 'personal'].forEach(cat => renderStrategyState(cat));
 
-    // Pagar una cuota: registra el egreso en Control Financiero PRIMERO (así se
-    // descuenta de verdad del Patrimonio Neto), y solo si eso funciona, actualiza
-    // el saldo restante guardado.
+    // Borrar el progreso de una categoría (empezar de cero)
+    async function borrarEstrategia(cat) {
+        if (!(await showConfirmModal('¿Borrar esta estrategia y empezar de cero?', true))) return;
+        localStorage.removeItem(getStrategyStateKey(cat));
+        document.getElementById(`stratResultBox-${cat}`).classList.add('hidden');
+        showLibertadToast('Estrategia borrada');
+    }
+
+    // Pagar una cuota: para "automotriz" pregunta cuántas querés adelantar ESTA VEZ
+    // (podés cambiarlo cada vez); registra el egreso en Control Financiero PRIMERO
+    // (así se descuenta de verdad del Patrimonio Neto), y solo si eso funciona,
+    // actualiza el saldo restante guardado.
     async function payOneCuotaGeneric(cat) {
         const raw = localStorage.getItem(getStrategyStateKey(cat));
         if (!raw) return;
         const state = JSON.parse(raw);
         if (state.saldoRestante <= 0) return;
 
-        const payAmount = Math.min(state.montoMensualTotal, state.saldoRestante);
+        let cantAdelantosEsta = state.cantAdelantosDefault;
+        if (cat === 'automotriz' && state.costoAdelanto > 0) {
+            const resp = prompt(`¿Cuántas cuotas querés adelantar esta vez? (0 si solo pagás la cuota normal)`, state.cantAdelantosDefault);
+            if (resp === null) return; // canceló
+            cantAdelantosEsta = parseInt(resp) || 0;
+        }
+
+        const payAmountFinal = cat === 'automotriz'
+            ? Math.min(state.cuotaAmount + (cantAdelantosEsta * state.costoAdelanto), state.saldoRestante)
+            : Math.min(state.montoMensualTotal, state.saldoRestante);
 
         try {
             const { error } = await sb.from('transactions').insert({
@@ -2601,7 +2652,7 @@
                 name: `Pago cuota - ${state.debtName}`,
                 date: new Date().toISOString().slice(0, 10),
                 month: new Date().toISOString().slice(0, 7),
-                qty_num: 1, unit: '', unit_price: payAmount, price: payAmount,
+                qty_num: 1, unit: '', unit_price: payAmountFinal, price: payAmountFinal,
                 category: 'Servicios', fuel_type: null, type: 'egreso', icon: '💳', completed: false
             });
             if (error) throw error;
@@ -2611,18 +2662,18 @@
             return;
         }
 
-        state.saldoRestante = Math.max(0, state.saldoRestante - payAmount);
+        state.saldoRestante = Math.max(0, state.saldoRestante - payAmountFinal);
         state.cuotasPagadas += 1;
         localStorage.setItem(getStrategyStateKey(cat), JSON.stringify(state));
 
-        await fetchExternalPatrimonioNeto(); // se registró un egreso nuevo, refrescamos
+        await fetchExternalPatrimonioNeto();
         render();
         renderStrategyState(cat);
 
         if (state.saldoRestante <= 0) {
             await showAlertModal(`🎉 ¡Felicidades! Terminaste de pagar: ${state.debtName}`);
         } else {
-            showLibertadToast(`✅ Pagaste $${Math.round(payAmount).toLocaleString()} de "${state.debtName}". Te falta $${Math.round(state.saldoRestante).toLocaleString()}.`);
+            showLibertadToast(`✅ Pagaste $${Math.round(payAmountFinal).toLocaleString()} de "${state.debtName}". Saldo restante: $${Math.round(state.saldoRestante).toLocaleString()}.`);
         }
     }
 
@@ -2692,7 +2743,7 @@
             const projectsList = document.getElementById('projectsList');
             const projectLinkSelect = document.getElementById('extraProjectLink');
 
-            projectLinkSelect.innerHTML = '<option value="">— Ninguno / venta suelta —</option>';
+            projectLinkSelect.innerHTML = '<option value="">Ninguno / venta suelta</option>';
             (projects || []).forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.id;
@@ -2734,6 +2785,7 @@
             }).join('');
         } catch (err) {
             console.error('Error al cargar proyectos:', err);
+            document.getElementById('projectsList').innerHTML = `<p class="text-center text-rose-400 text-xs py-3">⚠️ No se pudo cargar (¿ya creaste la tabla "projects" en Supabase?). Detalle: ${err.message || err}</p>`;
         }
     }
 
@@ -2820,6 +2872,7 @@
             }).join('');
         } catch (err) {
             console.error('Error al cargar metas:', err);
+            document.getElementById('goalsList').innerHTML = `<p class="text-center text-rose-400 text-xs py-3">⚠️ No se pudo cargar (¿ya creaste la tabla "savings_goals" en Supabase?). Detalle: ${err.message || err}</p>`;
         }
     }
 
