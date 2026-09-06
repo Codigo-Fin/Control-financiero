@@ -394,6 +394,12 @@
         <!-- ==================== TAB: SALDOS DEL MES ==================== -->
         <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
 
+        <div class="flex justify-end">
+            <button onclick="switchTab('cuadrante')" title="Cuadrante de Flujo" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
+                <i class="fa-solid fa-diagram-project text-lg"></i>
+            </button>
+        </div>
+
         <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
             <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
                 <div class="flex flex-wrap items-center gap-2">
@@ -489,19 +495,8 @@
             </button>
         </div>
 
-        <div class="bg-cyan-950/40 p-4 rounded-2xl border-2 border-cyan-500/30" style="box-shadow: 0 0 24px rgba(34,211,238,0.2);">
-
-            <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-cyan-300 uppercase tracking-wider">🏦 Ingresos Totales</span>
-            <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">
-                <i class="fa-solid fa-building-columns"></i>
-            </div>
-            </div>
-            <div class="mt-2 flex items-baseline justify-between">
-            <span id="stat-salary" class="text-2xl sm:text-3xl font-bold text-cyan-400">$0</span>
-            <span class="text-[10px] text-cyan-300 bg-cyan-500/15 px-2 py-0.5 rounded-full">Sueldo + Extra</span>
-            </div>
-        </div>
+        <!-- Oculto: mantiene el dato para el número gigante de arriba -->
+        <span id="stat-salary" class="hidden">$0</span>
 
         <div id="movements-panel-slot-ingresos">
         <!-- Panel de carga COMPARTIDO (voz, foto, galería, PDF, formulario) — se mueve
@@ -627,7 +622,13 @@
                 </span>
                 <i id="toggle-ingresos-icon" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
             </button>
-            <div id="ingresos-panel" class="hidden px-3 pb-3 space-y-2">
+            <div id="ingresos-panel" class="hidden px-3 pb-3 space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-center bg-slate-900/40 rounded-2xl p-3">
+                    <div class="h-36 relative flex items-center justify-center">
+                        <canvas id="categoryPieChartIngresos"></canvas>
+                    </div>
+                    <div id="chart-legend-grid-ingresos" class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                </div>
                 <input type="date" id="filter-date-ingresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500 mb-1">
                 <div id="movimientos-ingresos-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
             </div>
@@ -644,20 +645,10 @@
             </button>
             <div id="accordion-body-egresos" class="accordion-body hidden p-4 sm:p-5 space-y-5 bg-slate-950/50">
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="bg-rose-950/40 p-4 rounded-2xl border-2 border-rose-500/30">
-                <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-rose-300 uppercase tracking-wider">🛍️ Gastos del Mes</span>
-                <div class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-bag-shopping"></i>
-                </div>
-                </div>
-                <div class="mt-2 flex items-baseline justify-between">
-                <span id="stat-expenses" class="text-2xl sm:text-3xl font-bold text-rose-400">$0</span>
-                <span class="text-[10px] text-rose-300 bg-rose-500/15 px-2 py-0.5 rounded-full">Gastos</span>
-                </div>
-            </div>
+        <!-- Oculto: mantiene el dato para el número gigante de arriba -->
+        <span id="stat-expenses" class="hidden">$0</span>
 
+        <div class="max-w-sm mx-auto w-full">
             <div class="bg-slate-900/50 p-4 rounded-2xl border-2 border-teal-500/30 flex flex-col justify-between">
                 <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-teal-300 uppercase tracking-wider">📊 Patrimonio Neto</span>
@@ -685,7 +676,13 @@
                 </span>
                 <i id="toggle-egresos-icon" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
             </button>
-            <div id="egresos-panel" class="hidden px-3 pb-3 space-y-2">
+            <div id="egresos-panel" class="hidden px-3 pb-3 space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-center bg-slate-900/40 rounded-2xl p-3">
+                    <div class="h-36 relative flex items-center justify-center">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                    <div id="chart-legend-grid" class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
+                </div>
                 <input type="date" id="filter-date-egresos" class="w-full bg-slate-900/60 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-cyan-500 mb-1">
                 <div id="movimientos-egresos-list" class="space-y-2 max-h-96 overflow-y-auto"></div>
             </div>
@@ -757,33 +754,8 @@
             </div>
         </section>
 
-        <section class="space-y-3">
-            <div id="chart-card-container" class="glass-panel p-5 rounded-3xl space-y-3">
-                <div class="flex items-center justify-between border-b border-white/10 pb-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-cyan-400 text-sm"></i>
-                        <h3 class="font-bold text-sm sm:text-base text-white">Distribución de Ingresos y Egresos del Mes</h3>
-                    </div>
-                    <span id="chart-month-badge" class="text-[10px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-2.5 py-0.5 rounded-full font-semibold"></span>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-                    <div class="h-48 md:h-56 relative flex items-center justify-center">
-                        <canvas id="categoryPieChart"></canvas>
-                    </div>
-                    <div class="md:col-span-2 space-y-3">
-                        <div>
-                            <p class="text-[11px] font-bold text-rose-300 uppercase tracking-wide mb-1.5">Egresos por Categoría</p>
-                            <div id="chart-legend-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
-                        </div>
-                        <div class="border-t border-white/10 pt-3">
-                            <p class="text-[11px] font-bold text-cyan-300 uppercase tracking-wide mb-1.5">Ingresos por Categoría</p>
-                            <div id="chart-legend-grid-ingresos" class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
+        <!-- Oculto: mantiene el badge del mes usado por el gráfico -->
+        <span id="chart-month-badge" class="hidden"></span>
 
         </div> <!-- fin tab-panel-resumen (Mis Movimientos: Ingresos + Egresos + Resultados, todo unificado) -->
 
@@ -1318,6 +1290,7 @@
         let products = [];
         let selectedMonthFilter = currentM;
         let myChart = null;
+        let myChartIngresos = null;
 
         const addForm = document.getElementById('add-transaction-form');
         const headerMonthSelect = document.getElementById('header-month-select');
@@ -2376,27 +2349,39 @@
                 });
             }
 
-            // Ingresos por categoría (lista simple, sin gráfico aparte)
+            // Ingresos por categoría — ahora con su propio gráfico de torta también
             const incomeCategoryTotals = {};
             monthProducts.filter(p => p.type === 'ingreso').forEach(p => {
                 const cat = p.category || 'Otros';
                 incomeCategoryTotals[cat] = (incomeCategoryTotals[cat] || 0) + (parseFloat(p.price) || 0);
             });
             const incomeLabels = Object.keys(incomeCategoryTotals);
-            const totalIncomeSum = Object.values(incomeCategoryTotals).reduce((a, b) => a + b, 0);
+            const incomeData = Object.values(incomeCategoryTotals);
+            const totalIncomeSum = incomeData.reduce((a, b) => a + b, 0);
             legendGridIngresos.innerHTML = '';
+
+            const ctxIngresos = document.getElementById('categoryPieChartIngresos').getContext('2d');
 
             if (incomeLabels.length === 0) {
                 legendGridIngresos.innerHTML = '<div class="col-span-2 text-slate-500 text-xs py-2 text-center">Sin ingresos extra registrados este mes</div>';
+                if (myChartIngresos) myChartIngresos.destroy();
             } else {
-                incomeLabels.forEach((cat) => {
+                incomeLabels.forEach((cat, idx) => {
+                    const color = CHART_COLORS[idx % CHART_COLORS.length];
                     const val = incomeCategoryTotals[cat];
                     const pct = totalIncomeSum > 0 ? ((val / totalIncomeSum) * 100).toFixed(1) : 0;
                     const emoji = getCategoryEmoji(cat);
                     const item = document.createElement('div');
                     item.className = 'flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-white/5';
-                    item.innerHTML = `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-cyan-400"></span><span class="font-semibold text-slate-200 text-xs sm:text-sm">${emoji} ${cat}</span></div><div class="text-right"><span class="font-bold text-slate-100 text-xs sm:text-sm">${formatMoney(val)}</span><span class="text-[10px] text-slate-400 block">${pct}%</span></div>`;
+                    item.innerHTML = `<div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" style="background-color: ${color}"></span><span class="font-semibold text-slate-200 text-xs sm:text-sm">${emoji} ${cat}</span></div><div class="text-right"><span class="font-bold text-slate-100 text-xs sm:text-sm">${formatMoney(val)}</span><span class="text-[10px] text-slate-400 block">${pct}%</span></div>`;
                     legendGridIngresos.appendChild(item);
+                });
+
+                if (myChartIngresos) myChartIngresos.destroy();
+                myChartIngresos = new Chart(ctxIngresos, {
+                    type: 'doughnut',
+                    data: { labels: incomeLabels, datasets: [{ data: incomeData, backgroundColor: CHART_COLORS.slice(0, incomeLabels.length), borderWidth: 2, borderColor: '#111827' }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => ` ${c.label}: ${formatMoney(c.parsed)}` } } }, cutout: '65%' }
                 });
             }
         }
@@ -4267,7 +4252,7 @@
         window.onload = function() {
             applyLargeTextMode(localStorage.getItem('large_text_mode') === '1');
             updateFormSubtypes();
-            switchTab('cuadrante');
+            switchTab('resumen');
             checkGotoParam();
             restoreAllocationRule();
             checkSession().then(() => { checkReturnFromPayment(); checkPatrimonioPaymentConfirmation(); });
