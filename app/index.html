@@ -59,6 +59,12 @@
         .lemon-pill { background: transparent; color: #64748b; }
         .lemon-pill.active-ingreso { background: #164e63; color: #22d3ee; }
         .lemon-pill.active-egreso { background: #4c0519; color: #fb7185; }
+
+        /* Pastillas del modal "Nuevo Ingreso/Gasto" */
+        .lemon-cat-pill { background: #1e293b; color: #cbd5e1; }
+        .lemon-cat-pill.active { background: #a3e635; color: #0f172a; }
+        .lemon-date-pill { background: #1e293b; color: #cbd5e1; }
+        .lemon-date-pill.active { background: #a3e635; color: #0f172a; }
         .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
         /* Espacio para que el contenido no quede tapado por la barra fija de abajo */
         #app-content { padding-bottom: 90px; }
@@ -459,21 +465,48 @@
 
         <!-- Número gigante, tocable — tocarlo abre la carga rápida del tipo elegido -->
         <div class="glass-panel rounded-3xl p-6 sm:p-8 text-center space-y-1">
-            <p id="lemon-big-label" class="text-slate-400 text-sm font-semibold">Ingresos del mes</p>
+            <p id="lemon-big-label" class="text-slate-400 text-sm font-bold uppercase tracking-wide">AGREGAR INGRESO</p>
             <button id="lemon-big-number" class="text-5xl sm:text-6xl font-extrabold text-cyan-400 tracking-tight active:scale-95 transition-all">$0</button>
             <p class="text-slate-600 text-xs">Tocá el número para agregar uno nuevo</p>
         </div>
 
         <!-- Modal de carga rápida con número gigante, para escribirlo fácil -->
         <div id="lemon-quickadd-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
-            <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 text-center">
-                <h3 id="lemon-quickadd-title" class="font-bold text-white text-lg">Agregar Ingreso</h3>
-                <input type="number" id="lemon-quickadd-amount" placeholder="0" class="w-full bg-transparent text-center text-6xl font-extrabold text-cyan-400 focus:outline-none border-b-2 border-cyan-500/30 focus:border-cyan-500 py-2" autofocus>
-                <input type="text" id="lemon-quickadd-concept" placeholder="¿De qué es? (ej: Sueldo, Nafta...)" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white text-center focus:outline-none focus:border-cyan-500">
-                <div class="flex gap-2">
-                    <button id="lemon-quickadd-cancel" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm">Cancelar</button>
-                    <button id="lemon-quickadd-save" class="flex-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm">Guardar</button>
+            <div class="glass-panel p-5 sm:p-6 rounded-3xl w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto">
+                <div class="flex items-center justify-between">
+                    <h3 id="lemon-quickadd-title" class="font-bold text-white text-lg">Nuevo Ingreso</h3>
+                    <button id="lemon-quickadd-close" class="text-slate-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
                 </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase tracking-wide font-bold mb-2">Categoría</p>
+                    <div id="lemon-quickadd-categories" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase tracking-wide font-bold mb-1">Monto</p>
+                    <div class="flex items-center justify-center gap-1 border-b-2 border-cyan-500/30 focus-within:border-cyan-500 py-2">
+                        <span class="text-3xl sm:text-4xl font-extrabold text-slate-500">$</span>
+                        <input type="number" id="lemon-quickadd-amount" placeholder="0" class="w-full bg-transparent text-center text-4xl sm:text-5xl font-extrabold text-white focus:outline-none" autofocus>
+                    </div>
+                </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase tracking-wide font-bold mb-2">Fecha</p>
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" data-lemon-date-quick="hoy" class="lemon-date-pill flex-1 py-2 rounded-full text-xs sm:text-sm font-bold transition-all">Hoy</button>
+                        <button type="button" data-lemon-date-quick="ayer" class="lemon-date-pill flex-1 py-2 rounded-full text-xs sm:text-sm font-bold transition-all">Ayer</button>
+                        <button type="button" data-lemon-date-quick="antesdeayer" class="lemon-date-pill flex-1 py-2 rounded-full text-xs sm:text-sm font-bold transition-all">Antes de ayer</button>
+                    </div>
+                    <input type="date" id="lemon-quickadd-date" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
+                </div>
+
+                <div>
+                    <p class="text-[11px] text-slate-500 uppercase tracking-wide font-bold mb-1">Descripción (opcional)</p>
+                    <input type="text" id="lemon-quickadd-concept" placeholder="Ej: Sueldo, Nafta, Cena..." class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
+                </div>
+
+                <button id="lemon-quickadd-save" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3.5 rounded-2xl text-sm">Guardar</button>
             </div>
         </div>
 
@@ -543,7 +576,7 @@
             </div>
             <p id="photo-input-status" class="text-[10px] text-slate-500 -mt-2">Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura</p>
 
-            <form id="add-transaction-form" class="glass-panel p-4 rounded-2xl flex flex-col md:flex-row flex-wrap gap-2.5 items-end shadow-lg">
+            <form id="add-transaction-form" class="hidden glass-panel p-4 rounded-2xl flex flex-col md:flex-row flex-wrap gap-2.5 items-end shadow-lg">
                 <div class="flex-1 min-w-[140px]">
                     <label class="block text-xs font-medium text-slate-400 mb-1">Concepto / Producto</label>
                     <input type="text" id="input-name" placeholder="Ej. Nafta YPF, Cebolla, Cena..." required
@@ -3123,46 +3156,112 @@
                 bigNumber.textContent = document.getElementById('stat-expenses') ? document.getElementById('stat-expenses').textContent : '$0';
                 bigNumber.classList.remove('text-cyan-400');
                 bigNumber.classList.add('text-rose-400');
-                bigLabel.textContent = 'Gastos del mes';
+                bigLabel.textContent = 'AGREGAR GASTO';
             } else {
                 pillIngresos.classList.add('active-ingreso');
                 bigNumber.textContent = document.getElementById('stat-salary') ? document.getElementById('stat-salary').textContent : '$0';
                 bigNumber.classList.remove('text-rose-400');
                 bigNumber.classList.add('text-cyan-400');
-                bigLabel.textContent = 'Ingresos del mes';
+                bigLabel.textContent = 'AGREGAR INGRESO';
             }
         }
 
         document.getElementById('pill-tab-ingresos').addEventListener('click', () => openMovementSection('ingresos', false));
         document.getElementById('pill-tab-egresos').addEventListener('click', () => openMovementSection('egresos', false));
 
+        // Lista de categorías (misma que ya usa el resto de la app) para armar las
+        // pastillas grandes de "Categoría" del modal nuevo.
+        const LEMON_CATEGORIES = [
+            { value: 'Belleza y Cuidado Personal', emoji: '💄' },
+            { value: 'Limpieza del Hogar', emoji: '🧼' },
+            { value: 'Mecánica y Mantenimiento', emoji: '🔧' },
+            { value: 'Transporte', emoji: '⛽' },
+            { value: 'Delivery', emoji: '🛵' },
+            { value: 'Apps', emoji: '📱' },
+            { value: 'Servicios', emoji: '💡' },
+            { value: 'Almacén, Súper y Mayoristas', emoji: '🌾' },
+            { value: 'Panadería', emoji: '🥐' },
+            { value: 'Salidas y Diversión', emoji: '🍽️' },
+            { value: 'Farmacia', emoji: '💊' },
+            { value: 'Librería y Capacitación', emoji: '📚' },
+            { value: 'Juguetería y Bazar', emoji: '🧸' },
+            { value: 'Vestimenta', emoji: '👕' },
+            { value: 'Compras del Hogar y Electrónica', emoji: '📺' },
+            { value: 'Mascotas', emoji: '🐾' },
+            { value: 'Otros', emoji: '✍️' }
+        ];
+        let lemonSelectedCategory = null;
+
+        function buildLemonCategoryPills() {
+            const container = document.getElementById('lemon-quickadd-categories');
+            container.innerHTML = LEMON_CATEGORIES.map(c => `
+                <button type="button" data-lemon-cat="${c.value}" class="lemon-cat-pill px-4 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-1.5">
+                    ${c.emoji} ${c.value}
+                </button>
+            `).join('');
+            container.querySelectorAll('.lemon-cat-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    lemonSelectedCategory = btn.dataset.lemonCat;
+                    container.querySelectorAll('.lemon-cat-pill').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                });
+            });
+        }
+        buildLemonCategoryPills();
+
         // Número gigante tocable: abre la carga rápida del tipo que está activo
         document.getElementById('lemon-big-number').addEventListener('click', () => {
             const tipo = currentMovementSubTab === 'egresos' ? 'egreso' : 'ingreso';
-            document.getElementById('lemon-quickadd-title').textContent = tipo === 'ingreso' ? 'Agregar Ingreso' : 'Agregar Gasto';
+            document.getElementById('lemon-quickadd-title').textContent = tipo === 'ingreso' ? 'Nuevo Ingreso' : 'Nuevo Gasto';
             document.getElementById('lemon-quickadd-amount').value = '';
             document.getElementById('lemon-quickadd-concept').value = '';
+            document.getElementById('lemon-quickadd-date').value = todayDate;
+            lemonSelectedCategory = null;
+            document.querySelectorAll('.lemon-cat-pill').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.lemon-date-pill').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-lemon-date-quick="hoy"]').classList.add('active');
             document.getElementById('lemon-quickadd-modal').classList.remove('hidden');
             document.getElementById('lemon-quickadd-modal').classList.add('flex');
             document.getElementById('lemon-quickadd-amount').focus();
         });
 
-        document.getElementById('lemon-quickadd-cancel').addEventListener('click', () => {
+        document.getElementById('lemon-quickadd-close').addEventListener('click', () => {
             document.getElementById('lemon-quickadd-modal').classList.add('hidden');
             document.getElementById('lemon-quickadd-modal').classList.remove('flex');
+        });
+
+        // Pastillas rápidas de fecha (Hoy / Ayer / Antes de ayer)
+        document.querySelectorAll('.lemon-date-pill').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.lemon-date-pill').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const d = new Date();
+                if (btn.dataset.lemonDateQuick === 'ayer') d.setDate(d.getDate() - 1);
+                if (btn.dataset.lemonDateQuick === 'antesdeayer') d.setDate(d.getDate() - 2);
+                document.getElementById('lemon-quickadd-date').value = d.toISOString().slice(0, 10);
+            });
+        });
+
+        // Si cambia la fecha a mano, ninguna pastilla queda marcada como activa
+        document.getElementById('lemon-quickadd-date').addEventListener('change', () => {
+            document.querySelectorAll('.lemon-date-pill').forEach(b => b.classList.remove('active'));
         });
 
         document.getElementById('lemon-quickadd-save').addEventListener('click', async () => {
             const amount = parseFloat(document.getElementById('lemon-quickadd-amount').value);
             const concept = document.getElementById('lemon-quickadd-concept').value.trim();
+            const dateVal = document.getElementById('lemon-quickadd-date').value || todayDate;
+
             if (!amount || amount <= 0) {
                 showToast('Escribí un monto válido', 'warning');
                 return;
             }
             const tipo = currentMovementSubTab === 'egresos' ? 'egreso' : 'ingreso';
-            const nombre = concept || (tipo === 'ingreso' ? 'Ingreso' : 'Gasto');
+            const categoryVal = lemonSelectedCategory || 'Otros';
+            const nombre = concept || categoryVal;
+            const fuelTypeVal = categoryVal === 'Transporte' ? 'Nafta' : null;
 
-            await addTransactionRecord({ name: nombre, dateVal: todayDate, amount, categoryVal: 'Otros', fuelTypeVal: null, typeVal: tipo });
+            await addTransactionRecord({ name: nombre, dateVal, amount, categoryVal, fuelTypeVal, typeVal: tipo });
 
             document.getElementById('lemon-quickadd-modal').classList.add('hidden');
             document.getElementById('lemon-quickadd-modal').classList.remove('flex');
