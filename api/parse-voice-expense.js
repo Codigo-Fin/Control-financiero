@@ -90,6 +90,7 @@ Ejemplos (frase hablada → JSON esperado):
 - "macdonald 8000" → {"amount": 8000, "type": "egreso", "category": "Salidas y Diversión", "customCategory": null, "fuelType": null, "concept": "McDonald's"}
 - "cine 15000" → {"amount": 15000, "type": "egreso", "category": "Salidas y Diversión", "customCategory": null, "fuelType": null, "concept": "Cine"}
 - "gasté noventa millones en un auto" → {"amount": 90000000, "type": "egreso", "category": "Otros", "customCategory": "Vehículos", "fuelType": null, "concept": "Auto"}
+- "gasté 30000 pesos en apps" → {"amount": 30000, "type": "egreso", "category": "Apps", "customCategory": null, "fuelType": null, "concept": "App de viajes"}
 - Devolvé SOLO el JSON, nada de explicaciones ni texto extra.`;
 
   try {
