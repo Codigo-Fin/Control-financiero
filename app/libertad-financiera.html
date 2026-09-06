@@ -1069,7 +1069,7 @@
         } else {
             try {
                 const sessionPromise = sb.auth.getSession();
-                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), 6000));
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), 2000));
                 const result = await Promise.race([sessionPromise, timeoutPromise]);
 
                 if (result.timedOut) {
@@ -3488,7 +3488,7 @@
         <span class="text-[10px] font-semibold">Emergencia</span>
     </button>
     <button data-bottomnav-lf="inversiones" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
-        <i class="fa-regular fa-clock text-xl"></i>
+        <i class="fa-solid fa-chart-pie text-xl"></i>
         <span class="text-[10px] font-semibold">Inversiones</span>
     </button>
     <button data-bottomnav-lf="proyectos" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
