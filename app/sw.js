@@ -4,7 +4,7 @@
 // hay señal, los gastos/ingresos nuevos se guardan localmente y se sincronizan
 // solos apenas vuelve la conexión (eso lo maneja index.html, no este archivo).
 
-const CACHE_NAME = 'ressetia-shell-v4';
+const CACHE_NAME = 'ressetia-shell-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -43,19 +43,20 @@ self.addEventListener('fetch', (event) => {
     return; // deja que el navegador maneje el pedido normal (red directa)
   }
 
+  // "Stale-while-revalidate": mostramos la copia guardada AL INSTANTE (sin
+  // esperar nada de la red), y en paralelo pedimos la versión fresca para que
+  // la PRÓXIMA vez ya esté actualizada. Esto es lo que hace que cambiar de
+  // página se sienta tan fluido como cambiar de pestaña dentro de la misma.
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Si hay internet, actualizamos la copia guardada con la versión fresca
+    caches.match(event.request).then((cachedResponse) => {
+      const networkFetch = fetch(event.request).then((networkResponse) => {
         const clone = networkResponse.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         return networkResponse;
-      })
-      .catch(() => {
-        // Sin internet: devolvemos la copia guardada de ESTE archivo puntual, y si
-        // no existiera, la de index.html (siempre relativo a la carpeta de la app,
-        // nunca a la raíz del sitio, que ahora es la landing).
-        return caches.match(event.request).then((cached) => cached || caches.match('./index.html'));
-      })
+      }).catch(() => cachedResponse || caches.match('./index.html'));
+
+      // Si hay copia guardada, la devolvemos ya mismo; si no, esperamos la red.
+      return cachedResponse || networkFetch;
+    })
   );
 });
