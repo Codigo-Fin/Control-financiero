@@ -54,6 +54,11 @@
         /* Barra de navegación de abajo */
         .bottomnav-btn { color: #64748b; }
         .bottomnav-btn.active { color: #22d3ee; }
+
+        /* Pestañas estilo Lemon Cash (Ingreso / Gastos) */
+        .lemon-pill { background: transparent; color: #64748b; }
+        .lemon-pill.active-ingreso { background: #164e63; color: #22d3ee; }
+        .lemon-pill.active-egreso { background: #4c0519; color: #fb7185; }
         .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
         /* Espacio para que el contenido no quede tapado por la barra fija de abajo */
         #app-content { padding-bottom: 90px; }
@@ -440,10 +445,36 @@
         </header>
 
 
+        <!-- Pestañas estilo Lemon Cash: Ingreso / Gastos -->
+        <div class="flex gap-2 bg-slate-900/40 rounded-3xl p-1.5">
+            <button id="pill-tab-ingresos" class="lemon-pill flex-1 py-3 rounded-2xl font-bold text-sm transition-all">Ingreso</button>
+            <button id="pill-tab-egresos" class="lemon-pill flex-1 py-3 rounded-2xl font-bold text-sm transition-all">Gastos</button>
+        </div>
+
+        <!-- Número gigante, tocable — tocarlo abre la carga rápida del tipo elegido -->
+        <div class="glass-panel rounded-3xl p-6 sm:p-8 text-center space-y-1">
+            <p id="lemon-big-label" class="text-slate-400 text-sm font-semibold">Ingresos del mes</p>
+            <button id="lemon-big-number" class="text-5xl sm:text-6xl font-extrabold text-cyan-400 tracking-tight active:scale-95 transition-all">$0</button>
+            <p class="text-slate-600 text-xs">Tocá el número para agregar uno nuevo</p>
+        </div>
+
+        <!-- Modal de carga rápida con número gigante, para escribirlo fácil -->
+        <div id="lemon-quickadd-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+            <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 text-center">
+                <h3 id="lemon-quickadd-title" class="font-bold text-white text-lg">Agregar Ingreso</h3>
+                <input type="number" id="lemon-quickadd-amount" placeholder="0" class="w-full bg-transparent text-center text-6xl font-extrabold text-cyan-400 focus:outline-none border-b-2 border-cyan-500/30 focus:border-cyan-500 py-2" autofocus>
+                <input type="text" id="lemon-quickadd-concept" placeholder="¿De qué es? (ej: Sueldo, Nafta...)" class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white text-center focus:outline-none focus:border-cyan-500">
+                <div class="flex gap-2">
+                    <button id="lemon-quickadd-cancel" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm">Cancelar</button>
+                    <button id="lemon-quickadd-save" class="flex-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm">Guardar</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Acordeón: Ingresos / Gastos / Ganancias — solo uno abierto a la vez,
              con cajas de estilo neón, para que no sea un "choclo" de todo junto. -->
         <div class="rounded-3xl overflow-hidden border-2 border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)]">
-            <button data-accordion="ingresos" class="accordion-header w-full flex items-center justify-between p-4 bg-cyan-950/40 hover:bg-cyan-950/60 transition-all">
+            <button data-accordion="ingresos" class="accordion-header hidden w-full items-center justify-between p-4 bg-cyan-950/40 hover:bg-cyan-950/60 transition-all">
                 <span class="font-bold text-cyan-300 flex items-center gap-2 text-sm sm:text-base">
                     <i class="fa-solid fa-building-columns"></i> INGRESOS
                 </span>
@@ -605,7 +636,7 @@
         </div>
 
         <div class="rounded-3xl overflow-hidden border-2 border-rose-500/30 shadow-[0_0_20px_rgba(244,63,94,0.15)]">
-            <button data-accordion="egresos" class="accordion-header w-full flex items-center justify-between p-4 bg-rose-950/40 hover:bg-rose-950/60 transition-all">
+            <button data-accordion="egresos" class="accordion-header hidden items-center justify-between p-4 bg-rose-950/40 hover:bg-rose-950/60 transition-all">
                 <span class="font-bold text-rose-300 flex items-center gap-2 text-sm sm:text-base">
                     <i class="fa-solid fa-bag-shopping"></i> GASTOS
                 </span>
@@ -2757,6 +2788,7 @@
 
             document.getElementById('stat-salary').textContent = formatMoney(totalIncome);
             document.getElementById('stat-expenses').textContent = formatMoney(totalExpenses);
+            if (typeof updateLemonBigNumber === 'function') updateLemonBigNumber();
 
             const statNetworth = document.getElementById('stat-networth');
             const networthBadge = document.getElementById('networth-badge');
@@ -3085,7 +3117,72 @@
 
             if (section === 'ingresos') moveMovementsPanelTo('ingreso');
             if (section === 'egresos') moveMovementsPanelTo('egreso');
+
+            updateLemonBigNumber();
         }
+
+        // Actualiza el número gigante de arriba (Ingreso/Gastos) y resalta la
+        // pestaña activa, estilo Lemon Cash.
+        function updateLemonBigNumber() {
+            const pillIngresos = document.getElementById('pill-tab-ingresos');
+            const pillEgresos = document.getElementById('pill-tab-egresos');
+            const bigNumber = document.getElementById('lemon-big-number');
+            const bigLabel = document.getElementById('lemon-big-label');
+            if (!pillIngresos || !bigNumber) return;
+
+            pillIngresos.classList.remove('active-ingreso');
+            pillEgresos.classList.remove('active-egreso');
+
+            if (currentMovementSubTab === 'egresos') {
+                pillEgresos.classList.add('active-egreso');
+                bigNumber.textContent = document.getElementById('stat-expenses') ? document.getElementById('stat-expenses').textContent : '$0';
+                bigNumber.classList.remove('text-cyan-400');
+                bigNumber.classList.add('text-rose-400');
+                bigLabel.textContent = 'Gastos del mes';
+            } else {
+                pillIngresos.classList.add('active-ingreso');
+                bigNumber.textContent = document.getElementById('stat-salary') ? document.getElementById('stat-salary').textContent : '$0';
+                bigNumber.classList.remove('text-rose-400');
+                bigNumber.classList.add('text-cyan-400');
+                bigLabel.textContent = 'Ingresos del mes';
+            }
+        }
+
+        document.getElementById('pill-tab-ingresos').addEventListener('click', () => openMovementSection('ingresos', false));
+        document.getElementById('pill-tab-egresos').addEventListener('click', () => openMovementSection('egresos', false));
+
+        // Número gigante tocable: abre la carga rápida del tipo que está activo
+        document.getElementById('lemon-big-number').addEventListener('click', () => {
+            const tipo = currentMovementSubTab === 'egresos' ? 'egreso' : 'ingreso';
+            document.getElementById('lemon-quickadd-title').textContent = tipo === 'ingreso' ? 'Agregar Ingreso' : 'Agregar Gasto';
+            document.getElementById('lemon-quickadd-amount').value = '';
+            document.getElementById('lemon-quickadd-concept').value = '';
+            document.getElementById('lemon-quickadd-modal').classList.remove('hidden');
+            document.getElementById('lemon-quickadd-modal').classList.add('flex');
+            document.getElementById('lemon-quickadd-amount').focus();
+        });
+
+        document.getElementById('lemon-quickadd-cancel').addEventListener('click', () => {
+            document.getElementById('lemon-quickadd-modal').classList.add('hidden');
+            document.getElementById('lemon-quickadd-modal').classList.remove('flex');
+        });
+
+        document.getElementById('lemon-quickadd-save').addEventListener('click', async () => {
+            const amount = parseFloat(document.getElementById('lemon-quickadd-amount').value);
+            const concept = document.getElementById('lemon-quickadd-concept').value.trim();
+            if (!amount || amount <= 0) {
+                showToast('Escribí un monto válido', 'warning');
+                return;
+            }
+            const tipo = currentMovementSubTab === 'egresos' ? 'egreso' : 'ingreso';
+            const nombre = concept || (tipo === 'ingreso' ? 'Ingreso' : 'Gasto');
+
+            await addTransactionRecord({ name: nombre, dateVal: todayDate, amount, categoryVal: 'Otros', fuelTypeVal: null, typeVal: tipo });
+
+            document.getElementById('lemon-quickadd-modal').classList.add('hidden');
+            document.getElementById('lemon-quickadd-modal').classList.remove('flex');
+            showToast(`✅ ${tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} de ${formatMoney(amount)} agregado`);
+        });
 
         document.querySelectorAll('.accordion-header').forEach(btn => {
             btn.addEventListener('click', () => openMovementSection(btn.dataset.accordion, true));
