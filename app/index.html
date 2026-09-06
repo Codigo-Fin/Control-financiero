@@ -400,14 +400,24 @@
         <!-- ==================== TAB: SALDOS DEL MES ==================== -->
         <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
 
-        <div class="flex justify-end">
+        <div class="flex justify-end gap-2">
+            <button onclick="document.getElementById('header-options-modal').classList.remove('hidden'); document.getElementById('header-options-modal').classList.add('flex');" title="Mes, calendario y comprobantes" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
+                <i class="fa-solid fa-share-nodes text-lg"></i>
+            </button>
             <button onclick="switchTab('cuadrante')" title="Cuadrante de Flujo" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
                 <i class="fa-solid fa-diagram-project text-lg"></i>
             </button>
         </div>
 
-        <header class="glass-panel rounded-3xl p-5 sm:p-7 shadow-2xl relative overflow-hidden space-y-5">
-            <div class="flex flex-col md:flex-row md:items-center justify-end gap-4 pb-4 border-b border-white/10">
+        <!-- Modal: mes/calendario anual/comprobantes, todo junto, para no ocupar
+             espacio fijo arriba de la pantalla. -->
+        <div id="header-options-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+            <div class="glass-panel p-5 sm:p-7 rounded-3xl w-full max-w-md space-y-5 max-h-[85vh] overflow-y-auto">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-white text-lg">Mes y Comprobantes</h3>
+                    <button onclick="document.getElementById('header-options-modal').classList.add('hidden'); document.getElementById('header-options-modal').classList.remove('flex');" class="text-slate-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
                 <div class="flex flex-wrap items-center gap-2">
                     <div class="flex items-center bg-slate-900/90 border border-cyan-500/30 rounded-2xl p-1 gap-1 shadow-inner">
                         <button id="prev-month-btn" title="Mes Anterior" class="p-2 hover:bg-slate-800 text-cyan-400 rounded-xl transition-colors">
@@ -428,36 +438,33 @@
                         <i id="drawer-arrow" class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300"></i>
                     </button>
                 </div>
-            </div>
 
-            <div id="month-drawer" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Patrimonio Neto por Mes</span>
-                    <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
+                <div id="month-drawer" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Saldo por Mes</span>
+                        <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
+                    </div>
+                    <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
                 </div>
-                <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
-            </div>
 
-            <div class="pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
-                <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
-                    <i class="fa-solid fa-share-nodes text-cyan-400"></i>
-                    <span>Comprobante Mensual:</span>
-                </span>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                <div class="pt-3 border-t border-white/10 space-y-2.5">
+                    <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
+                        <i class="fa-solid fa-share-nodes text-cyan-400"></i>
+                        <span>Comprobante Mensual:</span>
+                    </span>
+                    <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="w-full bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-file-invoice text-rose-300"></i>
                         <span>Comprobante PDF a WhatsApp</span>
                     </button>
-                    <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center gap-1.5">
+                    <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="w-full bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
                         <span>Compartir Resumen (texto)</span>
                     </button>
                 </div>
             </div>
-        </header>
+        </div>
 
 
-        <!-- Pestañas estilo Lemon Cash: Ingreso / Gastos -->
         <div class="flex gap-2 bg-slate-900/40 rounded-3xl p-1.5">
             <button id="pill-tab-ingresos" class="lemon-pill flex-1 py-3 rounded-2xl font-bold text-sm transition-all">Ingreso</button>
             <button id="pill-tab-egresos" class="lemon-pill flex-1 py-3 rounded-2xl font-bold text-sm transition-all">Gastos</button>
@@ -468,6 +475,23 @@
             <p id="lemon-big-label" class="text-slate-400 text-sm font-bold uppercase tracking-wide">AGREGAR INGRESO</p>
             <button id="lemon-big-number" class="text-5xl sm:text-6xl font-extrabold text-cyan-400 tracking-tight active:scale-95 transition-all">$0</button>
             <p class="text-slate-600 text-xs">Tocá el número para agregar uno nuevo</p>
+        </div>
+
+        <!-- Saldo (antes "Patrimonio Neto") — solo se ve en la pestaña de Ingreso -->
+        <div id="saldo-card-ingreso" class="bg-slate-900/50 p-4 rounded-2xl border-2 border-teal-500/30 flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-teal-300 uppercase tracking-wider">📊 Saldo</span>
+            <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+            </div>
+            <div class="mt-2 flex items-baseline justify-between">
+            <span id="stat-networth" class="text-2xl sm:text-3xl font-bold text-teal-300">$0</span>
+            <span id="networth-badge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold">Disponible</span>
+            </div>
+            <button id="btn-pay-debt-with-networth" onclick="payDebtFromPatrimonio()" class="hidden mt-3 w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs py-2 rounded-xl">
+                💳 Pagar tu deuda con este Saldo
+            </button>
         </div>
 
         <!-- Modal de carga rápida con número gigante, para escribirlo fácil -->
@@ -680,24 +704,6 @@
 
         <!-- Oculto: mantiene el dato para el número gigante de arriba -->
         <span id="stat-expenses" class="hidden">$0</span>
-
-        <div class="max-w-sm mx-auto w-full">
-            <div class="bg-slate-900/50 p-4 rounded-2xl border-2 border-teal-500/30 flex flex-col justify-between">
-                <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-teal-300 uppercase tracking-wider">📊 Patrimonio Neto</span>
-                <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center text-xs">
-                    <i class="fa-solid fa-chart-line"></i>
-                </div>
-                </div>
-                <div class="mt-2 flex items-baseline justify-between">
-                <span id="stat-networth" class="text-2xl sm:text-3xl font-bold text-teal-300">$0</span>
-                <span id="networth-badge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold">Disponible</span>
-                </div>
-                <button id="btn-pay-debt-with-networth" onclick="payDebtFromPatrimonio()" class="hidden mt-3 w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs py-2 rounded-xl">
-                    💳 Pagar tu deuda con este Patrimonio
-                </button>
-            </div>
-        </div>
 
         <div id="movements-panel-slot-egresos"></div>
 
@@ -3157,12 +3163,14 @@
                 bigNumber.classList.remove('text-cyan-400');
                 bigNumber.classList.add('text-rose-400');
                 bigLabel.textContent = 'AGREGAR GASTO';
+                document.getElementById('saldo-card-ingreso').classList.add('hidden');
             } else {
                 pillIngresos.classList.add('active-ingreso');
                 bigNumber.textContent = document.getElementById('stat-salary') ? document.getElementById('stat-salary').textContent : '$0';
                 bigNumber.classList.remove('text-rose-400');
                 bigNumber.classList.add('text-cyan-400');
                 bigLabel.textContent = 'AGREGAR INGRESO';
+                document.getElementById('saldo-card-ingreso').classList.remove('hidden');
             }
         }
 
