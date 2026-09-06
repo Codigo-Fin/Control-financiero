@@ -405,7 +405,7 @@
                 <i class="fa-solid fa-share-nodes text-lg"></i>
             </button>
             <button onclick="switchTab('cuadrante')" title="Cuadrante de Flujo" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
-                <i class="fa-solid fa-diagram-project text-lg"></i>
+                <i class="fa-solid fa-briefcase text-lg"></i>
             </button>
         </div>
 
@@ -729,7 +729,7 @@
             </div>
         </div>
 
-        <div class="rounded-3xl overflow-hidden border-2 border-teal-500/30 shadow-[0_0_20px_rgba(20,184,166,0.15)]">
+        <div id="tus-ganancias-wrapper" class="rounded-3xl overflow-hidden border-2 border-teal-500/30 shadow-[0_0_20px_rgba(20,184,166,0.15)]">
             <button data-accordion="ganancias" class="accordion-header w-full flex items-center justify-between p-4 bg-teal-950/40 hover:bg-teal-950/60 transition-all">
                 <span class="font-bold text-teal-300 flex items-center gap-2 text-sm sm:text-base">
                     <i class="fa-solid fa-coins"></i> TUS GANANCIAS
@@ -3164,6 +3164,7 @@
                 bigNumber.classList.add('text-rose-400');
                 bigLabel.textContent = 'AGREGAR GASTO';
                 document.getElementById('saldo-card-ingreso').classList.add('hidden');
+                document.getElementById('tus-ganancias-wrapper').classList.add('hidden');
             } else {
                 pillIngresos.classList.add('active-ingreso');
                 bigNumber.textContent = document.getElementById('stat-salary') ? document.getElementById('stat-salary').textContent : '$0';
@@ -3171,6 +3172,7 @@
                 bigNumber.classList.add('text-cyan-400');
                 bigLabel.textContent = 'AGREGAR INGRESO';
                 document.getElementById('saldo-card-ingreso').classList.remove('hidden');
+                document.getElementById('tus-ganancias-wrapper').classList.remove('hidden');
             }
         }
 
