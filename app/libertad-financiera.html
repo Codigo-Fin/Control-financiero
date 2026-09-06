@@ -436,7 +436,7 @@
                         <label>¿Este ingreso viene de uno de tus Proyectos? (opcional)</label>
                         <p class="text-[10px] text-slate-500 -mt-1 mb-1">Si tenés un proyecto cargado en "Mis Proyectos" y este cobro es de ahí, elegilo acá para que quede sumado a ese proyecto. Si es una venta suelta sin proyecto, dejalo en "Ninguno".</p>
                         <select id="extraProjectLink">
-                            <option value="">Ninguno / venta suelta</option>
+                            <option value="">Sin proyecto</option>
                         </select>
                     </div>
                     <div>
@@ -538,12 +538,6 @@
                         <i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota
                     </button>
                     <p class="text-[10px] text-slate-600 pt-1">Al pagar, se descuenta de tu Patrimonio Neto en Control Financiero.</p>
-                    <button onclick="borrarEstrategia('personal')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
-                        <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
-                    </button>
-                    <button onclick="borrarEstrategia('tarjeta')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
-                        <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
-                    </button>
                     <button onclick="borrarEstrategia('automotriz')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
                         <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
                     </button>
@@ -590,6 +584,9 @@
                         <i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota
                     </button>
                     <p class="text-[10px] text-slate-600 pt-1">Al pagar, se descuenta de tu Patrimonio Neto en Control Financiero.</p>
+                    <button onclick="borrarEstrategia('tarjeta')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
+                        <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
+                    </button>
                 </div>
             </div>
         </div>
@@ -634,6 +631,9 @@
                         <i class="fa-solid fa-money-bill-wave"></i> Pagar esta cuota
                     </button>
                     <p class="text-[10px] text-slate-600 pt-1">Al pagar, se descuenta de tu Patrimonio Neto en Control Financiero.</p>
+                    <button onclick="borrarEstrategia('personal')" class="w-full mt-1 text-rose-400 hover:text-rose-300 text-xs py-1.5">
+                        <i class="fa-solid fa-trash-can"></i> Borrar esta estrategia
+                    </button>
                 </div>
             </div>
         </div>
@@ -752,20 +752,6 @@
                 <div>
                     <label>Nombre del Activo / Acción / ETF</label>
                     <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label>Ticker / Símbolo (opcional)</label>
-                        <input type="text" id="investTicker" placeholder="Ej: NVDA, AAPL, SPY">
-                    </div>
-                    <div>
-                        <label>Mercado</label>
-                        <select id="investMarket">
-                            <option value="BCBA">🇦🇷 CEDEAR (BCBA)</option>
-                            <option value="NASDAQ">🇺🇸 NASDAQ</option>
-                            <option value="NYSE">🇺🇸 NYSE</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -1611,12 +1597,10 @@
     investForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('investName').value;
-        const ticker = document.getElementById('investTicker').value.trim().toUpperCase();
-        const market = document.getElementById('investMarket').value;
         const qty = parseFloat(document.getElementById('investQty').value);
         const price = parseFloat(document.getElementById('investPrice').value);
 
-        investments.push({ id: Date.now(), name, ticker, market, qty, price });
+        investments.push({ id: Date.now(), name, ticker: '', market: '', qty, price });
         investForm.reset();
         await saveStorage();
         render();
@@ -1910,11 +1894,12 @@
 
     // Registra el ingreso en Control Financiero, etiquetado con el proyecto elegido
     // (si eligió alguno) — no afecta nada de lo que ya pasó arriba, es adicional.
+    // Registra el ingreso en Control Financiero SIEMPRE (antes solo lo hacía si
+    // había un proyecto elegido, por eso no se reflejaba en el Saldo).
     async function tagIncomeWithProjectIfSelected(amount, category, detail) {
-        const projectId = document.getElementById('extraProjectLink').value;
-        if (!projectId) return;
+        const projectId = document.getElementById('extraProjectLink').value || null;
         try {
-            await sb.from('transactions').insert({
+            const { error } = await sb.from('transactions').insert({
                 user_id: currentUser.id,
                 name: detail || category,
                 date: new Date().toISOString().slice(0, 10),
@@ -1923,9 +1908,12 @@
                 category: 'Otros', fuel_type: null, type: 'ingreso', icon: '🚀', completed: false,
                 project_id: projectId
             });
+            if (error) throw error;
             document.getElementById('extraProjectLink').value = '';
+            await fetchExternalPatrimonioNeto(); // se registró un ingreso nuevo, refrescamos el Saldo
         } catch (err) {
-            console.warn('No se pudo etiquetar el ingreso con el proyecto:', err);
+            console.error('No se pudo registrar el ingreso en Control Financiero:', err);
+            await showAlertModal('No se pudo registrar este ingreso en tu Saldo. Probá de nuevo en un momento.');
         }
     }
 
@@ -2745,7 +2733,7 @@
             const projectsList = document.getElementById('projectsList');
             const projectLinkSelect = document.getElementById('extraProjectLink');
 
-            projectLinkSelect.innerHTML = '<option value="">Ninguno / venta suelta</option>';
+            projectLinkSelect.innerHTML = '<option value="">Sin proyecto</option>';
             (projects || []).forEach(p => {
                 const opt = document.createElement('option');
                 opt.value = p.id;
