@@ -184,11 +184,8 @@
         </div>
 
         <div class="flex items-center justify-between">
-            <button id="btn-open-menu" title="Menú" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-300 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all">
-                <i class="fa-solid fa-bars text-lg"></i>
-            </button>
-            <a href="index.html" class="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 text-sm transition-colors">
-                <i class="fa-solid fa-arrow-left"></i> Volver al Control Financiero
+            <a href="index.html?goto=perfil" title="Mi Perfil" class="bg-gradient-to-br from-cyan-500/30 to-teal-500/20 hover:from-cyan-500/40 border border-cyan-500/40 text-cyan-300 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-all">
+                <i class="fa-solid fa-circle-user text-3xl"></i>
             </a>
         </div>
 
@@ -320,7 +317,7 @@
         <div id="lf-tab-emergencia" class="lf-tab-panel hidden space-y-5">
 
         <!-- Pestañas internas: Registrar / Estrategia / Pagar, todo dentro de "Deudas" -->
-        <div class="flex gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5">
+        <div class="hidden gap-1.5 bg-slate-900/60 border border-white/10 rounded-2xl p-1.5">
             <button data-sub-tab-lf="registrar" class="sub-tab-btn-lf flex-1 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">
                 <i class="fa-solid fa-file-invoice-dollar"></i> REGISTRAR
             </button>
@@ -2702,6 +2699,11 @@
                 btn.classList.add('text-slate-400');
             }
         });
+
+        // Resalta el ícono correspondiente en la barra de navegación de abajo
+        document.querySelectorAll('[data-bottomnav-lf]').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.bottomnavLf === tabName);
+        });
     }
 
     document.querySelectorAll('.lf-tab-btn').forEach(btn => {
@@ -2939,7 +2941,6 @@
         document.getElementById('side-menu').classList.add('-translate-x-full');
         document.getElementById('side-menu-overlay').classList.add('hidden');
     }
-    document.getElementById('btn-open-menu').addEventListener('click', openSideMenu);
     document.getElementById('btn-close-menu').addEventListener('click', closeSideMenu);
     document.getElementById('side-menu-overlay').addEventListener('click', closeSideMenu);
 
@@ -3471,7 +3472,44 @@
     });
 </script>
 
+<!-- Barra de navegación fija de abajo, igual a la de Control Financiero, para
+     que no desaparezca al moverse entre secciones. -->
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-white/10 px-2 py-2 flex items-center justify-around safe-area-bottom">
+    <a href="index.html?goto=resumen" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
+        <i class="fa-solid fa-house text-xl"></i>
+        <span class="text-[10px] font-semibold">Inicio</span>
+    </a>
+    <button data-bottomnav-lf="emergencia" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
+        <i class="fa-solid fa-link text-xl"></i>
+        <span class="text-[10px] font-semibold">Deudas</span>
+    </button>
+    <button data-bottomnav-lf="fondos" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
+        <i class="fa-solid fa-bolt text-xl"></i>
+        <span class="text-[10px] font-semibold">Emergencia</span>
+    </button>
+    <button data-bottomnav-lf="inversiones" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
+        <i class="fa-regular fa-clock text-xl"></i>
+        <span class="text-[10px] font-semibold">Inversiones</span>
+    </button>
+    <button data-bottomnav-lf="proyectos" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
+        <i class="fa-solid fa-grip text-xl"></i>
+        <span class="text-[10px] font-semibold">Proyectos</span>
+    </button>
+</div>
 
+<style>
+    .bottomnav-btn { color: #64748b; background: none; border: none; cursor: pointer; }
+    .bottomnav-btn.active { color: #22d3ee; }
+    .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
+    #app-content { padding-bottom: 90px; }
+</style>
+
+<script>
+    // La barra de abajo cambia de pestaña acá mismo (sin recargar la página)
+    document.querySelectorAll('[data-bottomnav-lf]').forEach(btn => {
+        btn.addEventListener('click', () => switchLfTab(btn.dataset.bottomnavLf));
+    });
+</script>
 
 </body>
 </html>
