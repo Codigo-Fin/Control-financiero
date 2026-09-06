@@ -401,7 +401,10 @@
         <div id="tab-panel-resumen" class="tab-panel hidden space-y-5">
 
         <div class="flex justify-end gap-2">
-            <button onclick="document.getElementById('header-options-modal').classList.remove('hidden'); document.getElementById('header-options-modal').classList.add('flex');" title="Mes, calendario y comprobantes" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
+            <button onclick="document.getElementById('calendar-options-modal').classList.remove('hidden'); document.getElementById('calendar-options-modal').classList.add('flex');" title="Mes y calendario anual" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
+                <i class="fa-regular fa-calendar-days text-lg"></i>
+            </button>
+            <button onclick="document.getElementById('header-options-modal').classList.remove('hidden'); document.getElementById('header-options-modal').classList.add('flex');" title="Comprobantes para compartir" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
                 <i class="fa-solid fa-share-nodes text-lg"></i>
             </button>
             <button onclick="switchTab('cuadrante')" title="Cuadrante de Flujo" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
@@ -409,13 +412,12 @@
             </button>
         </div>
 
-        <!-- Modal: mes/calendario anual/comprobantes, todo junto, para no ocupar
-             espacio fijo arriba de la pantalla. -->
-        <div id="header-options-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+        <!-- Modal: mes y calendario anual, con su propio ícono aparte -->
+        <div id="calendar-options-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
             <div class="glass-panel p-5 sm:p-7 rounded-3xl w-full max-w-md space-y-5 max-h-[85vh] overflow-y-auto">
                 <div class="flex items-center justify-between">
-                    <h3 class="font-bold text-white text-lg">Mes y Comprobantes</h3>
-                    <button onclick="document.getElementById('header-options-modal').classList.add('hidden'); document.getElementById('header-options-modal').classList.remove('flex');" class="text-slate-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                    <h3 class="font-bold text-white text-lg">Mes y Calendario</h3>
+                    <button onclick="document.getElementById('calendar-options-modal').classList.add('hidden'); document.getElementById('calendar-options-modal').classList.remove('flex');" class="text-slate-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
                 </div>
 
                 <div class="flex flex-wrap items-center gap-2">
@@ -439,15 +441,25 @@
                     </button>
                 </div>
 
-                <div id="month-drawer" class="hidden transition-all duration-300 border-b border-white/10 pb-4">
+                <div id="month-drawer" class="hidden transition-all duration-300">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold text-slate-400 tracking-wider uppercase">🗓️ Saldo por Mes</span>
                         <span class="text-[11px] text-slate-500">Tocá un mes para seleccionarlo</span>
                     </div>
                     <div id="annual-months-grid" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2"></div>
                 </div>
+            </div>
+        </div>
 
-                <div class="pt-3 border-t border-white/10 space-y-2.5">
+        <!-- Modal: comprobantes para compartir -->
+        <div id="header-options-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+            <div class="glass-panel p-5 sm:p-7 rounded-3xl w-full max-w-md space-y-5 max-h-[85vh] overflow-y-auto">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-white text-lg">Comprobantes</h3>
+                    <button onclick="document.getElementById('header-options-modal').classList.add('hidden'); document.getElementById('header-options-modal').classList.remove('flex');" class="text-slate-400 hover:text-white text-xl w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="space-y-2.5">
                     <span class="text-xs sm:text-sm text-slate-400 font-medium flex items-center gap-1.5">
                         <i class="fa-solid fa-share-nodes text-cyan-400"></i>
                         <span>Comprobante Mensual:</span>
@@ -1056,7 +1068,7 @@
             <span class="text-[10px] font-semibold">Emergencia</span>
         </a>
         <a href="libertad-financiera.html?goto=inversiones" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
-            <i class="fa-regular fa-clock text-xl"></i>
+            <i class="fa-solid fa-chart-pie text-xl"></i>
             <span class="text-[10px] font-semibold">Inversiones</span>
         </a>
         <a href="libertad-financiera.html?goto=proyectos" class="bottomnav-btn flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all">
@@ -1461,7 +1473,7 @@
                 // (típico cuando la señal es muy mala, no directamente "sin internet"),
                 // no dejamos a la persona esperando para siempre.
                 const sessionPromise = sb.auth.getSession();
-                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), 6000));
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ timedOut: true }), 2000));
                 const result = await Promise.race([sessionPromise, timeoutPromise]);
 
                 if (result.timedOut) {
