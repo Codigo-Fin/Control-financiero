@@ -489,8 +489,8 @@
             <p class="text-slate-600 text-xs">Tocá el número para agregar uno nuevo</p>
         </div>
 
-        <!-- Saldo (antes "Patrimonio Neto") — solo se ve en la pestaña de Ingreso -->
-        <div class="grid grid-cols-2 gap-3">
+        <!-- Saldo + Inversiones — solo se ven en la pestaña de Ingreso -->
+        <div id="saldo-inversiones-grid" class="grid grid-cols-2 gap-3">
             <div id="saldo-card-ingreso" class="bg-slate-900/50 p-4 rounded-2xl border-2 border-teal-500/30 flex flex-col justify-between">
                 <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-teal-300 uppercase tracking-wider">📊 Saldo</span>
@@ -3248,7 +3248,7 @@
                 bigNumber.classList.remove('text-cyan-400');
                 bigNumber.classList.add('text-rose-400');
                 bigLabel.textContent = 'AGREGAR GASTOS';
-                document.getElementById('saldo-card-ingreso').classList.add('hidden');
+                document.getElementById('saldo-inversiones-grid').classList.add('hidden');
                 document.getElementById('tus-ganancias-wrapper').classList.add('hidden');
             } else {
                 pillIngresos.classList.add('active-ingreso');
@@ -3256,7 +3256,7 @@
                 bigNumber.classList.remove('text-rose-400');
                 bigNumber.classList.add('text-cyan-400');
                 bigLabel.textContent = 'AGREGAR INGRESO';
-                document.getElementById('saldo-card-ingreso').classList.remove('hidden');
+                document.getElementById('saldo-inversiones-grid').classList.remove('hidden');
                 document.getElementById('tus-ganancias-wrapper').classList.remove('hidden');
             }
         }
