@@ -905,6 +905,25 @@
             </div>
         </div> <!-- fin lf-tab-proyectos -->
 
+        <!-- Modal lindo para aportar a una meta (reemplaza el prompt() feo del navegador) -->
+        <div id="aportar-meta-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
+            <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border-2 border-amber-500/30 shadow-[0_0_30px_rgba(251,191,36,0.2)] text-center">
+                <i class="fa-solid fa-piggy-bank text-amber-400 text-3xl"></i>
+                <h3 class="font-bold text-white text-lg">Aportar a <span id="aportar-meta-nombre" class="text-amber-300">tu meta</span></h3>
+                <p class="text-xs text-slate-400">Saldo disponible: <span id="aportar-meta-saldo-disponible" class="font-bold text-cyan-300">$0</span></p>
+                <div class="flex items-center justify-center gap-1 border-b-2 border-amber-500/30 focus-within:border-amber-500 py-2">
+                    <span class="text-3xl font-extrabold text-slate-500">$</span>
+                    <input type="number" id="aportar-meta-amount" placeholder="0" class="w-full bg-transparent text-center text-4xl font-extrabold text-white focus:outline-none">
+                </div>
+                <p id="aportar-meta-error" class="hidden text-rose-400 text-xs font-semibold"></p>
+                <div class="flex gap-2">
+                    <button id="aportar-meta-cancelar" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-sm">Cancelar</button>
+                    <button id="aportar-meta-confirmar" class="flex-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold py-3 rounded-xl text-sm">Aportar</button>
+                </div>
+            </div>
+        </div>
+
+
     </div>
 
     <!-- Hidden PDF invoice template -->
@@ -2869,12 +2888,49 @@
         }
     }
 
+    let pendingAportarGoalId = null;
+
     async function promptAportarMeta(goalId) {
-        const monto = prompt('¿Cuánto querés aportar a esta meta?');
-        const amount = parseFloat(monto);
-        if (!amount || amount <= 0) return;
-        await aportarAMeta(goalId, amount);
+        const { data: goal } = await sb.from('savings_goals').select('*').eq('id', goalId).single();
+        if (!goal) return;
+
+        pendingAportarGoalId = goalId;
+        const disponible = creditBalance + externalPatrimonioNeto;
+
+        document.getElementById('aportar-meta-nombre').textContent = goal.name;
+        document.getElementById('aportar-meta-saldo-disponible').textContent = `$${Math.round(disponible).toLocaleString()}`;
+        document.getElementById('aportar-meta-amount').value = '';
+        document.getElementById('aportar-meta-error').classList.add('hidden');
+        document.getElementById('aportar-meta-modal').classList.remove('hidden');
+        document.getElementById('aportar-meta-modal').classList.add('flex');
+        document.getElementById('aportar-meta-amount').focus();
     }
+
+    document.getElementById('aportar-meta-cancelar').addEventListener('click', () => {
+        document.getElementById('aportar-meta-modal').classList.add('hidden');
+        document.getElementById('aportar-meta-modal').classList.remove('flex');
+    });
+
+    document.getElementById('aportar-meta-confirmar').addEventListener('click', async () => {
+        const amount = parseFloat(document.getElementById('aportar-meta-amount').value);
+        const errorEl = document.getElementById('aportar-meta-error');
+        const disponible = creditBalance + externalPatrimonioNeto;
+
+        if (!amount || amount <= 0) {
+            errorEl.textContent = 'Escribí un monto válido.';
+            errorEl.classList.remove('hidden');
+            return;
+        }
+        if (disponible <= 0 || amount > disponible) {
+            errorEl.textContent = `No tenés Saldo suficiente para aportar esto (disponible: $${Math.round(Math.max(disponible, 0)).toLocaleString()}).`;
+            errorEl.classList.remove('hidden');
+            return;
+        }
+
+        document.getElementById('aportar-meta-modal').classList.add('hidden');
+        document.getElementById('aportar-meta-modal').classList.remove('flex');
+        await aportarAMeta(pendingAportarGoalId, amount);
+    });
 
     // Aportar a una meta: se registra como egreso en Control Financiero (sale del
     // Patrimonio Neto), y solo si eso funciona, se suma el progreso de la meta.
