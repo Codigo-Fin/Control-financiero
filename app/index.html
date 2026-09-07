@@ -253,7 +253,7 @@
                     <i class="fa-solid fa-rocket w-5 text-center"></i> Mis Proyectos
                 </a>
                 <a href="libertad-financiera.html?goto=suenos" class="menu-item-link w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
-                    <i class="fa-solid fa-star-of-life w-5 text-center"></i> Mis Sueños
+                    <i class="fa-solid fa-star-of-life w-5 text-center"></i> Metas
                 </a>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
@@ -505,6 +505,13 @@
                 <button id="btn-pay-debt-with-networth" onclick="payDebtFromPatrimonio()" class="hidden mt-3 w-full bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs py-2 rounded-xl">
                     💳 Pagar tu deuda con este Saldo
                 </button>
+
+                <!-- Saldo Favor/Contra — se llena solo si ya visitaste Libertad Financiera al menos una vez -->
+                <div id="saldo-favor-contra-box" class="hidden mt-3 pt-3 border-t border-white/10 text-center">
+                    <p id="saldo-favor-contra-label" class="text-[10px] uppercase tracking-wide font-bold"></p>
+                    <p id="saldo-favor-contra-amount" class="text-xl font-bold">$0</p>
+                    <p id="saldo-favor-contra-detail" class="text-[10px] text-slate-500 mt-0.5"></p>
+                </div>
             </div>
 
             <a href="libertad-financiera.html?goto=inversiones" id="inversiones-card-ingreso" class="bg-slate-900/50 p-4 rounded-2xl border-2 border-purple-500/30 flex flex-col justify-between">
@@ -536,9 +543,14 @@
 
                     <div>
                         <p class="text-[11px] text-slate-500 uppercase tracking-wide font-bold mb-1">Monto</p>
-                        <div class="flex items-center justify-center gap-1 border-b-2 border-cyan-500/30 focus-within:border-cyan-500 py-2">
-                            <span class="text-3xl sm:text-4xl font-extrabold text-slate-500">$</span>
-                            <input type="number" id="lemon-quickadd-amount" placeholder="0" class="w-full bg-transparent text-center text-4xl sm:text-5xl font-extrabold text-white focus:outline-none" autofocus>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 flex items-center justify-center gap-1 border-b-2 border-cyan-500/30 focus-within:border-cyan-500 py-2">
+                                <span class="text-3xl sm:text-4xl font-extrabold text-slate-500">$</span>
+                                <input type="number" id="lemon-quickadd-amount" placeholder="0" class="w-full bg-transparent text-center text-4xl sm:text-5xl font-extrabold text-white focus:outline-none" autofocus>
+                            </div>
+                            <button id="lemon-quickadd-save" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 text-xl active:scale-95 transition-all">
+                                <i class="fa-solid fa-check"></i>
+                            </button>
                         </div>
                     </div>
 
@@ -556,11 +568,6 @@
                         <p class="text-[11px] text-slate-500 uppercase tracking-wide font-bold mb-1">Descripción (opcional)</p>
                         <input type="text" id="lemon-quickadd-concept" placeholder="Ej: Sueldo, Nafta, Cena..." class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
                     </div>
-                </div>
-
-                <!-- Fijo abajo del todo, SIEMPRE visible (no se pierde con el teclado ni con scroll) -->
-                <div class="p-4 sm:p-5 border-t border-white/10 flex-shrink-0">
-                    <button id="lemon-quickadd-save" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3.5 rounded-2xl text-sm">Guardar</button>
                 </div>
             </div>
         </div>
@@ -3192,6 +3199,39 @@
             }
         }
 
+        // Lee el "Saldo Favor/Contra" que Libertad Financiera ya guarda en el celular
+        // (no hace falta pedirlo de nuevo a internet) y lo muestra acá también.
+        function loadSaldoFavorContra() {
+            if (!currentUser) return;
+            try {
+                const raw = localStorage.getItem(`finzia_lf_snapshot_${currentUser.id}`);
+                if (!raw) return; // todavía no visitó Libertad Financiera, no hay nada que mostrar
+                const snap = JSON.parse(raw);
+                const monto = snap.saldo_favor_o_contra || 0;
+                const box = document.getElementById('saldo-favor-contra-box');
+                const label = document.getElementById('saldo-favor-contra-label');
+                const amountEl = document.getElementById('saldo-favor-contra-amount');
+                const detail = document.getElementById('saldo-favor-contra-detail');
+
+                box.classList.remove('hidden');
+                if (monto >= 0) {
+                    label.textContent = 'SALDO FAVOR';
+                    label.className = 'text-[10px] uppercase tracking-wide font-bold text-cyan-300';
+                    amountEl.className = 'text-xl font-bold text-cyan-300';
+                } else {
+                    label.textContent = 'SALDO EN CONTRA';
+                    label.className = 'text-[10px] uppercase tracking-wide font-bold text-rose-400';
+                    amountEl.className = 'text-xl font-bold text-rose-400';
+                }
+                amountEl.textContent = formatMoney(Math.abs(monto));
+                detail.textContent = snap.deuda_total > 0
+                    ? `Deuda pendiente: ${formatMoney(snap.deuda_total)}`
+                    : 'Sin deuda pendiente';
+            } catch (err) {
+                console.warn('No se pudo leer el Saldo Favor/Contra:', err);
+            }
+        }
+
         function updateLemonBigNumber() {
             const pillIngresos = document.getElementById('pill-tab-ingresos');
             const pillEgresos = document.getElementById('pill-tab-egresos');
@@ -4156,7 +4196,7 @@
             lf_emergencia: 'Ir a Deudas (Pagar)',
             lf_inversiones: 'Ir a Libertad Financiera → Inversiones',
             lf_proyectos: 'Ir a Libertad Financiera → Mis Proyectos',
-            lf_suenos: 'Ir a Libertad Financiera → Mis Sueños',
+            lf_suenos: 'Ir a Libertad Financiera → Metas',
             suscripcion: 'Ir a Suscripción',
             perfil: 'Ir a Mi Perfil y Soporte'
         };
@@ -4418,7 +4458,7 @@
             switchTab('resumen');
             checkGotoParam();
             restoreAllocationRule();
-            checkSession().then(() => { checkReturnFromPayment(); checkPatrimonioPaymentConfirmation(); fetchInvestmentsTotal(); });
+            checkSession().then(() => { checkReturnFromPayment(); checkPatrimonioPaymentConfirmation(); fetchInvestmentsTotal(); loadSaldoFavorContra(); });
 
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error registrando el service worker:', err));
