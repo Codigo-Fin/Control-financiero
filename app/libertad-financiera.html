@@ -173,7 +173,7 @@
                     <i class="fa-solid fa-rocket w-5 text-center"></i> Mis Proyectos
                 </button>
                 <button data-menu-lf-tab="suenos" class="menu-item-btn-lf w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-fuchsia-500/10 hover:text-fuchsia-300 transition-all border-l-4 border-emerald-500/60">
-                    <i class="fa-solid fa-star-of-life w-5 text-center"></i> Mis Sueños
+                    <i class="fa-solid fa-star-of-life w-5 text-center"></i> Metas
                 </button>
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
@@ -859,13 +859,12 @@
             </div>
 
             <div id="projectsList" class="space-y-3"></div>
-        </div> <!-- fin lf-tab-proyectos -->
 
-        <!-- ==================== TAB: MIS SUEÑOS ==================== -->
-        <div id="lf-tab-suenos" class="lf-tab-panel hidden space-y-5">
+            <!-- METAS (antes "Mis Sueños") — fusionado acá porque no tenía acceso
+                 propio en la barra de abajo. -->
             <div class="glass-panel neon-card neon-amber rounded-3xl p-5 sm:p-7 space-y-3">
                 <h2 class="font-bold text-base sm:text-lg text-amber-300 flex items-center gap-2">
-                    <i class="fa-solid fa-star-of-life"></i> Mis Sueños
+                    <i class="fa-solid fa-star-of-life"></i> Metas
                 </h2>
                 <p class="text-[11px] text-slate-500">Una meta de ahorro con nombre propio — una bici, un viaje, un auto. Cada aporte que hagas sale de tu Patrimonio Neto.</p>
 
@@ -892,7 +891,7 @@
                 </form>
             </div>
 
-            <!-- Cuadro fijo con la lista desplegable de sueños acumulados -->
+            <!-- Cuadro fijo con la lista desplegable de metas acumuladas -->
             <div class="rounded-3xl overflow-hidden border-2 border-amber-500/30 shadow-[0_0_20px_rgba(251,191,36,0.15)]">
                 <button id="btn-toggle-goals-list" class="w-full flex items-center justify-between p-4 bg-amber-950/40 hover:bg-amber-950/60 transition-all">
                     <span class="font-bold text-amber-300 flex items-center gap-2 text-sm sm:text-base">
@@ -904,7 +903,7 @@
                     <div id="goalsList" class="space-y-3"></div>
                 </div>
             </div>
-        </div> <!-- fin lf-tab-suenos -->
+        </div> <!-- fin lf-tab-proyectos -->
 
     </div>
 
@@ -2670,13 +2669,17 @@
             switchDebtSubTab('registrar');
             return;
         }
+        // "Mis Sueños" (Metas) ahora vive DENTRO de "Proyectos" — no tiene panel propio
+        if (tabName === 'suenos') {
+            switchLfTab('proyectos');
+            return;
+        }
 
         document.querySelectorAll('.lf-tab-panel').forEach(panel => panel.classList.add('hidden'));
         document.getElementById('lf-tab-' + tabName).classList.remove('hidden');
 
         if (tabName === 'emergencia') switchDebtSubTab(currentDebtSubTab);
-        if (tabName === 'proyectos') loadProjects();
-        if (tabName === 'suenos') loadSavingsGoals();
+        if (tabName === 'proyectos') { loadProjects(); loadSavingsGoals(); }
 
         document.querySelectorAll('.lf-tab-btn').forEach(btn => {
             if (btn.dataset.tab === tabName) {
@@ -3253,7 +3256,7 @@
         lf_emergencia: 'Ir a Deudas (Pagar)',
         lf_inversiones: 'Ir a Inversiones',
         lf_proyectos: 'Ir a Mis Proyectos',
-        lf_suenos: 'Ir a Mis Sueños',
+        lf_suenos: 'Ir a Metas (dentro de Proyectos)',
         suscripcion: 'Ir a Control Financiero → Suscripción',
         perfil: 'Ir a Control Financiero → Mi Perfil y Soporte'
     };
