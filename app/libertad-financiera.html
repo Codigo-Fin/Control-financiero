@@ -2956,9 +2956,13 @@
     }
 
     switchLfTab('saldo');
-    checkGotoParamLF();
 
-    checkAccess();
+    // Primero confirmamos quién sos (esto define "currentUser"), y RECIÉN
+    // DESPUÉS revisamos si hay que ir a alguna pestaña puntual — antes estaba
+    // al revés, y por eso a veces intentaba cargar datos sin usuario todavía.
+    checkAccess().then(() => {
+        checkGotoParamLF();
+    });
 
     // Le mostramos el globito "¿Tenés dudas?" solo la primera vez (misma clave que Control Financiero)
     if (!localStorage.getItem('assistant_hint_shown')) {
