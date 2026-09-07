@@ -215,7 +215,7 @@
             <button data-tab="emergencia" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">BOLA DE NIEVE</button>
             <button data-tab="inversiones" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">INVERSIONES</button>
             <button data-tab="proyectos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS PROYECTOS</button>
-            <button data-tab="suenos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">MIS SUEÑOS</button>
+            <button data-tab="suenos" class="lf-tab-btn flex-1 whitespace-nowrap px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all">METAS</button>
         </div>
 
         <!-- ==================== TAB: SALDO A FAVOR ==================== -->
@@ -874,7 +874,7 @@
 
                 <form id="goalForm" class="hidden space-y-3 pt-2">
                     <div>
-                        <label>¿Cuál es tu sueño?</label>
+                        <label>¿Cuál es tu meta?</label>
                         <input type="text" id="goalName" placeholder="Ej: Bicicleta nueva" required>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
@@ -2822,7 +2822,7 @@
             showLibertadToast('✅ Meta creada');
         } catch (err) {
             console.error('No se pudo crear la meta:', err);
-            showLibertadToast('No se pudo guardar. Probá de nuevo.');
+            await showAlertModal('No se pudo guardar la meta. Detalle: ' + (err.message || JSON.stringify(err)));
         }
     });
 
