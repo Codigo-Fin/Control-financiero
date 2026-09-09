@@ -258,10 +258,7 @@
 
                 <p class="text-[10px] uppercase tracking-wider text-slate-600 font-bold px-3 pt-4 pb-1">Cuenta</p>
                 <button data-menu-tab="perfil" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-teal-500/10 hover:text-teal-300 transition-all">
-                    <i class="fa-solid fa-user w-5 text-center"></i> Mi Perfil y Soporte
-                </button>
-                <button data-menu-tab="suscripcion" class="menu-item-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:bg-amber-500/10 hover:text-amber-300 transition-all">
-                    <i class="fa-solid fa-star w-5 text-center"></i> Suscripción
+                    <i class="fa-solid fa-user w-5 text-center"></i> Mi Perfil, Soporte y Suscripción
                 </button>
             </nav>
         </div>
@@ -846,6 +843,11 @@
 
         <!-- ==================== TAB: SUSCRIPCIÓN (exclusivo, solo desde el menú) ==================== -->
         <!-- ==================== TAB: MI PERFIL Y SOPORTE ==================== -->
+        <!-- 🔒 ZONA PROTEGIDA — MI PERFIL + SUSCRIPCIÓN UNIFICADOS (NO TOCAR)
+             Ya quedó confirmado funcionando: correo, cambiar contraseña, soporte,
+             y toda la Suscripción (plan, transferencia, baja, eliminar cuenta) en
+             una sola pantalla. "suscripcion" redirige acá solo via switchTab.
+             No modificar salvo pedido explícito y puntual sobre esto mismo. -->
         <div id="tab-panel-perfil" class="tab-panel hidden space-y-5">
             <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
                 <h3 class="font-bold text-base text-white flex items-center gap-2">
@@ -877,68 +879,73 @@
                     <i class="fa-brands fa-whatsapp"></i> Contactar por WhatsApp
                 </a>
             </section>
+
+            <!-- SUSCRIPCIÓN — unificado acá, antes vivía en su propia pestaña aparte -->
+            <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
+                            <i class="fa-solid fa-star text-fuchsia-400"></i> Suscripción Premium
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button id="btn-subscribe"
+                            class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-credit-card"></i> Suscribirme
+                        </button>
+                        <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');"
+                            class="bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-building-columns"></i> Pagar por Transferencia
+                        </button>
+                        <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
+                            <i class="fa-solid fa-circle-check"></i> Ya sos Premium
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Cambiar de plan (solo visible si sos premium y estás en el plan Mensual) -->
+                <div id="upgrade-plan-box" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <p class="text-sm text-purple-200">¿Querés pasarte al plan Anual y ahorrar?</p>
+                    <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
+                        <i class="fa-solid fa-arrows-rotate"></i> Cambiar a Plan Anual ($69.990)
+                    </button>
+                </div>
+
+                <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
+                <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
+                    <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button data-plan="mensual" data-price="6999" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                            <div class="text-xs text-slate-400">Mensual</div>
+                            <div class="text-lg font-bold text-white">$6.999</div>
+                        </button>
+                        <button data-plan="anual" data-price="69990" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                            <div class="text-xs text-slate-400">Anual</div>
+                            <div class="text-lg font-bold text-white">$69.990</div>
+                        </button>
+                    </div>
+                </div>
+
+                <button id="btn-unsubscribe" class="hidden w-full sm:w-auto bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all items-center justify-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Dar de baja mi suscripción
+                </button>
+
+                <div class="pt-4 border-t border-white/10">
+                    <button id="btn-delete-account" class="w-full sm:w-auto bg-slate-900 hover:bg-rose-950/60 border border-rose-900/40 text-rose-500 font-semibold px-5 py-2.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-trash-can"></i> Eliminar mi cuenta permanentemente
+                    </button>
+                    <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
+                </div>
+            </section>
         </div> <!-- fin tab-panel-perfil -->
 
-        <div id="tab-panel-suscripcion" class="tab-panel hidden space-y-5">
-        <!-- SUSCRIPCIÓN -->
-        <section class="glass-panel rounded-3xl p-5 sm:p-7 space-y-5">
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div>
-                    <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
-                        <i class="fa-solid fa-star text-fuchsia-400"></i> Suscripción Premium
-                    </h3>
-                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button id="btn-subscribe"
-                        class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-credit-card"></i> Suscribirme
-                    </button>
-                    <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');"
-                        class="bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-building-columns"></i> Pagar por Transferencia
-                    </button>
-                    <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
-                        <i class="fa-solid fa-circle-check"></i> Ya sos Premium
-                    </span>
-                </div>
-            </div>
-
-            <!-- Cambiar de plan (solo visible si sos premium y estás en el plan Mensual) -->
-            <div id="upgrade-plan-box" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p class="text-sm text-purple-200">¿Querés pasarte al plan Anual y ahorrar?</p>
-                <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-arrows-rotate"></i> Cambiar a Plan Anual ($69.990)
-                </button>
-            </div>
-
-            <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
-            <div id="plan-options-box" class="hidden bg-slate-900/60 border border-amber-500/20 rounded-2xl p-4 space-y-3">
-                <p class="text-sm font-semibold text-amber-300">Elegí tu plan:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button data-plan="mensual" data-price="6999" data-days="30" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
-                        <div class="text-xs text-slate-400">Mensual</div>
-                        <div class="text-lg font-bold text-white">$6.999</div>
-                    </button>
-                    <button data-plan="anual" data-price="69990" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
-                        <div class="text-xs text-slate-400">Anual</div>
-                        <div class="text-lg font-bold text-white">$69.990</div>
-                    </button>
-                </div>
-            </div>
-
-            <button id="btn-unsubscribe" class="hidden w-full sm:w-auto bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all items-center justify-center gap-2">
-                <i class="fa-solid fa-triangle-exclamation"></i> Dar de baja mi suscripción
-            </button>
-
-            <div class="pt-4 border-t border-white/10">
-                <button id="btn-delete-account" class="w-full sm:w-auto bg-slate-900 hover:bg-rose-950/60 border border-rose-900/40 text-rose-500 font-semibold px-5 py-2.5 rounded-xl text-xs transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-trash-can"></i> Eliminar mi cuenta permanentemente
-                </button>
-                <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
-            </div>
-        </section>
-        </div> <!-- fin tab-panel-suscripcion -->
+        <div id="tab-panel-suscripcion" class="hidden">
+            <!-- Vacío a propósito: todo su contenido se unificó arriba, en
+                 "tab-panel-perfil". Se deja este div solo para no romper ningún
+                 link viejo que todavía apunte a "suscripcion" (switchTab lo
+                 redirige automáticamente a "perfil", ver más abajo). -->
+        </div>
     </div>
 
     <footer class="max-w-6xl mx-auto w-full mt-6 z-10">
@@ -1256,11 +1263,15 @@
 
     <script>
         // 🔒 ESTADO CONFIRMADO ESTABLE (a la fecha de este comentario): login/registro,
-        // modo sin internet, PDF/foto/voz, reparto de dinero automático, pestañas de
-        // Ingresos/Egresos separadas, pago de deudas, y todo lo demás probado hasta
-        // ahora. Cualquier cambio nuevo debe tocar SOLO lo que pide explícitamente el
-        // usuario, sin modificar código de otras partes salvo que sea indispensable
-        // para ese pedido puntual — y si es indispensable, avisar antes de guardar.
+        // modo sin internet, PDF/foto/voz, reparto de dinero automático, acordeón de
+        // Ingresos/Gastos/Ganancias, navegación estilo Lemon Cash (barra de abajo +
+        // número gigante tocable), pago de deudas, Mi Perfil+Suscripción unificados,
+        // y todo lo demás probado hasta ahora. Cualquier cambio nuevo debe tocar SOLO
+        // lo que pide explícitamente el usuario, sin modificar código de otras partes
+        // salvo que sea indispensable para ese pedido puntual — y si es indispensable,
+        // avisar antes de guardar. PENDIENTE A FUTURO (con su propia sesión dedicada,
+        // no mezclado con otros pedidos): unificar index.html y libertad-financiera.html
+        // en un solo archivo — recién ahí, no antes de que esté todo lo demás estable.
         const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -2554,14 +2565,27 @@
         setupMovementsAccordion('ingresos');
         setupMovementsAccordion('egresos');
 
-        // Mayor gasto / mayor ingreso del mes, con gráfico de barras
+        // Mayor gasto / mayor ingreso del mes — SUMADO por categoría (no una sola
+        // transacción individual), para que "Nafta" junte todas sus cargas del mes.
         let topMovementsChart = null;
         function renderTopMovements(monthProducts) {
             const egresos = monthProducts.filter(p => p.type === 'egreso');
             const ingresos = monthProducts.filter(p => p.type === 'ingreso');
 
-            const topExpense = egresos.length ? egresos.reduce((a, b) => (b.price > a.price ? b : a)) : null;
-            const topIncome = ingresos.length ? ingresos.reduce((a, b) => (b.price > a.price ? b : a)) : null;
+            function topCategoryTotal(items) {
+                const totals = {};
+                items.forEach(p => {
+                    const cat = p.category || 'Otros';
+                    totals[cat] = (totals[cat] || 0) + (parseFloat(p.price) || 0);
+                });
+                const entries = Object.entries(totals);
+                if (entries.length === 0) return null;
+                const [name, total] = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
+                return { name, price: total };
+            }
+
+            const topExpense = topCategoryTotal(egresos);
+            const topIncome = topCategoryTotal(ingresos);
 
             document.getElementById('top-expense-label').textContent = topExpense ? topExpense.name : 'Sin egresos este mes';
             document.getElementById('top-expense-amount').textContent = formatMoney(topExpense ? topExpense.price : 0);
@@ -3143,7 +3167,7 @@
                 title.innerHTML = '<i class="fa-solid fa-building-columns text-cyan-400"></i> AGREGAR INGRESO';
                 document.getElementById('voice-input-status').textContent = 'Tocá el micrófono y decí, por ejemplo: "cobré 20000 de un trabajo extra"';
             } else {
-                title.innerHTML = '<i class="fa-solid fa-bag-shopping text-rose-400"></i> AGREGAR EGRESO';
+                title.innerHTML = '<i class="fa-solid fa-bag-shopping text-rose-400"></i> AGREGAR GASTO';
                 document.getElementById('voice-input-status').textContent = 'Tocá el micrófono y decí, por ejemplo: "gasté 12000 pesos en medialunas"';
             }
             syncInputDateToSelectedMonth();
@@ -3376,6 +3400,11 @@
                 openMovementSection(tabName, false);
                 return;
             }
+
+            // "Suscripción" ahora vive DENTRO de "Mi Perfil y Soporte", unificado en
+            // una sola pantalla — cualquier link viejo que pida "suscripcion" lo
+            // mandamos directo ahí.
+            if (tabName === 'suscripcion') tabName = 'perfil';
 
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
             document.getElementById('tab-panel-' + tabName).classList.remove('hidden');
