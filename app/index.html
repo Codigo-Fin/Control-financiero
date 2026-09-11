@@ -1845,7 +1845,12 @@
             } catch (e) { return null; }
         }
 
-        async function loadAllUserData() {
+        // 🔒 ZONA PROTEGIDA — CARGA DE DATOS DEL USUARIO (NO TOCAR)
+        // Bug crítico ya resuelto: antes, si la consulta a Supabase fallaba justo
+        // después de cambiar la contraseña (sesión nueva, propagación lenta), el
+        // código lo confundía con "usuario nuevo" y reiniciaba todo de cero. Ahora
+        // revisa errores de verdad y reintenta antes de asumir que no hay datos.
+        async function loadAllUserData(retryCount = 0) {
             // Mostramos el email en "Mi Perfil" y en el botón de cerrar sesión
             const emailDisplay = document.getElementById('profile-email-display');
             if (emailDisplay && currentUser) emailDisplay.textContent = currentUser.email;
@@ -1868,7 +1873,9 @@
             }
 
             try {
-                const { data: settings } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
+                const { data: settings, error: settingsError } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
+                if (settingsError) throw settingsError; // si falló de verdad, no lo confundimos con "usuario nuevo"
+
                 if (settings) {
                     salary = (settings.salary !== null && settings.salary !== undefined) ? parseFloat(settings.salary) : 500000;
                     incomeFrequency = settings.income_frequency || 'mensual';
@@ -1886,7 +1893,9 @@
                     await offerPaymentSetupIfNeeded({ mp_preapproval_id: null, is_premium: false });
                 }
 
-                const { data: txs } = await sb.from('transactions').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+                const { data: txs, error: txsError } = await sb.from('transactions').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+                if (txsError) throw txsError; // idem: un error real no es "no tenés movimientos"
+
                 products = (txs || []).map(t => ({
                     id: t.id, name: t.name, date: t.date, month: t.month,
                     unitPrice: t.unit_price, price: t.price, category: t.category,
@@ -1895,13 +1904,25 @@
 
                 saveLocalDataCache();
             } catch (err) {
-                // Si algo falla en el medio (se cortó la conexión justo ahora), usamos
-                // la copia guardada en vez de dejar la pantalla rota o colgada.
+                // Si algo falla en el medio (se cortó la conexión, o la sesión recién
+                // creada todavía no se propagó del todo — como pasa justo después de
+                // cambiar la contraseña), usamos la copia guardada en vez de dar por
+                // sentado que no hay datos y "reiniciar" la cuenta de cero.
                 console.warn('No se pudo conectar con la nube, usando copia local:', err);
                 const cache = loadLocalDataCache();
                 if (cache) {
                     salary = cache.salary; incomeFrequency = cache.incomeFrequency; products = cache.products || [];
                     showToast('📴 Se cortó la conexión — mostrando tus datos guardados', 'warning');
+                } else {
+                    // Ni siquiera hay copia local: probamos hasta 3 veces (cada 2
+                    // segundos, dándole tiempo a que la sesión nueva se propague)
+                    // antes de asumir que de verdad es una cuenta sin datos.
+                    if (retryCount < 3) {
+                        showToast('⏳ Confirmando tu sesión, un momento...', 'warning');
+                        setTimeout(() => loadAllUserData(retryCount + 1), 2000);
+                        return;
+                    }
+                    console.warn('No se pudo confirmar la sesión después de varios intentos, seguimos con valores por defecto.');
                 }
             }
 
