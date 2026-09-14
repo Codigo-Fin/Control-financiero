@@ -9,7 +9,7 @@
          cuando la barra de direcciones no muestra la barra "/" final. -->
     <base href="/app/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ressetia - Control Financiero</title>
+    <title>Ressetia - Control Financiero & Mercado</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./icons/icon-192.png">
     <meta name="theme-color" content="#22d3ee">
@@ -267,8 +267,9 @@
         <!-- Barra superior fija: perfil (grande, arriba a la izquierda) + logout -->
         <div class="glass-panel rounded-3xl p-4 sm:p-5 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3 min-w-0">
-                <button id="btn-open-profile" title="Mi Perfil" class="bg-gradient-to-br from-cyan-500/30 to-teal-500/20 hover:from-cyan-500/40 border border-cyan-500/40 text-cyan-300 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-all">
-                    <i class="fa-solid fa-circle-user text-3xl"></i>
+                <button id="btn-open-profile" title="Mi Perfil" class="relative bg-gradient-to-br from-cyan-500/30 to-teal-500/20 hover:from-cyan-500/40 border border-cyan-500/40 text-cyan-300 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-all overflow-hidden">
+                    <i class="fa-solid fa-circle-user text-3xl" id="header-avatar-icon"></i>
+                    <img id="header-avatar-img" class="hidden absolute inset-0 w-full h-full object-cover rounded-full" alt="Tu foto de perfil">
                 </button>
                 <div class="min-w-0">
                     <h1 class="text-xl sm:text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-cyan-400 bg-clip-text text-transparent">
@@ -854,6 +855,21 @@
                 <h3 class="font-bold text-base text-white flex items-center gap-2">
                     <i class="fa-solid fa-user text-teal-400"></i> Mi Perfil
                 </h3>
+
+                <div class="flex flex-col items-center gap-3">
+                    <div class="relative w-24 h-24">
+                        <div id="profile-avatar-placeholder" class="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500/30 to-teal-500/20 border-2 border-cyan-500/40 flex items-center justify-center overflow-hidden">
+                            <i class="fa-solid fa-circle-user text-6xl text-cyan-300" id="profile-avatar-icon"></i>
+                            <img id="profile-avatar-img" class="hidden w-full h-full object-cover" alt="Tu foto de perfil">
+                        </div>
+                        <button id="btn-change-avatar" title="Cambiar foto" class="absolute -bottom-1 -right-1 bg-cyan-500 hover:bg-cyan-400 text-slate-950 w-8 h-8 rounded-full flex items-center justify-center border-2 border-slate-950 transition-all">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                        </button>
+                        <input type="file" id="input-avatar-file" accept="image/*" class="hidden">
+                    </div>
+                    <p id="avatar-upload-status" class="text-[11px] text-slate-500"></p>
+                </div>
+
                 <div class="bg-slate-900/60 rounded-2xl p-4 flex items-center justify-between">
                     <div>
                         <p class="text-[10px] text-slate-500 uppercase tracking-wide">Tu correo</p>
@@ -1885,6 +1901,7 @@
                     applyPremiumUI(subscriptionActive, settings.current_plan);
                     await offerPaymentSetupIfNeeded(settings);
                     checkTrialEndingSoon(settings);
+                    if (settings.avatar_url && typeof showAvatarEverywhere === 'function') showAvatarEverywhere(settings.avatar_url);
                 } else {
                     salary = 500000;
                     const trialEnd = new Date();
@@ -4379,6 +4396,76 @@
         document.getElementById('btn-open-assistant-menu').addEventListener('click', () => {
             closeSideMenu();
             openAssistantModal();
+        });
+
+        // ============================================
+        // FOTO DE PERFIL — subir, guardar el link, y mostrarla en los 2 lugares
+        // (el ícono de arriba a la izquierda, y adentro de "Mi Perfil")
+        // ============================================
+        // 🔒 ZONA PROTEGIDA — FOTO DE PERFIL (NO TOCAR)
+        // Sube a Supabase Storage (bucket "avatars"), guarda el link en user_settings,
+        // y la muestra en 2 lugares (arriba a la izquierda, y adentro de Mi Perfil).
+        function showAvatarEverywhere(url) {
+            [
+                { img: 'header-avatar-img', icon: 'header-avatar-icon' },
+                { img: 'profile-avatar-img', icon: 'profile-avatar-icon' }
+            ].forEach(({ img, icon }) => {
+                const imgEl = document.getElementById(img);
+                const iconEl = document.getElementById(icon);
+                if (url) {
+                    imgEl.src = url;
+                    imgEl.classList.remove('hidden');
+                    iconEl.classList.add('hidden');
+                } else {
+                    imgEl.classList.add('hidden');
+                    iconEl.classList.remove('hidden');
+                }
+            });
+        }
+
+        document.getElementById('btn-change-avatar').addEventListener('click', () => {
+            document.getElementById('input-avatar-file').click();
+        });
+
+        document.getElementById('input-avatar-file').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!navigator.onLine) {
+                showToast('📴 Sin acceso a internet — subir una foto necesita conexión.', 'warning');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('La foto es muy pesada (máximo 5MB). Probá con otra.', 'warning');
+                return;
+            }
+
+            const statusEl = document.getElementById('avatar-upload-status');
+            statusEl.textContent = 'Subiendo foto...';
+
+            try {
+                const ext = file.name.split('.').pop();
+                const filePath = `${currentUser.id}/avatar.${ext}`;
+
+                const { error: uploadError } = await sb.storage.from('avatars').upload(filePath, file, { upsert: true });
+                if (uploadError) throw uploadError;
+
+                const { data: publicUrlData } = sb.storage.from('avatars').getPublicUrl(filePath);
+                // Le agregamos la fecha al final, para que el navegador no muestre
+                // una versión vieja guardada en caché al cambiar la foto de nuevo.
+                const finalUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+
+                await sb.from('user_settings').update({ avatar_url: finalUrl }).eq('user_id', currentUser.id);
+
+                showAvatarEverywhere(finalUrl);
+                statusEl.textContent = '✅ Foto actualizada';
+                setTimeout(() => { statusEl.textContent = ''; }, 3000);
+            } catch (err) {
+                console.error('No se pudo subir la foto:', err);
+                statusEl.textContent = '';
+                showToast('No se pudo subir la foto. Probá de nuevo.', 'warning');
+            }
+            e.target.value = '';
         });
 
         // Cambiar contraseña, desde "Mi Perfil"
