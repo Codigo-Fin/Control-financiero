@@ -1720,10 +1720,10 @@
                 const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
                 try {
-                    const resp = await fetch('/api/create-trial-subscription', {
+                    const resp = await fetch('/api/subscription', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, plan, price, discountCode })
+                        body: JSON.stringify({ action: 'create-trial', userId: currentUser.id, userEmail: currentUser.email, plan, price, discountCode })
                     });
                     const subData = await resp.json();
                     if (subData.init_point) {
@@ -3061,11 +3061,12 @@
                 const price = parseFloat(btn.dataset.price);
                 const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
                 try {
-                    const resp = await fetch('/api/create-subscription', {
+                    const resp = await fetch('/api/subscription', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, plan, price })
+                        body: JSON.stringify({ action: 'create', userId: currentUser.id, userEmail: currentUser.email, plan, price })
                     });
                     const data = await resp.json();
                     if (data.init_point) {
@@ -3089,10 +3090,10 @@
             const btnUnsub = document.getElementById('btn-unsubscribe');
             btnUnsub.textContent = 'Procesando...';
             try {
-                await fetch('/api/cancel-subscription', {
+                await fetch('/api/subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id })
+                    body: JSON.stringify({ action: 'cancel', userId: currentUser.id })
                 });
                 await showAlertModal('Lamentamos que te vayas, esperamos volverte a ver pronto.');
                 applyPremiumUI(false);
@@ -3143,10 +3144,10 @@
             const originalText = btn.textContent;
             btn.textContent = 'Procesando...';
             try {
-                const resp = await fetch('/api/change-plan', {
+                const resp = await fetch('/api/subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, newPlan: 'anual', newPrice: 25000 })
+                    body: JSON.stringify({ action: 'change-plan', userId: currentUser.id, userEmail: currentUser.email, newPlan: 'anual', newPrice: 25000 })
                 });
                 const data = await resp.json();
                 if (data.init_point) {
