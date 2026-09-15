@@ -60,15 +60,16 @@ module.exports = async (req, res) => {
       site_transaction_id: siteTransactionId,
     };
 
-    // Paso 1: generar el hash de la operación
-    const checkout = new sdk.checkoutHash(sdk, args);
-    const hashResult = await checkout;
+    // Paso 1: generar el hash de la operación (es una función normal, no un
+    // constructor — antes tenía "new" por error, causaba "is not a constructor")
+    const hashResult = await sdk.checkoutHash(sdk, args);
 
     // Paso 2: con el hash, pedimos el link de pago hosteado por Payway.
     // NOTA: el nombre exacto de este método SDK ("paymentLink" / "getLink" / etc.)
-    // hay que confirmarlo la primera vez que se pruebe en sandbox — la
-    // documentación pública no mostraba este paso completo. Si el nombre real
-    // es distinto, Payway devuelve un error claro indicando el método correcto.
+    // todavía no está confirmado — la documentación pública no mostraba este paso
+    // completo. Si el nombre real es distinto, Payway va a devolver un error
+    // claro (tipo "sdk.paymentLink is not a function") indicando que hay que
+    // ajustar el nombre — pasámelo tal cual y lo corrijo al toque.
     const linkResult = await sdk.paymentLink({ hash: hashResult.hash, ...args });
 
     const paymentId = linkResult.id || linkResult.payment_id;
