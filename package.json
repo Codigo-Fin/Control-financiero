@@ -2,8 +2,5 @@
   "name": "ressetia",
   "version": "1.0.0",
   "private": true,
-  "description": "Ressetia - Control Financiero, Deudas, Ahorro e Inversiones",
-  "dependencies": {
-    "sdk-node-payway": "^1.0.8"
-  }
+  "description": "Ressetia - Control Financiero, Deudas, Ahorro e Inversiones"
 }
