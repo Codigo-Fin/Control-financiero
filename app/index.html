@@ -3153,7 +3153,9 @@
                 if (data.init_point) {
                     window.location.href = data.init_point;
                 } else {
-                    showToast('No se pudo cambiar el plan. Probá de nuevo.', 'warning');
+                    console.error('Error al cambiar de plan:', data);
+                    const detailMsg = data.detail?.message || (data.detail?.cause && data.detail.cause[0]?.description) || data.detail || data.error || 'Error desconocido';
+                    showToast('No se pudo cambiar el plan: ' + detailMsg, 'warning');
                     btn.textContent = originalText;
                 }
             } catch (err) {
