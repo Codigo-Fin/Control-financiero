@@ -915,10 +915,6 @@
                             class="bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
                             <i class="fa-solid fa-building-columns"></i> Pagar por Transferencia
                         </button>
-                        <button id="btn-subscribe-payway"
-                            class="bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 text-teal-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-credit-card"></i> Pagar con Tarjeta
-                        </button>
                         <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
                             <i class="fa-solid fa-circle-check"></i> Ya sos Premium
                         </span>
@@ -3055,16 +3051,8 @@
         });
 
         document.getElementById('btn-subscribe').addEventListener('click', () => {
-            pendingPaymentMethod = 'mercadopago';
             document.getElementById('plan-options-box').classList.toggle('hidden');
         });
-
-        document.getElementById('btn-subscribe-payway').addEventListener('click', () => {
-            pendingPaymentMethod = 'payway';
-            document.getElementById('plan-options-box').classList.remove('hidden');
-        });
-
-        let pendingPaymentMethod = 'mercadopago';
 
         document.querySelectorAll('.plan-option-btn').forEach(btn => {
             btn.addEventListener('click', async () => {
@@ -3073,29 +3061,6 @@
                 const price = parseFloat(btn.dataset.price);
                 const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-                // Pago con tarjeta vía Payway (para quien no quiere usar Mercado Pago)
-                if (pendingPaymentMethod === 'payway') {
-                    try {
-                        const resp = await fetch('/api/payway-checkout', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ userId: currentUser.id, userEmail: currentUser.email, plan })
-                        });
-                        const data = await resp.json();
-                        if (data.checkoutUrl) {
-                            window.location.href = data.checkoutUrl;
-                        } else {
-                            console.error('Error de Payway:', data);
-                            showToast('Error: ' + (data.detail || data.error || 'Error desconocido'), 'warning');
-                            btn.innerHTML = originalHTML;
-                        }
-                    } catch (err) {
-                        showToast('Error al conectar con Payway: ' + err.message, 'warning');
-                        btn.innerHTML = originalHTML;
-                    }
-                    return;
-                }
 
                 try {
                     const resp = await fetch('/api/subscription', {
