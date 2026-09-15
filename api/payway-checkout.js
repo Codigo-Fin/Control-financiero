@@ -5,14 +5,14 @@
 //
 // Variables de entorno necesarias en Vercel (Settings → Environment Variables):
 //   PAYWAY_PRIVATE_KEY   -> secreta, nunca se expone al navegador
-//   PAYWAY_PUBLIC_KEY    -> KiMOUA5xWtyqjhd3YTboWPodKwsXdakW
-//   PAYWAY_SITE_ID       -> 93019057
-//   PAYWAY_TEMPLATE_ID   -> 42247
+//   PAYWAY_PUBLIC_KEY    -> tu clave pública
+//   PAYWAY_SITE_ID       -> tu Site ID
+//   PAYWAY_TEMPLATE_ID   -> tu Template ID
 //   PAYWAY_AMBIENT       -> "developer" (pruebas) o "production" (cuando lances)
 
-const sdkModulo = require('sdk-node-payway');
+import sdkModulo from 'sdk-node-payway';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
@@ -38,9 +38,7 @@ module.exports = async (req, res) => {
 
     const sdk = new sdkModulo.sdk(ambient, publicKey, privateKey, 'Ressetia', userEmail || 'usuario');
 
-    // El transaction_id tiene que ser único por operación — usamos el userId + fecha
     const siteTransactionId = `${userId || 'user'}_${Date.now()}`.slice(0, 40);
-
     const baseUrl = 'https://www.ressetia.com/app';
 
     const args = {
@@ -60,19 +58,23 @@ module.exports = async (req, res) => {
       site_transaction_id: siteTransactionId,
     };
 
-    // Paso 1: generar el hash de la operación (es una función normal, no un
-    // constructor — antes tenía "new" por error, causaba "is not a constructor")
-    const hashResult = await sdk.checkoutHash(sdk, args);
+    // sdk.checkout() es el único método real (confirmado en el código fuente del
+    // SDK) — genera el link de pago en un solo paso, y usa callback, no promesa,
+    // así que lo envolvemos en una Promise para poder usar await como el resto
+    // del código.
+    const result = await new Promise((resolve, reject) => {
+      sdk.checkout(args, (result, err) => {
+        if (err) reject(err);
+        else resolve(result);
+      });
+    });
 
-    // Paso 2: con el hash, pedimos el link de pago hosteado por Payway.
-    // NOTA: el nombre exacto de este método SDK ("paymentLink" / "getLink" / etc.)
-    // todavía no está confirmado — la documentación pública no mostraba este paso
-    // completo. Si el nombre real es distinto, Payway va a devolver un error
-    // claro (tipo "sdk.paymentLink is not a function") indicando que hay que
-    // ajustar el nombre — pasámelo tal cual y lo corrijo al toque.
-    const linkResult = await sdk.paymentLink({ hash: hashResult.hash, ...args });
+    const paymentId = result.id || result.payment_id;
+    if (!paymentId) {
+      console.error('Payway no devolvió un payment_id, respuesta completa:', result);
+      return res.status(500).json({ error: 'Payway no devolvió un ID de pago', detail: result });
+    }
 
-    const paymentId = linkResult.id || linkResult.payment_id;
     const checkoutUrl = ambient === 'production'
       ? `https://live.decidir.com/web/checkout/${paymentId}`
       : `https://developers.decidir.com/web/checkout/${paymentId}`;
@@ -80,6 +82,6 @@ module.exports = async (req, res) => {
     return res.status(200).json({ checkoutUrl });
   } catch (error) {
     console.error('Error en Payway checkout:', error);
-    return res.status(500).json({ error: 'No se pudo generar el link de pago', detail: error.message });
+    return res.status(500).json({ error: 'No se pudo generar el link de pago', detail: error.message || error });
   }
-};
+}
