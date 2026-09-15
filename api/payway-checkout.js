@@ -107,7 +107,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ checkoutUrl });
   } catch (error) {
-    const detailText = error instanceof Error ? error.message : JSON.stringify(error);
+    // "fetch failed" por sí solo no dice nada — el motivo real (DNS, TLS,
+    // conexión rechazada, etc.) suele venir adentro de error.cause.
+    const causeText = error?.cause ? ` | Causa real: ${error.cause.code || error.cause.message || JSON.stringify(error.cause)}` : '';
+    const detailText = (error instanceof Error ? error.message : JSON.stringify(error)) + causeText;
     console.error('Error en Payway checkout:', detailText);
     return res.status(500).json({ error: 'No se pudo generar el link de pago', detail: detailText });
   }
