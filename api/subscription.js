@@ -192,28 +192,33 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { action } = req.body;
-  const env = {
-    MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN,
-    SUPABASE_URL: process.env.SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
-    SITE_URL: process.env.SITE_URL || `https://${req.headers.host}`
-  };
-
-  if (!env.MP_ACCESS_TOKEN) {
-    return res.status(500).json({ error: 'Falta configurar MP_ACCESS_TOKEN en Vercel' });
-  }
-
   try {
+    let parsedBody = req.body;
+    if (typeof parsedBody === 'string') {
+      try { parsedBody = JSON.parse(parsedBody); } catch { parsedBody = {}; }
+    }
+    req.body = parsedBody || {};
+    const { action } = req.body;
+    const env = {
+      MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN,
+      SUPABASE_URL: process.env.SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      SITE_URL: process.env.SITE_URL || `https://${req.headers.host}`
+    };
+
+    if (!env.MP_ACCESS_TOKEN) {
+      return res.status(500).json({ error: 'Falta configurar MP_ACCESS_TOKEN en Vercel' });
+    }
+
     switch (action) {
       case 'create': return await handleCreate(req, res, env);
       case 'create-trial': return await handleCreateTrial(req, res, env);
       case 'cancel': return await handleCancel(req, res, env);
       case 'change-plan': return await handleChangePlan(req, res, env);
-      default: return res.status(400).json({ error: 'action inválida (usar: create, create-trial, cancel, change-plan)' });
+      default: return res.status(400).json({ error: 'action inválida (usar: create, create-trial, cancel, change-plan)', detail: `Recibido: ${JSON.stringify(action)}` });
     }
   } catch (err) {
-    console.error(`Error interno en subscription (action=${action}):`, err.message);
+    console.error(`Error interno en subscription:`, err.message, err.stack);
     return res.status(500).json({ error: 'Error interno', detail: err.message });
   }
 }
