@@ -36,6 +36,21 @@ export default async function handler(req, res) {
     const siteId = process.env.PAYWAY_SITE_ID;
     const templateId = process.env.PAYWAY_TEMPLATE_ID;
 
+    // Si falta cualquiera de estas variables en Vercel, avisamos clarito de
+    // entrada — así no perdemos tiempo interpretando una respuesta confusa
+    // de Payway cuando en realidad el dato nunca le llegó.
+    const missingVars = [];
+    if (!publicKey) missingVars.push('PAYWAY_PUBLIC_KEY');
+    if (!privateKey) missingVars.push('PAYWAY_PRIVATE_KEY');
+    if (!siteId) missingVars.push('PAYWAY_SITE_ID');
+    if (!templateId) missingVars.push('PAYWAY_TEMPLATE_ID');
+    if (missingVars.length > 0) {
+      return res.status(500).json({
+        error: 'Faltan variables de entorno en Vercel',
+        detail: `No están configuradas (o están vacías): ${missingVars.join(', ')}. Revisá Vercel → Settings → Environment Variables.`
+      });
+    }
+
     const sdk = new sdkModulo.sdk(ambient, publicKey, privateKey, 'Ressetia', userEmail || 'usuario');
 
     const siteTransactionId = `${userId || 'user'}_${Date.now()}`.slice(0, 40);
@@ -82,6 +97,13 @@ export default async function handler(req, res) {
     return res.status(200).json({ checkoutUrl });
   } catch (error) {
     console.error('Error en Payway checkout:', error);
-    return res.status(500).json({ error: 'No se pudo generar el link de pago', detail: error.message || error });
+    // Serializamos bien el detalle del error de Payway — si es un objeto (lo más
+    // común con esta SDK), lo convertimos a texto legible en vez de perderlo como
+    // "[object Object]".
+    const detailText = error instanceof Error
+      ? error.message
+      : (typeof error === 'object' ? JSON.stringify(error) : String(error));
+    console.error('Error en Payway checkout (detalle completo):', JSON.stringify(error, null, 2));
+    return res.status(500).json({ error: 'No se pudo generar el link de pago', detail: detailText });
   }
 }
