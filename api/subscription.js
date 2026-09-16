@@ -5,6 +5,22 @@
 // permite máximo 12) — la lógica de cada una es EXACTAMENTE la misma que antes,
 // solo que ahora conviven en un mismo archivo, elegidas por el campo "action".
 
+// 🐛 BUG CONFIRMADO DE MERCADO PAGO (desde el 2026-09-02, reportado en su GitHub
+// oficial): agregan "&activation=true" al init_point de las suscripciones sin
+// plan asociado, y esa URL exacta muestra "Esta página no existe" para
+// cualquier cuenta. La misma URL SIN ese parámetro funciona bien. Esta función
+// lo saca antes de mandarle el link al usuario.
+function limpiarInitPoint(initPoint) {
+  if (!initPoint) return initPoint;
+  try {
+    const url = new URL(initPoint);
+    url.searchParams.delete('activation');
+    return url.toString();
+  } catch {
+    return initPoint;
+  }
+}
+
 async function applyDiscountIfValid(discountCode, price, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) {
   if (!discountCode || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return { finalPrice: price, codeUsed: null };
 
@@ -67,7 +83,7 @@ async function handleCreate(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_
       body: JSON.stringify({ mp_preapproval_id: data.id, current_plan: plan })
     });
   }
-  return res.status(200).json({ init_point: data.init_point });
+  return res.status(200).json({ init_point: limpiarInitPoint(data.init_point) });
 }
 
 async function handleCreateTrial(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SITE_URL }) {
@@ -108,7 +124,7 @@ async function handleCreateTrial(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPA
       body: JSON.stringify({ mp_preapproval_id: data.id, current_plan: plan || 'mensual' })
     });
   }
-  return res.status(200).json({ init_point: data.init_point });
+  return res.status(200).json({ init_point: limpiarInitPoint(data.init_point) });
 }
 
 async function handleCancel(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY }) {
@@ -184,7 +200,7 @@ async function handleChangePlan(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPAB
     body: JSON.stringify({ mp_preapproval_id: data.id, current_plan: newPlan })
   });
 
-  return res.status(200).json({ init_point: data.init_point });
+  return res.status(200).json({ init_point: limpiarInitPoint(data.init_point) });
 }
 
 export default async function handler(req, res) {
