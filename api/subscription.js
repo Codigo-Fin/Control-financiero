@@ -187,19 +187,6 @@ async function handleChangePlan(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPAB
   return res.status(200).json({ init_point: data.init_point });
 }
 
-async function handleCreateTestUser(req, res, { MP_ACCESS_TOKEN }) {
-  const mpResponse = await fetch('https://api.mercadopago.com/users/test', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${MP_ACCESS_TOKEN}` },
-    body: JSON.stringify({ site_id: 'MLA', description: 'comprador de prueba Ressetia' })
-  });
-  const data = await mpResponse.json();
-  if (!mpResponse.ok) {
-    return res.status(500).json({ error: 'Mercado Pago rechazó la creación del usuario de prueba', detail: data });
-  }
-  return res.status(200).json({ email: data.email, password: data.password, nickname: data.nickname });
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
@@ -228,9 +215,6 @@ export default async function handler(req, res) {
       case 'create-trial': return await handleCreateTrial(req, res, env);
       case 'cancel': return await handleCancel(req, res, env);
       case 'change-plan': return await handleChangePlan(req, res, env);
-      // TEMPORAL — solo para generar un usuario de prueba comprador una vez.
-      // Se puede borrar este "case" después de usarlo (no lo llama nadie de la app).
-      case 'crear-usuario-prueba': return await handleCreateTestUser(req, res, env);
       default: return res.status(400).json({ error: 'action inválida (usar: create, create-trial, cancel, change-plan)', detail: `Recibido: ${JSON.stringify(action)}` });
     }
   } catch (err) {
