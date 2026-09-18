@@ -186,8 +186,9 @@
         </div>
 
         <div class="flex items-center justify-between">
-            <a href="index.html?goto=perfil" title="Mi Perfil" class="bg-gradient-to-br from-cyan-500/30 to-teal-500/20 hover:from-cyan-500/40 border border-cyan-500/40 text-cyan-300 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-all">
-                <i class="fa-solid fa-circle-user text-3xl"></i>
+            <a href="index.html?goto=perfil" title="Mi Perfil" class="relative bg-gradient-to-br from-cyan-500/30 to-teal-500/20 hover:from-cyan-500/40 border border-cyan-500/40 text-cyan-300 w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 transition-all overflow-hidden">
+                <i class="fa-solid fa-circle-user text-3xl" id="header-avatar-icon"></i>
+                <img id="header-avatar-img" class="hidden absolute inset-0 w-full h-full object-cover rounded-full" alt="Tu foto de perfil">
             </a>
         </div>
 
@@ -995,6 +996,20 @@
     const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        function showAvatarEverywhere(url) {
+            const imgEl = document.getElementById('header-avatar-img');
+            const iconEl = document.getElementById('header-avatar-icon');
+            if (!imgEl || !iconEl) return;
+            if (url) {
+                imgEl.src = url;
+                imgEl.classList.remove('hidden');
+                iconEl.classList.add('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                iconEl.classList.remove('hidden');
+            }
+        }
     let currentUser = null;
 
     let debts = [];
@@ -1116,10 +1131,11 @@
             usedCache = true;
         } else {
             try {
-                const { data } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary').eq('user_id', currentUser.id).maybeSingle();
+                const { data } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary, avatar_url').eq('user_id', currentUser.id).maybeSingle();
                 if (data) {
                     settings = data;
                     saveAccessCache(data);
+                    showAvatarEverywhere(data.avatar_url);
                 } else {
                     settings = loadAccessCache();
                     usedCache = true;
@@ -1130,6 +1146,8 @@
                 usedCache = true;
             }
         }
+
+        if (usedCache && settings) showAvatarEverywhere(settings.avatar_url);
 
         const subscriptionActive = settings && settings.is_premium === true &&
             (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
