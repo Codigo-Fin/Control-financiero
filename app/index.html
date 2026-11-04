@@ -212,8 +212,8 @@
                     <!-- Qué pasa después de registrarse (solo en "Crear cuenta") -->
                     <div id="signup-extras" class="mt-5 space-y-4">
                         <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                            <p class="text-sm font-semibold text-white flex items-center gap-2"><span class="ai-dot w-2 h-2 rounded-full bg-fuchsia-400"></span>14 días gratis con IA, sin tarjeta</p>
-                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Probás todo, incluida la Inteligencia Artificial. Cuando terminan los 14 días seguís usando gratis el plan Básico (sin IA), o te suscribís para mantener la IA. Nunca te cobramos nada sin que vos lo actives.</p>
+                            <p class="text-sm font-semibold text-white flex items-center gap-2"><span class="ai-dot w-2 h-2 rounded-full bg-fuchsia-400"></span>14 días gratis con todo, sin tarjeta</p>
+                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Probás toda la app, incluida la Inteligencia Artificial. Si dejás tu tarjeta en Mercado Pago, la prueba es de <b class="text-slate-200">30 días</b>. Al terminar elegís tu plan para seguir. Nunca te cobramos nada sin que vos lo actives.</p>
                         </div>
 
                         <!-- Código de descuento (opcional) — si viene por link (?promo=CODIGO) se completa solo -->
@@ -233,6 +233,51 @@
 
                         <p class="text-xs text-slate-500 leading-relaxed"><i class="fa-solid fa-book-open text-emerald-400 mr-1"></i> <b class="text-slate-300 font-semibold">¿Compraste el ebook?</b> Creá tu cuenta con normalidad y, cuando entres, cargá tu código en Mi Perfil para activar la app de por vida.</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prueba terminada: hay que elegir un plan para seguir (los datos quedan guardados) -->
+    <div id="paywall-screen" class="hidden fixed inset-0 z-[45] overflow-y-auto bg-black">
+        <div class="min-h-full w-full flex items-center justify-center px-4 py-10" style="background: radial-gradient(520px 340px at 85% 5%, rgba(224,64,251,.16), transparent 70%), radial-gradient(520px 360px at 10% 95%, rgba(34,211,238,.14), transparent 70%);">
+            <div class="w-full max-w-md space-y-5">
+                <div class="text-center">
+                    <span class="inline-flex w-12 h-12 rounded-2xl bg-fuchsia-500/15 border border-fuchsia-500/40 text-fuchsia-300 items-center justify-center text-xl"><i class="fa-solid fa-hourglass-end"></i></span>
+                    <h2 class="text-2xl font-semibold tracking-tight text-white mt-4">Terminó tu prueba gratis</h2>
+                    <p class="text-slate-400 text-[15px] mt-2">Todo lo que cargaste está guardado. Elegí cómo seguir y lo recuperás al instante.</p>
+                </div>
+
+                <div class="rounded-3xl p-5 border border-cyan-400/50 bg-[rgba(8,10,18,.85)] shadow-[0_0_40px_rgba(34,211,238,.15)]">
+                    <p class="text-white font-semibold flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-fuchsia-400"></i> Premium con IA</p>
+                    <p class="text-xs text-slate-400 mt-1">Toda la app + asistente, lectura de tickets y voz inteligente.</p>
+                    <div class="grid grid-cols-2 gap-2 mt-4">
+                        <button type="button" data-plan="mensual" class="paywall-plan-btn rounded-2xl p-3 text-center bg-slate-900 border border-white/10 hover:border-cyan-400/60 transition-all">
+                            <span class="block text-[11px] text-slate-400">Mensual</span>
+                            <span class="block text-lg font-semibold text-white">$6.999</span>
+                        </button>
+                        <button type="button" data-plan="anual" class="paywall-plan-btn rounded-2xl p-3 text-center bg-cyan-400/10 border border-cyan-400/60 hover:bg-cyan-400/20 transition-all">
+                            <span class="block text-[11px] text-cyan-300">Anual · ahorrás $14.988</span>
+                            <span class="block text-lg font-semibold text-white">$69.000</span>
+                        </button>
+                    </div>
+                    <button type="button" onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');" class="w-full mt-3 text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2">Prefiero pagar por transferencia</button>
+                </div>
+
+                <div class="rounded-3xl p-5 border border-emerald-500/35 bg-[rgba(8,10,18,.85)]">
+                    <p class="text-white font-semibold flex items-center gap-2"><i class="fa-solid fa-book-open text-emerald-400"></i> App de por vida, sin IA</p>
+                    <p class="text-xs text-slate-400 mt-1">Viene con el ebook El Plan de Rescate Financiero. Pago único de $27.000, sin suscripción.</p>
+                    <div class="flex gap-2 mt-4">
+                        <input type="text" id="paywall-code-input" placeholder="Tengo el código" class="flex-1 min-w-0 bg-slate-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white uppercase placeholder-slate-600 focus:outline-none focus:border-emerald-500">
+                        <button type="button" id="btn-paywall-redeem" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold px-4 rounded-xl whitespace-nowrap">Activar</button>
+                    </div>
+                    <p id="paywall-code-status" class="text-[11px] mt-2 hidden"></p>
+                    <a href="https://plan.ressetia.com/" target="_blank" rel="noopener" class="block text-center mt-3 text-sm font-semibold text-emerald-300 hover:text-emerald-200">Comprar el ebook + app de por vida</a>
+                </div>
+
+                <div class="flex items-center justify-between text-xs text-slate-500 px-1">
+                    <a href="https://wa.me/5491162332122?text=Hola!%20Tengo%20una%20consulta%20sobre%20mi%20plan%20de%20Ressetia" target="_blank" rel="noopener" class="hover:text-slate-300"><i class="fa-brands fa-whatsapp"></i> Ayuda por WhatsApp</a>
+                    <button type="button" id="btn-paywall-logout" class="hover:text-slate-300">Cerrar sesión</button>
                 </div>
             </div>
         </div>
@@ -1237,12 +1282,12 @@
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-5 border border-cyan-500/30 text-center">
             <div class="space-y-1">
                 <i class="fa-solid fa-gift text-fuchsia-400 text-2xl"></i>
-                <h3 class="font-bold text-white text-base">¡Listo! Ya tenés 14 días con IA gratis</h3>
-                <p class="text-xs sm:text-sm text-slate-400">Usá todo sin límites. Cuando terminen, seguís gratis con el plan Básico (sin IA). Si querés mantener la IA, podés dejar tu suscripción lista ahora: no se cobra nada hasta el día 15.</p>
+                <h3 class="font-bold text-white text-base">¡Listo! Tenés 14 días gratis con todo</h3>
+                <p class="text-xs sm:text-sm text-slate-400">¿Querés <b class="text-white">30 días</b> en vez de 14? Dejá tu tarjeta en Mercado Pago: no se cobra nada hasta el día 30 y cancelás cuando quieras.</p>
             </div>
-            <button id="btn-payment-choice-later" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all">Empezar a usar Ressetia</button>
+            <button id="btn-payment-choice-yes" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all">Quiero 30 días gratis</button>
             <div class="grid grid-cols-2 gap-3">
-                <button id="btn-payment-choice-yes" class="bg-slate-800 hover:bg-slate-700 border border-cyan-500/30 text-cyan-200 font-semibold py-2.5 rounded-xl text-xs transition-all">Dejar lista con Mercado Pago</button>
+                <button id="btn-payment-choice-later" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold py-2.5 rounded-xl text-xs transition-all">Seguir con 14 días</button>
                 <button id="btn-payment-choice-no" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold py-2.5 rounded-xl text-xs transition-all">Pagar por transferencia</button>
             </div>
             <button id="btn-payment-choice-ebook" class="text-xs text-emerald-300 hover:text-emerald-200 underline underline-offset-2"><i class="fa-solid fa-book"></i> Compré el ebook, tengo un código</button>
@@ -1255,7 +1300,7 @@
             <div class="text-center space-y-1">
                 <i class="fa-solid fa-building-columns text-fuchsia-400 text-2xl"></i>
                 <h3 class="font-bold text-white text-base">Pago por Transferencia</h3>
-                <p class="text-xs sm:text-sm text-slate-400">Cuando quieras mantener la IA después de tu prueba, transferí a estos datos:</p>
+                <p class="text-xs sm:text-sm text-slate-400">Para seguir usando Ressetia cuando termine tu prueba, transferí a estos datos:</p>
             </div>
 
             <div class="bg-slate-900/70 border border-fuchsia-500/20 rounded-2xl p-4 space-y-3">
@@ -1294,8 +1339,8 @@
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30">
             <div class="text-center space-y-1">
                 <i class="fa-solid fa-credit-card text-cyan-400 text-2xl"></i>
-                <h3 class="font-bold text-white text-base">Dejá lista tu suscripción con IA</h3>
-                <p class="text-xs sm:text-sm text-slate-400">Elegí tu plan y autorizá Mercado Pago. No se cobra nada hasta que terminen tus 14 días gratis, y podés cancelar antes sin costo.</p>
+                <h3 class="font-bold text-white text-base">Activá tus 30 días gratis</h3>
+                <p class="text-xs sm:text-sm text-slate-400">Elegí tu plan y autorizá Mercado Pago. No se cobra nada hasta el día 30 desde que te registraste, y podés cancelar antes sin costo.</p>
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <button data-plan="mensual" data-price="6999" class="payment-setup-plan-btn bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 rounded-xl p-3 text-center transition-all">
@@ -1317,7 +1362,7 @@
                 <p id="discount-code-status" class="text-[11px] mt-1 hidden"></p>
             </div>
 
-            <p class="text-[11px] text-slate-500 text-center">Es opcional: si no lo hacés ahora, el día 15 seguís con el plan Básico gratis.</p>
+            <p class="text-[11px] text-slate-500 text-center">Es opcional: si no lo hacés ahora, tenés 14 días gratis y al terminar elegís tu plan.</p>
             <button type="button" onclick="document.getElementById('payment-setup-modal').classList.add('hidden'); document.getElementById('payment-setup-modal').classList.remove('flex');" class="w-full text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2">Ahora no, seguir probando</button>
         </div>
     </div>
@@ -1806,11 +1851,11 @@
             setTimeout(() => input?.focus(), 400);
         });
 
-        document.getElementById('btn-redeem-ebook').addEventListener('click', async () => {
-            if (!currentUser) return;
-            const input = document.getElementById('ebook-code-input');
-            const statusEl = document.getElementById('ebook-code-status');
-            const btn = document.getElementById('btn-redeem-ebook');
+        async function redeemEbookCodeFrom(inputId, statusId, btnId) {
+            if (!currentUser) return false;
+            const input = document.getElementById(inputId);
+            const statusEl = document.getElementById(statusId);
+            const btn = document.getElementById(btnId);
             const code = input.value.trim();
             statusEl.classList.remove('hidden', 'text-emerald-400', 'text-rose-400');
             if (!code) {
@@ -1833,19 +1878,58 @@
                 statusEl.classList.add('text-emerald-400');
                 statusEl.textContent = '¡Listo! Ya tenés el plan Básico de por vida.';
                 showToast('🎉 ¡App activada de por vida!');
+                hidePaywall();
+                return true;
             } catch (err) {
                 statusEl.classList.add('text-rose-400');
                 statusEl.textContent = err.message;
+                return false;
             } finally {
                 btn.disabled = false;
             }
+        }
+        document.getElementById('btn-redeem-ebook').addEventListener('click', () => redeemEbookCodeFrom('ebook-code-input', 'ebook-code-status', 'btn-redeem-ebook'));
+        document.getElementById('btn-paywall-redeem').addEventListener('click', () => redeemEbookCodeFrom('paywall-code-input', 'paywall-code-status', 'btn-paywall-redeem'));
+
+        function showPaywall() {
+            document.getElementById('paywall-screen').classList.remove('hidden');
+        }
+        function hidePaywall() {
+            document.getElementById('paywall-screen').classList.add('hidden');
+        }
+        document.getElementById('btn-paywall-logout').addEventListener('click', async () => {
+            hidePaywall();
+            await handleSignOut();
+        });
+        document.querySelectorAll('.paywall-plan-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                if (!currentUser) return;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+                try {
+                    const resp = await fetch('/api/subscription', {
+                        method: 'POST',
+                        headers: await authHeaders(),
+                        body: JSON.stringify({ action: 'create', plan: btn.dataset.plan })
+                    });
+                    const data = await resp.json();
+                    if (data.init_point) {
+                        window.location.href = data.init_point;
+                        return;
+                    }
+                    showToast('No se pudo abrir Mercado Pago. Probá de nuevo.', 'warning');
+                } catch (err) {
+                    showToast('No se pudo abrir Mercado Pago. Probá de nuevo.', 'warning');
+                }
+                btn.innerHTML = originalHTML;
+            });
         });
 
         document.getElementById('btn-payment-choice-later').addEventListener('click', async () => {
             document.getElementById('payment-method-choice-modal').classList.add('hidden');
             document.getElementById('payment-method-choice-modal').classList.remove('flex');
             await sb.from('user_settings').upsert({ user_id: currentUser.id, payment_preference: 'ninguna' }, { onConflict: 'user_id' });
-            showToast('🎉 ¡Disfrutá tus 14 días con IA! Cuando quieras suscribirte, está en Mi Perfil.');
+            showToast('🎉 ¡Disfrutá tus 14 días gratis! Si querés 30, dejá tu tarjeta desde Mi Perfil.');
         });
 
         document.getElementById('btn-payment-choice-no').addEventListener('click', async () => {
@@ -1854,7 +1938,7 @@
 
             await sb.from('user_settings').upsert({ user_id: currentUser.id, payment_preference: 'transferencia' }, { onConflict: 'user_id' });
 
-            showToast('🎉 ¡Listo! Tus 14 días con IA siguen igual. Transferí cuando quieras mantener la IA.');
+            showToast('🎉 ¡Listo! Tenés 14 días gratis. Transferí antes de que terminen para seguir usando Ressetia.');
             document.getElementById('bank-transfer-modal').classList.remove('hidden');
             document.getElementById('bank-transfer-modal').classList.add('flex');
         });
@@ -2011,7 +2095,10 @@
                 badge.classList.add('flex');
                 btnUnsub.classList.remove('hidden');
                 planBox.classList.add('hidden');
-                if (currentPlan !== 'anual') {
+                if (currentPlan === 'owner') {
+                    upgradeBox.classList.add('hidden');
+                    btnUnsub.classList.add('hidden');
+                } else if (currentPlan !== 'anual') {
                     upgradeBox.classList.remove('hidden');
                 } else {
                     upgradeBox.classList.add('hidden');
@@ -2033,11 +2120,11 @@
                 const hasPayment = !!settings.mp_preapproval_id;
 
                 if (settings.payment_preference === 'transferencia') {
-                    toast.innerHTML = `⚠️ Tu prueba con IA termina en ${daysLeft} día(s). Después seguís con el plan Básico gratis; transferí si querés mantener la IA — <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');" class="underline font-bold">ver Alias/CBU</button>`;
+                    toast.innerHTML = `⚠️ Tu prueba gratis termina en ${daysLeft} día(s). Transferí para seguir usando Ressetia — <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');" class="underline font-bold">ver Alias/CBU</button>`;
                 } else {
                     toast.textContent = hasPayment
-                        ? `⏰ Tu prueba con IA termina en ${daysLeft} día(s). Después empieza tu suscripción y seguís con la IA.`
-                        : `✨ Tu prueba con IA termina en ${daysLeft} día(s). Después seguís gratis con el plan Básico. Si querés mantener la IA, suscribite en Mi Perfil.`;
+                        ? `⏰ Tu prueba gratis termina en ${daysLeft} día(s). Después empieza tu suscripción y seguís con todo.`
+                        : `⏳ Tu prueba gratis termina en ${daysLeft} día(s). Para no perder el acceso, elegí tu plan en Mi Perfil (o activá tu código del ebook).`;
                 }
                 toast.classList.remove('hidden');
             }
@@ -2103,8 +2190,15 @@
                         aiAllowed: subscriptionActive || trialActive
                     };
                     applyPremiumUI(subscriptionActive, settings.current_plan, settings.lifetime_access === true);
-                    await offerPaymentSetupIfNeeded(settings);
-                    checkTrialEndingSoon(settings);
+                    // Sin suscripción, sin prueba vigente y sin el plan de por vida: hay que elegir un plan.
+                    const hasAccess = subscriptionActive || trialActive || settings.lifetime_access === true;
+                    if (hasAccess) {
+                        hidePaywall();
+                        await offerPaymentSetupIfNeeded(settings);
+                        checkTrialEndingSoon(settings);
+                    } else {
+                        showPaywall();
+                    }
                     if (settings.avatar_url && typeof showAvatarEverywhere === 'function') showAvatarEverywhere(settings.avatar_url);
                 } else {
                     salary = 500000;

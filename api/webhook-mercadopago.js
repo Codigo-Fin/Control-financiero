@@ -64,6 +64,13 @@ export default async function handler(req, res) {
 
     if (isPremium !== null) {
       const detectedPlan = preapproval.auto_recurring?.frequency === 12 ? 'anual' : 'mensual';
+      const update = { is_premium: isPremium, mp_preapproval_id: preapprovalId, current_plan: isPremium ? detectedPlan : null };
+      // Dejó la tarjeta: su prueba se extiende hasta el primer cobro (día 30),
+      // así no pierde esos días aunque después cancele.
+      const firstCharge = preapproval.auto_recurring?.start_date ? new Date(preapproval.auto_recurring.start_date) : null;
+      if (isPremium && firstCharge && firstCharge > new Date()) {
+        update.trial_ends_at = firstCharge.toISOString();
+      }
       const updateResp = await fetch(`${SUPABASE_URL}/rest/v1/user_settings?user_id=eq.${userId}`, {
         method: 'PATCH',
         headers: {
@@ -72,7 +79,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
         },
-        body: JSON.stringify({ is_premium: isPremium, mp_preapproval_id: preapprovalId, current_plan: isPremium ? detectedPlan : null })
+        body: JSON.stringify(update)
       });
       const updateResult = await updateResp.json();
       console.log('Resultado de actualizar user_settings:', updateResp.status, JSON.stringify(updateResult));

@@ -23,6 +23,17 @@ function limpiarInitPoint(initPoint) {
   }
 }
 
+// Quien deja la tarjeta en Mercado Pago tiene 30 días gratis desde que se registró
+// (en vez de 14). El primer cobro se programa para el día 30; si ya pasaron,
+// se cobra en el momento.
+const CARD_TRIAL_DAYS = 30;
+function cardTrialStartDate(createdAt) {
+  const created = createdAt ? new Date(createdAt) : null;
+  if (!created || isNaN(created)) return null;
+  const start = new Date(created.getTime() + CARD_TRIAL_DAYS * 24 * 60 * 60 * 1000);
+  return start.getTime() > Date.now() + 60 * 60 * 1000 ? start : null;
+}
+
 async function applyDiscountIfValid(discountCode, price, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) {
   if (!discountCode || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return { finalPrice: price, codeUsed: null };
 
@@ -60,6 +71,7 @@ async function handleCreate(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_
 
   const frequency = plan === 'anual' ? 12 : 1;
   const reason = plan === 'anual' ? 'Suscripción Anual - Control Financiero' : 'Suscripción Mensual - Control Financiero';
+  const startDate = cardTrialStartDate(req.authUser?.created_at);
 
   const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
     method: 'POST',
@@ -68,7 +80,7 @@ async function handleCreate(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPABASE_
       reason, external_reference: userId, payer_email: userEmail,
       back_url: `${SITE_URL}/index.html`,
       notification_url: `${SITE_URL}/api/webhook-mercadopago`,
-      auto_recurring: { frequency, frequency_type: 'months', transaction_amount: Number(price), currency_id: 'ARS' },
+      auto_recurring: { frequency, frequency_type: 'months', transaction_amount: Number(price), currency_id: 'ARS', ...(startDate ? { start_date: startDate.toISOString() } : {}) },
       status: 'pending'
     })
   });
@@ -96,8 +108,7 @@ async function handleCreateTrial(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPA
 
   const frequency = plan === 'anual' ? 12 : 1;
   const reason = plan === 'anual' ? 'Suscripción Anual - Ressetia' : 'Suscripción Mensual - Ressetia';
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() + 14);
+  const startDate = cardTrialStartDate(req.authUser?.created_at);
 
   const { finalPrice, codeUsed } = await applyDiscountIfValid(discountCode, price, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -109,7 +120,7 @@ async function handleCreateTrial(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPA
       external_reference: userId, payer_email: userEmail,
       back_url: `${SITE_URL}/index.html`,
       notification_url: `${SITE_URL}/api/webhook-mercadopago`,
-      auto_recurring: { frequency, frequency_type: 'months', transaction_amount: Number(finalPrice), currency_id: 'ARS', start_date: startDate.toISOString() },
+      auto_recurring: { frequency, frequency_type: 'months', transaction_amount: Number(finalPrice), currency_id: 'ARS', ...(startDate ? { start_date: startDate.toISOString() } : {}) },
       status: 'pending'
     })
   });
@@ -251,6 +262,7 @@ export default async function handler(req, res) {
     if (!user) return;
     req.body.userId = user.id;
     req.body.userEmail = user.email;
+    req.authUser = user;
 
     // 🔒 El precio lo pone el servidor según el plan, no el navegador.
     req.body.plan = req.body.plan === 'anual' ? 'anual' : 'mensual';

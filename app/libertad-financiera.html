@@ -13,8 +13,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- defer: se descargan en paralelo y no frenan la apertura (igual que en index.html) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         html { font-size: 16px; }
@@ -92,8 +93,8 @@
             <div id="gate-not-premium" class="hidden space-y-3">
                 <i class="fa-solid fa-star text-amber-400 text-2xl"></i>
                 <h2 class="text-white font-bold text-base">Tu prueba gratis terminó</h2>
-                <p class="text-slate-400 text-sm">Libertad Financiera es parte de la suscripción premium. Suscribite para seguir usándola.</p>
-                <a href="index.html?goto=suscripcion" class="block bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-sm">Ver Suscripción</a>
+                <p class="text-slate-400 text-sm">Tus datos están guardados. Elegí tu plan para seguir usando Ressetia.</p>
+                <a href="index.html?goto=suscripcion" class="block bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-sm">Elegir mi plan</a>
                 <a href="index.html?goto=suscripcion" class="block text-xs text-emerald-300 underline underline-offset-2">¿Compraste el ebook? Activá tu acceso de por vida con tu código</a>
             </div>
         </div>
@@ -1155,20 +1156,42 @@
             settings = loadAccessCache();
             usedCache = true;
         } else {
-            try {
-                const { data } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary, avatar_url, lifetime_access').eq('user_id', currentUser.id).maybeSingle();
-                if (data) {
-                    settings = data;
+            const accessOk = (st) => !!st && (
+                (st.is_premium === true && (st.subscription_ends_at === null || new Date(st.subscription_ends_at) > new Date())) ||
+                (st.trial_ends_at && new Date(st.trial_ends_at) > new Date()) ||
+                st.lifetime_access === true);
+            const freshPromise = sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary, avatar_url, lifetime_access').eq('user_id', currentUser.id).maybeSingle();
+            const cachedAccess = loadAccessCache();
+
+            if (accessOk(cachedAccess)) {
+                settings = cachedAccess;
+                freshPromise.then(({ data }) => {
+                    if (!data) return;
                     saveAccessCache(data);
                     showAvatarEverywhere(data.avatar_url);
-                } else {
-                    settings = loadAccessCache();
+                    if (!accessOk(data)) {
+                        document.getElementById('app-content').classList.add('hidden');
+                        document.getElementById('gate-screen').classList.remove('hidden');
+                        document.getElementById('gate-loading').classList.add('hidden');
+                        document.getElementById('gate-not-premium').classList.remove('hidden');
+                    }
+                }).catch((err) => console.warn('No se pudo re-verificar el acceso en segundo plano:', err));
+            } else {
+                try {
+                    const { data } = await freshPromise;
+                    if (data) {
+                        settings = data;
+                        saveAccessCache(data);
+                        showAvatarEverywhere(data.avatar_url);
+                    } else {
+                        settings = cachedAccess;
+                        usedCache = true;
+                    }
+                } catch (err) {
+                    console.warn('No se pudo verificar el acceso en la nube, usando lo guardado localmente:', err);
+                    settings = cachedAccess;
                     usedCache = true;
                 }
-            } catch (err) {
-                console.warn('No se pudo verificar el acceso en la nube, usando lo guardado localmente:', err);
-                settings = loadAccessCache();
-                usedCache = true;
             }
         }
 
@@ -2068,6 +2091,10 @@
         const totalDisponible = creditBalance + Math.max(externalPatrimonioNeto, 0);
         const netBalance = totalDisponible - totalRemaining;
 
+        if (typeof Chart === 'undefined') {
+            window.addEventListener('load', () => { if (typeof Chart !== 'undefined') updateProgressChart(); }, { once: true });
+            return;
+        }
         if (progressChart) progressChart.destroy();
 
         const isFavor = netBalance >= 0;
