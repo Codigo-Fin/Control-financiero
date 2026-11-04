@@ -574,14 +574,24 @@
         </div>
 
         <!-- Sobres del reparto: plata apartada (no es gasto) -->
-        <div id="envelopes-panel" class="hidden glass-panel rounded-3xl p-5 sm:p-6 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-                <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2"><i class="fa-solid fa-envelope-open-text text-cyan-400"></i> Mis apartados del mes</h3>
-                <button type="button" onclick="switchTab('cuadrante')" class="text-[11px] text-cyan-300 hover:text-cyan-200 underline underline-offset-2 shrink-0">Cambiar reparto</button>
+        <!-- Desplegable: cerrado ocupa una sola línea, así no tapa la carga de ingresos y gastos -->
+        <details id="envelopes-panel" class="hidden glass-panel rounded-2xl group">
+            <summary class="list-none [&::-webkit-details-marker]:hidden cursor-pointer select-none flex items-center justify-between gap-2 px-4 py-3">
+                <span class="flex items-center gap-2 min-w-0">
+                    <i class="fa-solid fa-envelope-open-text text-cyan-400"></i>
+                    <span class="font-bold text-sm text-white truncate">Mis apartados</span>
+                </span>
+                <span class="flex items-center gap-2 shrink-0">
+                    <span id="envelopes-total" class="text-xs font-bold text-cyan-300"></span>
+                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform group-open:rotate-180"></i>
+                </span>
+            </summary>
+            <div class="px-4 pb-4 space-y-2">
+                <p id="envelopes-summary" class="text-[11px] text-slate-400"></p>
+                <div id="envelopes-list" class="space-y-1.5 max-h-72 overflow-y-auto pr-1"></div>
+                <button type="button" onclick="switchTab('cuadrante')" class="text-[11px] text-cyan-300 hover:text-cyan-200 underline underline-offset-2">Cambiar reparto</button>
             </div>
-            <p id="envelopes-summary" class="text-xs text-slate-400"></p>
-            <div id="envelopes-list" class="space-y-2"></div>
-        </div>
+        </details>
 
         <!-- Modal: mes y calendario anual, con su propio ícono aparte -->
         <div id="calendar-options-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center p-4 z-50">
@@ -1144,7 +1154,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 25 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 26 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -3561,15 +3571,16 @@
             const data = computeEnvelopes(monthProducts);
             if (!data) { panel.classList.add('hidden'); return; }
             panel.classList.remove('hidden');
+            document.getElementById('envelopes-total').textContent = `${formatMoney(data.totalLeft)} sin usar`;
             document.getElementById('envelopes-summary').innerHTML = data.income > 0
-                ? `De lo que cobraste este mes (${formatMoney(data.income)}) tenés <b class="text-cyan-300">${formatMoney(data.totalLeft)}</b> apartado sin usar. Lo apartado no cuenta como gasto: baja solo cuando cargás un gasto de ese sobre.`
+                ? `De lo que cobraste este mes (${formatMoney(data.income)}). Lo apartado no cuenta como gasto: baja solo cuando cargás un gasto de ese sobre.`
                 : 'Cuando cargues un ingreso, se va a repartir solo en tus sobres. Lo apartado no cuenta como gasto.';
             document.getElementById('envelopes-list').innerHTML = data.envs.map(v => {
                 const usedPct = v.assigned > 0 ? Math.min(100, (v.spent / v.assigned) * 100) : (v.spent > 0 ? 100 : 0);
                 const over = v.left < 0;
                 const link = v.cat === '*' ? 'todos los otros gastos' : (v.cat || 'gastos con este nombre');
                 return `
-                    <div class="bg-slate-900/60 rounded-xl p-2.5 space-y-1.5">
+                    <div class="bg-slate-900/60 rounded-xl px-2.5 py-2 space-y-1">
                         <div class="flex items-center justify-between gap-2">
                             <span class="flex items-center gap-2 min-w-0">
                                 <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:${v.color}"></span>
