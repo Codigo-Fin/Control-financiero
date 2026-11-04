@@ -1735,24 +1735,9 @@
                 <i class="fa-solid fa-chart-line"></i> Mercado en Vivo
             </h2>
             <div class="rounded-2xl overflow-hidden border border-white/10">
-                <div class="tradingview-widget-container">
+                <div class="tradingview-widget-container" id="market-tape-outer" style="min-height:46px">
                     <div class="tradingview-widget-container__widget"></div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
-                    {
-                      "symbols": [
-                        { "proName": "FOREXCOM:SPXUSD", "title": "S&P 500" },
-                        { "proName": "FOREXCOM:NSXUSD", "title": "Nasdaq 100" },
-                        { "proName": "FOREXCOM:DJI", "title": "Dow Jones" },
-                        { "proName": "BCBA:IMV", "title": "Merval" },
-                        { "proName": "BITSTAMP:BTCUSD", "title": "Bitcoin" }
-                      ],
-                      "showSymbolLogo": true,
-                      "colorTheme": "dark",
-                      "isTransparent": false,
-                      "displayMode": "adaptive",
-                      "locale": "es"
-                    }
-                    </script>
+                    <!-- La cinta de precios se carga recién al abrir Inversiones (ver loadMarketWidgetsOnce) -->
                 </div>
             </div>
             <div class="flex items-center gap-2">
@@ -1768,19 +1753,7 @@
             <div class="rounded-2xl overflow-hidden border border-white/10" style="height:420px">
                 <div class="tradingview-widget-container" id="market-chart-outer" style="height:100%">
                     <div class="tradingview-widget-container__widget" style="height:100%"></div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async id="market-chart-script">
-                    {
-                      "autosize": true,
-                      "symbol": "AMEX:SPY",
-                      "interval": "D",
-                      "timezone": "America/Argentina/Buenos_Aires",
-                      "theme": "dark",
-                      "style": "1",
-                      "locale": "es",
-                      "allow_symbol_change": true,
-                      "support_host": "https://www.tradingview.com"
-                    }
-                    </script>
+                    <!-- El gráfico se carga recién al abrir Inversiones (ver loadMarketWidgetsOnce) -->
                 </div>
             </div>
         </div>
@@ -2265,7 +2238,7 @@
     </div>
 
     <!-- Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900/90 border border-cyan-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+    <div id="toast" class="pointer-events-none fixed bottom-5 right-5 bg-slate-900/90 border border-cyan-500/40 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
         <i id="toast-icon" class="fa-solid fa-circle-check text-cyan-400 text-base"></i>
         <span id="toast-message" class="text-xs sm:text-sm font-medium"></span>
     </div>
@@ -7568,6 +7541,37 @@
         outer.appendChild(script);
     }
 
+    // Los widgets de TradingView son pesados (cada uno es una página entera adentro):
+    // los creamos una sola vez y recién cuando la persona abre Inversiones.
+    let marketWidgetsLoaded = false;
+    function loadMarketWidgetsOnce() {
+        if (marketWidgetsLoaded) return;
+        marketWidgetsLoaded = true;
+        const tape = document.getElementById('market-tape-outer');
+        if (tape) {
+            const sc = document.createElement('script');
+            sc.type = 'text/javascript';
+            sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
+            sc.async = true;
+            sc.innerHTML = JSON.stringify({
+                symbols: [
+                    { proName: 'FOREXCOM:SPXUSD', title: 'S&P 500' },
+                    { proName: 'FOREXCOM:NSXUSD', title: 'Nasdaq 100' },
+                    { proName: 'FOREXCOM:DJI', title: 'Dow Jones' },
+                    { proName: 'BCBA:IMV', title: 'Merval' },
+                    { proName: 'BITSTAMP:BTCUSD', title: 'Bitcoin' }
+                ],
+                showSymbolLogo: true,
+                colorTheme: 'dark',
+                isTransparent: false,
+                displayMode: 'adaptive',
+                locale: 'es'
+            });
+            tape.appendChild(sc);
+        }
+        reloadMarketChart('AMEX:SPY');
+    }
+
     const marketSearchInput = document.getElementById('market-search-input');
     const marketSearchBtn = document.getElementById('market-search-btn');
     marketSearchBtn.addEventListener('click', () => {
@@ -7828,6 +7832,7 @@
 
         if (tabName === 'emergencia') switchDebtSubTab(currentDebtSubTab);
         if (tabName === 'proyectos') { loadProjects(); loadSavingsGoals(); }
+        if (tabName === 'inversiones') loadMarketWidgetsOnce();
 
         document.querySelectorAll('.lf-tab-btn').forEach(btn => {
             if (btn.dataset.tab === tabName) {
@@ -8221,13 +8226,19 @@
         if (!el) {
             el = document.createElement('div');
             el.id = 'libertad-toast';
-            el.className = 'fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-cyan-500/40 text-cyan-200 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xl z-50 transition-opacity duration-300 max-w-[90%] text-center';
+            // pointer-events-none: es solo un aviso, nunca tiene que "comerse" los toques
+            // de la barra de abajo (antes quedaba invisible encima y trababa la navegación).
+            el.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-cyan-500/40 text-cyan-200 px-4 py-2.5 rounded-xl text-xs font-semibold shadow-2xl z-50 transition-opacity duration-300 max-w-[90%] text-center pointer-events-none';
             document.body.appendChild(el);
         }
         el.textContent = message;
+        el.style.visibility = 'visible';
         el.style.opacity = '1';
         clearTimeout(window._libertadToastTimeout);
-        window._libertadToastTimeout = setTimeout(() => { el.style.opacity = '0'; }, 3500);
+        window._libertadToastTimeout = setTimeout(() => {
+            el.style.opacity = '0';
+            setTimeout(() => { if (el.style.opacity === '0') el.style.visibility = 'hidden'; }, 350);
+        }, 3500);
     }
 
     // ============================================
@@ -8659,6 +8670,7 @@
         const LF_TABS = ['saldo', 'fondos', 'emergencia', 'deudas', 'inversiones', 'proyectos', 'suenos'];
         window.openLF = function (tab) {
             if (typeof closeSideMenu === 'function') closeSideMenu();
+            const comingFromMain = document.getElementById('tab-panel-lf').classList.contains('hidden');
             switchTab('lf');
             window.LF.show(LF_TABS.includes(tab) ? tab : 'saldo');
             try { localStorage.setItem('last_tab', 'lf:' + (LF_TABS.includes(tab) ? tab : 'saldo')); } catch (e) {}
@@ -8667,7 +8679,7 @@
                 const goto = new URL(a.getAttribute('href'), location.href).searchParams.get('goto');
                 a.classList.toggle('active', goto === tab);
             });
-            window.LF.refresh();
+            if (comingFromMain) window.LF.refresh();
         };
         window.isLfTab = (tab) => LF_TABS.includes(tab);
 
