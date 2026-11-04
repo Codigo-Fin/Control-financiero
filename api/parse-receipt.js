@@ -54,7 +54,7 @@ export default async function handler(req, res) {
 
   const systemPrompt = `Analizás fotos de tickets/comprobantes de compra, o facturas de servicios en PDF (luz, gas, internet, etc.), de Argentina, y devolvés SOLO un JSON, sin texto adicional, con este formato exacto:
 {
-  "amount": <número, el monto TOTAL a pagar en pesos argentinos, o null si no se pudo leer>,
+  "amount": <número con sus centavos (ej. 44017.24), el monto TOTAL a pagar en pesos argentinos, o null si no se pudo leer>,
   "type": "egreso" o "ingreso",
   "category": una de estas exactas: ${CATEGORIES.join(', ')},
   "customCategory": <string corto sugerido SOLO si category es "Otros", si no null>,
@@ -83,7 +83,7 @@ Guía de categorías (con ejemplos, usá tu criterio para casos parecidos):
 
 Reglas:
 - El monto tiene que ser el TOTAL final a pagar del ticket/factura — buscá específicamente la línea que dice "TOTAL" (no "Efectivo", no "Vuelto", no "Cambio", esos son otra cosa). En un recibo de sueldo, el monto es el "TOTAL NETO".
-- Los tickets argentinos usan el punto como separador de miles y la coma como separador decimal: "$5.890,00" significa cinco mil ochocientos noventa pesos (5890), NO 5,89 ni 589000. IMPORTANTE: si hay MÁS DE UN PUNTO o el número es largo, seguís usando la MISMA regla — por ejemplo "707.104,16" significa setecientos siete mil ciento cuatro con dieciséis centavos (707104.16), NUNCA lo recortes a "707" ni tomes solo la primera parte antes del primer punto. Leé el número completo de punta a punta antes de convertirlo.
+- Los tickets argentinos usan el punto como separador de miles y la coma como separador decimal: "$5.890,00" significa cinco mil ochocientos noventa pesos (5890), NO 5,89 ni 589000. IMPORTANTE: si hay MÁS DE UN PUNTO o el número es largo, seguís usando la MISMA regla — por ejemplo "707.104,16" significa setecientos siete mil ciento cuatro con dieciséis centavos (707104.16), NUNCA lo recortes a "707" ni tomes solo la primera parte antes del primer punto. Leé el número completo de punta a punta antes de convertirlo. NUNCA redondees: si el total tiene centavos, devolvelos (",24" → .24).
 - Si te llegan VARIAS imágenes (varias páginas de un mismo PDF), es UN SOLO comprobante — el monto total puede estar en cualquiera de las páginas (a veces en la primera, a veces en la última, a veces en un comprobante de pago que viene en una página aparte). Revisá TODAS las páginas antes de decidir el monto.
 - Si el documento es un RECIBO DE SUELDO, LIQUIDACIÓN DE HABERES, o similar (tiene campos como "LEGAJO", "REM. ASIGNADA", "TOTAL NETO", nombre de un empleado y un empleador) — es un "ingreso" (es plata que la persona cobró, no que gastó), el monto es el "TOTAL NETO", category es "Otros", y concept es "Sueldo" (o "Sueldo" + el nombre de la empresa si se lee, ej. "Sueldo Gulma SRL").
 - Para cualquier otro caso, casi siempre es un "egreso" (es un comprobante de algo que se pagó). Solo poné "ingreso" si es evidente que es un recibo de cobro a favor de la persona (recibo de sueldo, transferencia recibida, etc.).
@@ -108,13 +108,16 @@ Reglas:
       ? 'Estas son las páginas de un mismo comprobante/factura. Analizalas todas y devolveme el JSON pedido.'
       : 'Analizá este comprobante y devolveme el JSON pedido.';
 
-  // Primero una lectura rápida; si no encuentra el monto, una segunda mirando con más detalle
+  // Primero una lectura rápida (sin razonamiento, responde en pocos segundos);
+  // si no encuentra el monto, una segunda pensando con más detalle
   // Si el modelo nuevo no estuviera disponible en la cuenta, usamos el de antes (así nunca se rompe)
   let useLegacyModel = false;
-  async function askClaude(effort) {
+  async function askClaude(detailed) {
     const modelParams = useLegacyModel
       ? { model: 'claude-haiku-4-5-20251001', max_tokens: 300 }
-      : { model: 'claude-haiku-5-5', max_tokens: 4000, output_config: { effort } };
+      : detailed
+        ? { model: 'claude-haiku-5-5', max_tokens: 4000, output_config: { effort: 'high' } }
+        : { model: 'claude-haiku-5-5', max_tokens: 400, thinking: { type: 'disabled' }, output_config: { effort: 'low' } };
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -140,7 +143,7 @@ Reglas:
       console.error('Error de Anthropic:', JSON.stringify(data));
       if (!useLegacyModel && (response.status === 400 || response.status === 404)) {
         useLegacyModel = true;
-        return askClaude(effort);
+        return askClaude(detailed);
       }
       return { error: data?.error?.message || JSON.stringify(data) };
     }
@@ -156,12 +159,12 @@ Reglas:
   }
 
   try {
-    let result = await askClaude('low');
+    let result = await askClaude(false);
     if (result.error) {
       return res.status(500).json({ error: 'Error al interpretar con IA', detail: result.error });
     }
     if (!result.parsed || result.parsed.amount == null) {
-      const retry = await askClaude('high');
+      const retry = await askClaude(true);
       if (retry.parsed) result = retry;
     }
     if (!result.parsed) {

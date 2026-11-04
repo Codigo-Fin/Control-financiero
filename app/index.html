@@ -703,7 +703,7 @@
                         <div class="flex items-center gap-2">
                             <div class="flex-1 flex items-center justify-center gap-1 border-b-2 border-cyan-500/30 focus-within:border-cyan-500 py-2">
                                 <span class="text-3xl sm:text-4xl font-extrabold text-slate-500">$</span>
-                                <input type="number" id="lemon-quickadd-amount" placeholder="0" class="w-full bg-transparent text-center text-4xl sm:text-5xl font-extrabold text-white focus:outline-none" autofocus>
+                                <input type="number" step="any" inputmode="decimal" id="lemon-quickadd-amount" placeholder="0" class="w-full bg-transparent text-center text-4xl sm:text-5xl font-extrabold text-white focus:outline-none" autofocus>
                             </div>
                             <button id="lemon-quickadd-save" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 text-xl active:scale-95 transition-all">
                                 <i class="fa-solid fa-check"></i>
@@ -1126,7 +1126,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 21 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 22 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -2353,8 +2353,11 @@
             return `Día ${parts[2]} ${monthName}`;
         }
 
+        // Muestra los centavos solo cuando los hay ($44.017,24); los montos redondos quedan limpios ($50.000)
         function formatMoney(amount) {
-            return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(amount || 0);
+            const value = Math.round((Number(amount) || 0) * 100) / 100;
+            const decimals = Number.isInteger(value) ? 0 : 2;
+            return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(value);
         }
 
         const currentM = getCurrentMonthStr();
