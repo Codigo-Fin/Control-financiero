@@ -535,12 +535,20 @@
                     <option value="custom">✍️ Personalizada (la armo yo)</option>
                 </select>
 
+                <button type="button" id="btn-toggle-allocation-manage" class="text-[11px] text-cyan-300 hover:text-cyan-200 underline underline-offset-2">Administrar mis reglas</button>
+                <div id="allocation-manage-box" class="hidden space-y-1.5 bg-slate-900/60 rounded-2xl p-3">
+                    <p class="text-[11px] text-slate-400">Tus reglas propias quedan guardadas en tu cuenta, aunque reinicies todo. Las que no uses las podés borrar.</p>
+                    <div id="allocation-manage-list" class="space-y-1.5"></div>
+                    <button type="button" id="btn-restore-default-rules" class="hidden text-[11px] text-slate-300 hover:text-white underline underline-offset-2">Volver a mostrar las reglas que vienen por defecto</button>
+                </div>
+
                 <div id="allocation-custom-builder" class="hidden space-y-2 bg-slate-900/60 rounded-2xl p-3">
+                    <input type="text" id="allocation-custom-name" maxlength="40" placeholder="Nombre de tu regla (ej. Mi reparto)" class="w-full bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white">
                     <p class="text-[11px] text-slate-400">Definí tus categorías y sus porcentajes (tienen que sumar 100%). Marcá <b class="text-cyan-300">"Apartar solo"</b> en las partes que querés que se descuenten de tus movimientos (ej. Ahorro); se aplica también a lo que ya cobraste este mes.</p>
                     <div id="allocation-custom-rows" class="space-y-2"></div>
                     <div class="flex gap-2">
                         <button type="button" id="btn-add-allocation-row" class="text-xs bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg">+ Agregar categoría</button>
-                        <button type="button" id="btn-save-allocation-custom" class="text-xs bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">Guardar</button>
+                        <button type="button" id="btn-save-allocation-custom" class="text-xs bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg">Guardar mi regla</button>
                     </div>
                     <p id="allocation-custom-error" class="hidden text-[11px] text-rose-400"></p>
                 </div>
@@ -1126,7 +1134,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 23 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 24 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -3117,6 +3125,7 @@
                 if (settings) {
                     salary = (settings.salary !== null && settings.salary !== undefined) ? parseFloat(settings.salary) : 500000;
                     incomeFrequency = settings.income_frequency || 'mensual';
+                    syncAllocationPrefsFromServer(settings.allocation_prefs);
                     const subscriptionActive = settings.is_premium === true &&
                         (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
                     const trialActive = !!settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
@@ -3485,6 +3494,11 @@
                 '503020': [{ name: 'Ahorro', pct: 20 }]
             };
             if (predefined[ruleCode]) return predefined[ruleCode];
+            // Reglas propias guardadas (sobreviven al reinicio total)
+            if (typeof ruleCode === 'string' && ruleCode.startsWith('saved:')) {
+                const preset = getSavedAllocationRule(ruleCode);
+                return preset ? preset.buckets.filter(b => b.auto).map(b => ({ name: b.name, pct: b.pct })) : [];
+            }
             if (ruleCode === 'custom') {
                 try {
                     const saved = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]');
@@ -4165,11 +4179,11 @@
 
             // Si ya hay una regla de reparto elegida, la recalculamos con los datos reales del mes
             const activeRule = document.getElementById('allocation-rule-select')?.value;
-            if (activeRule && activeRule !== 'none' && activeRule !== 'custom') {
+            if (activeRule && activeRule.startsWith('saved:')) {
+                const preset = getSavedAllocationRule(activeRule);
+                if (preset) renderAllocationResult(preset.buckets);
+            } else if (activeRule && ALLOCATION_RULES[activeRule]) {
                 renderAllocationResult(ALLOCATION_RULES[activeRule]);
-            } else if (activeRule === 'custom') {
-                const savedBuckets = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]');
-                if (savedBuckets.length > 0) renderAllocationResult(savedBuckets);
             }
         }
 
@@ -4261,8 +4275,8 @@
             ['emergencyBasic_target', 'emergencyBasic_current', 'emergencyFull_target', 'emergencyFull_current'].forEach(k => localStorage.removeItem(k));
             localStorage.removeItem(`pending_sync_${currentUser.id}`);
             localStorage.removeItem(`finzia_chat_${currentUser.id}`);
-            localStorage.removeItem('allocation_rule');
-            localStorage.removeItem('allocation_custom_buckets');
+            // Las reglas de reparto (propias y elegida) NO se borran: son preferencias,
+            // no datos de plata (pedido explícito del dueño)
 
             if (hadError) {
                 showToast('⚠️ Hubo un problema al reiniciar algo. Revisá la consola o probá de nuevo.', 'warning');
@@ -5304,7 +5318,7 @@
             const row = document.createElement('div');
             row.className = 'flex gap-2 items-center allocation-custom-row';
             row.innerHTML = `
-                <input type="text" placeholder="Nombre (ej. Ahorro)" value="${name}" class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-name">
+                <input type="text" placeholder="Nombre (ej. Ahorro)" value="${escapeHtml(String(name))}" class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-name">
                 <input type="number" placeholder="%" value="${pct}" class="w-16 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-pct">
                 <label class="flex items-center gap-1 text-[10px] text-slate-400 whitespace-nowrap" title="Si lo marcás, esta parte se descuenta sola de Egresos cada vez que entra plata. Dejalo sin marcar para la parte que es para vivir/gastar normal.">
                     <input type="checkbox" class="alloc-auto custom-checkbox" ${auto ? 'checked' : ''}> Apartar solo
@@ -5315,6 +5329,172 @@
         }
 
         document.getElementById('btn-add-allocation-row').addEventListener('click', () => addAllocationCustomRow());
+
+        // ===== Reglas propias guardadas en la cuenta (pedido explícito del dueño) =====
+        // Se guardan en user_settings.allocation_prefs (y copia local), así el
+        // "Reinicio total" no las borra. También se pueden borrar las predefinidas.
+        const DEFAULT_RULE_LABELS = {
+            diezmo: '✝️ Diezmo — 10% ofrenda / 90% vivir',
+            babilonia: '🏛️ El Hombre Más Rico de Babilonia — 10% invertir / 90% vivir',
+            ramsey: '📘 Estilo Dave Ramsey — 65% invertir / 35% vivir',
+            '503020': '⚖️ Regla 50/30/20 — Necesidades / Deseos / Ahorro'
+        };
+        const DEFAULT_RULE_ORDER = ['diezmo', 'babilonia', 'ramsey', '503020']; // orden fijo (un objeto pondría primero '503020')
+        let editingAllocationPresetId = null;
+
+        function getAllocPrefs() {
+            try {
+                const p = JSON.parse(localStorage.getItem('allocation_prefs') || '{}') || {};
+                return { saved: Array.isArray(p.saved) ? p.saved : [], hidden: Array.isArray(p.hidden) ? p.hidden : [] };
+            } catch (e) { return { saved: [], hidden: [] }; }
+        }
+
+        async function setAllocPrefs(prefs) {
+            try { localStorage.setItem('allocation_prefs', JSON.stringify(prefs)); } catch (e) {}
+            if (!currentUser) return;
+            try {
+                const { error } = await sb.from('user_settings').update({ allocation_prefs: prefs }).eq('user_id', currentUser.id);
+                if (error) throw error;
+            } catch (err) { console.warn('No se pudieron guardar las reglas en la cuenta:', err); }
+        }
+
+        function getSavedAllocationRule(ruleCode) {
+            const id = String(ruleCode || '').replace(/^saved:/, '');
+            return getAllocPrefs().saved.find(r => r.id === id) || null;
+        }
+
+        // Pasa la regla "personalizada" vieja (guardada solo en el celular) a una regla guardada
+        function migrateLegacyCustomAllocation() {
+            const prefs = getAllocPrefs();
+            let legacy = [];
+            try { legacy = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]'); } catch (e) {}
+            if (prefs.saved.length === 0 && Array.isArray(legacy) && legacy.length >= 2) {
+                const id = 'r' + Date.now().toString(36);
+                prefs.saved.push({ id, name: 'Mi reparto', buckets: legacy });
+                try { localStorage.setItem('allocation_prefs', JSON.stringify(prefs)); } catch (e) {}
+                if (localStorage.getItem('allocation_rule') === 'custom') localStorage.setItem('allocation_rule', 'saved:' + id);
+            } else if (localStorage.getItem('allocation_rule') === 'custom') {
+                localStorage.setItem('allocation_rule', 'none');
+            }
+        }
+
+        // Arma el desplegable: predefinidas no borradas + reglas propias + "armar una nueva"
+        function renderAllocationSelect() {
+            const select = document.getElementById('allocation-rule-select');
+            const prefs = getAllocPrefs();
+            const current = select.value;
+            let html = '<option value="none">Elegí una regla...</option>';
+            DEFAULT_RULE_ORDER.forEach(code => {
+                if (!prefs.hidden.includes(code)) html += `<option value="${code}">${DEFAULT_RULE_LABELS[code]}</option>`;
+            });
+            prefs.saved.forEach(r => {
+                html += `<option value="saved:${escapeHtml(r.id)}">⭐ ${escapeHtml(r.name)} — ${r.buckets.map(b => b.pct + '% ' + escapeHtml(b.name)).join(' / ')}</option>`;
+            });
+            html += '<option value="custom">✍️ Armar una regla nueva (la armo yo)</option>';
+            select.innerHTML = html;
+            select.value = [...select.options].some(o => o.value === current) ? current : 'none';
+            renderAllocationManageList();
+        }
+
+        function renderAllocationManageList() {
+            const prefs = getAllocPrefs();
+            const list = document.getElementById('allocation-manage-list');
+            const rowCls = 'flex items-center justify-between gap-2 bg-slate-800/70 rounded-xl px-2.5 py-2';
+            let html = prefs.saved.map(r => `
+                <div class="${rowCls}">
+                    <span class="text-xs text-slate-200 truncate">⭐ ${escapeHtml(r.name)}</span>
+                    <span class="flex gap-1 shrink-0">
+                        <button type="button" class="text-cyan-300 hover:text-cyan-200 text-xs px-2 py-1" data-alloc-edit="${escapeHtml(r.id)}" title="Editar"><i class="fa-solid fa-pen"></i></button>
+                        <button type="button" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1" data-alloc-del="saved:${escapeHtml(r.id)}" title="Borrar"><i class="fa-solid fa-trash"></i></button>
+                    </span>
+                </div>`).join('');
+            DEFAULT_RULE_ORDER.forEach(code => {
+                if (prefs.hidden.includes(code)) return;
+                html += `
+                <div class="${rowCls}">
+                    <span class="text-xs text-slate-400 truncate">${DEFAULT_RULE_LABELS[code]}</span>
+                    <button type="button" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 shrink-0" data-alloc-del="${code}" title="Borrar"><i class="fa-solid fa-trash"></i></button>
+                </div>`;
+            });
+            list.innerHTML = html || '<p class="text-[11px] text-slate-500">No te queda ninguna regla. Armá una nueva desde el desplegable.</p>';
+            document.getElementById('btn-restore-default-rules').classList.toggle('hidden', prefs.hidden.length === 0);
+        }
+
+        function openAllocationBuilder(preset) {
+            editingAllocationPresetId = preset ? preset.id : null;
+            document.getElementById('allocation-custom-builder').classList.remove('hidden');
+            document.getElementById('allocation-result').classList.add('hidden');
+            document.getElementById('allocation-custom-error').classList.add('hidden');
+            document.getElementById('allocation-custom-name').value = preset ? preset.name : '';
+            document.getElementById('allocation-custom-rows').innerHTML = '';
+            if (preset) preset.buckets.forEach(b => addAllocationCustomRow(b.name, b.pct, b.auto));
+            else { addAllocationCustomRow(); addAllocationCustomRow(); }
+        }
+
+        document.getElementById('btn-toggle-allocation-manage').addEventListener('click', () => {
+            renderAllocationManageList();
+            document.getElementById('allocation-manage-box').classList.toggle('hidden');
+        });
+
+        document.getElementById('allocation-manage-list').addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('[data-alloc-edit]');
+            const delBtn = e.target.closest('[data-alloc-del]');
+            if (editBtn) {
+                const preset = getSavedAllocationRule(editBtn.dataset.allocEdit);
+                if (preset) openAllocationBuilder(preset);
+                return;
+            }
+            if (!delBtn) return;
+            const code = delBtn.dataset.allocDel;
+            const isSaved = code.startsWith('saved:');
+            const label = isSaved ? (getSavedAllocationRule(code)?.name || 'esta regla') : DEFAULT_RULE_LABELS[code];
+            const ok = await showConfirmModal(`¿Borrar la regla "${label}"?${isSaved ? ' No se puede deshacer.' : ' La podés volver a mostrar cuando quieras.'}`, true);
+            if (!ok) return;
+            const prefs = getAllocPrefs();
+            if (isSaved) prefs.saved = prefs.saved.filter(r => 'saved:' + r.id !== code);
+            else if (!prefs.hidden.includes(code)) prefs.hidden.push(code);
+            await setAllocPrefs(prefs);
+            if (isSaved && editingAllocationPresetId === code.slice(6)) {
+                editingAllocationPresetId = null;
+                document.getElementById('allocation-custom-builder').classList.add('hidden');
+            }
+            // Si era la regla en uso, se deja de apartar (igual que elegir "ninguna")
+            if (localStorage.getItem('allocation_rule') === code) {
+                localStorage.setItem('allocation_rule', 'none');
+                document.getElementById('allocation-result').classList.add('hidden');
+                await removeStaleAutoAllocationSummaryEntries(null);
+                renderApp();
+            }
+            renderAllocationSelect();
+            showToast('Regla borrada');
+        });
+
+        document.getElementById('btn-restore-default-rules').addEventListener('click', async () => {
+            const prefs = getAllocPrefs();
+            prefs.hidden = [];
+            await setAllocPrefs(prefs);
+            renderAllocationSelect();
+            showToast('Volvieron las reglas que vienen por defecto');
+        });
+
+        // Al iniciar sesión: las reglas de la cuenta mandan; si la cuenta todavía no
+        // tiene y el celular sí, se suben
+        async function syncAllocationPrefsFromServer(serverPrefs) {
+            try {
+                const server = serverPrefs && typeof serverPrefs === 'object' ? serverPrefs : {};
+                const hasServer = (Array.isArray(server.saved) && server.saved.length > 0) || (Array.isArray(server.hidden) && server.hidden.length > 0);
+                const local = getAllocPrefs();
+                if (hasServer) {
+                    try { localStorage.setItem('allocation_prefs', JSON.stringify({ saved: server.saved || [], hidden: server.hidden || [] })); } catch (e) {}
+                } else if (local.saved.length || local.hidden.length) {
+                    await setAllocPrefs(local);
+                }
+                const before = document.getElementById('allocation-rule-select').value;
+                renderAllocationSelect();
+                const wanted = localStorage.getItem('allocation_rule') || 'none';
+                if (wanted !== before) restoreAllocationRule();
+            } catch (err) { console.warn('No se pudieron cargar las reglas de reparto:', err); }
+        }
 
         document.getElementById('btn-save-allocation-custom').addEventListener('click', async () => {
             const rows = document.querySelectorAll('.allocation-custom-row');
@@ -5347,12 +5527,24 @@
                 return;
             }
 
-            localStorage.setItem('allocation_rule', 'custom');
+            // Se guarda como regla propia en la cuenta (nueva, o editando una existente)
+            const prefs = getAllocPrefs();
+            const name = document.getElementById('allocation-custom-name').value.trim() || `Mi reparto ${prefs.saved.length + 1}`;
+            let preset = editingAllocationPresetId ? prefs.saved.find(r => r.id === editingAllocationPresetId) : null;
+            if (preset) { preset.name = name; preset.buckets = buckets; }
+            else { preset = { id: 'r' + Date.now().toString(36), name, buckets }; prefs.saved.push(preset); }
+            await setAllocPrefs(prefs);
+            editingAllocationPresetId = null;
+
+            const ruleCode = 'saved:' + preset.id;
+            localStorage.setItem('allocation_rule', ruleCode);
             localStorage.setItem('allocation_custom_buckets', JSON.stringify(buckets));
+            renderAllocationSelect();
+            document.getElementById('allocation-rule-select').value = ruleCode;
+            document.getElementById('allocation-custom-builder').classList.add('hidden');
             renderAllocationResult(buckets);
 
-            // A diferencia de las reglas predefinidas, "personalizada" sí se aplica
-            // automáticamente apenas se guarda (antes no hacía nada al guardar).
+            // Se aplica apenas se guarda, también sobre lo ya cobrado este mes
             await applyAutoAllocationToWholeMonth(true);
         });
 
@@ -5414,32 +5606,25 @@
             const customBuilder = document.getElementById('allocation-custom-builder');
             const resultBox = document.getElementById('allocation-result');
 
+            // "Armar una nueva" solo abre el armador: la regla en uso no cambia hasta guardar
+            if (rule === 'custom') {
+                openAllocationBuilder(null);
+                return;
+            }
+
             localStorage.setItem('allocation_rule', rule);
+            customBuilder.classList.add('hidden');
+            editingAllocationPresetId = null;
 
             if (rule === 'none') {
-                customBuilder.classList.add('hidden');
                 resultBox.classList.add('hidden');
                 if (!isRestoringAllocationRule) await removeStaleAutoAllocationSummaryEntries(null);
                 return;
             }
 
-            if (rule === 'custom') {
-                customBuilder.classList.remove('hidden');
-                resultBox.classList.add('hidden');
-                if (!isRestoringAllocationRule) await removeStaleAutoAllocationSummaryEntries(null);
-                const savedBuckets = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]');
-                document.getElementById('allocation-custom-rows').innerHTML = '';
-                if (savedBuckets.length > 0) {
-                    savedBuckets.forEach(b => addAllocationCustomRow(b.name, b.pct, b.auto));
-                } else {
-                    addAllocationCustomRow();
-                    addAllocationCustomRow();
-                }
-                return;
-            }
-
-            customBuilder.classList.add('hidden');
-            renderAllocationResult(ALLOCATION_RULES[rule]);
+            const buckets = rule.startsWith('saved:') ? getSavedAllocationRule(rule)?.buckets : ALLOCATION_RULES[rule];
+            if (!buckets) { resultBox.classList.add('hidden'); return; }
+            renderAllocationResult(buckets);
 
             // Solo aplicamos el descuento retroactivo si esto fue un cambio real de la
             // persona (no la restauración automática al recargar la página).
@@ -5449,11 +5634,12 @@
         });
 
         function restoreAllocationRule() {
+            const select = document.getElementById('allocation-rule-select');
             const savedRule = localStorage.getItem('allocation_rule');
-            if (!savedRule || savedRule === 'none') return;
+            if (!savedRule || savedRule === 'none' || ![...select.options].some(o => o.value === savedRule)) return;
             isRestoringAllocationRule = true;
-            document.getElementById('allocation-rule-select').value = savedRule;
-            document.getElementById('allocation-rule-select').dispatchEvent(new Event('change'));
+            select.value = savedRule;
+            select.dispatchEvent(new Event('change'));
             isRestoringAllocationRule = false;
         }
 
@@ -6116,6 +6302,8 @@
             updateFormSubtypes();
             switchTab(getStartTab());
             checkGotoParam();
+            migrateLegacyCustomAllocation();
+            renderAllocationSelect();
             restoreAllocationRule();
             checkSession().then(() => { checkReturnFromPayment(); checkPatrimonioPaymentConfirmation(); fetchInvestmentsTotal(); loadSaldoFavorContra(); });
 
