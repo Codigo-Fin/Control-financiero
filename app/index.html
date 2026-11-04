@@ -536,7 +536,7 @@
                 </select>
 
                 <div id="allocation-custom-builder" class="hidden space-y-2 bg-slate-900/60 rounded-2xl p-3">
-                    <p class="text-[11px] text-slate-400">Definí tus categorías y sus porcentajes (tienen que sumar 100%).</p>
+                    <p class="text-[11px] text-slate-400">Definí tus categorías y sus porcentajes (tienen que sumar 100%). Marcá <b class="text-cyan-300">"Apartar solo"</b> en las partes que querés que se descuenten de tus movimientos (ej. Ahorro); se aplica también a lo que ya cobraste este mes.</p>
                     <div id="allocation-custom-rows" class="space-y-2"></div>
                     <div class="flex gap-2">
                         <button type="button" id="btn-add-allocation-row" class="text-xs bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg">+ Agregar categoría</button>
@@ -1126,7 +1126,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 22 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 23 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -3523,28 +3523,9 @@
             const rule = localStorage.getItem('allocation_rule');
             const buckets = getAutoDeductBuckets(rule);
             if (buckets.length === 0 || incomeFrequency === 'diario' || !salary) return;
-
-            const entryNames = buckets.map(b => `${b.name} (${b.pct}% automático)`);
-            await removeStaleAutoAllocationSummaryEntries(entryNames);
-
-            for (const bucket of buckets) {
-                const amount = Math.round(salary * bucket.pct / 100);
-                const entryName = `${bucket.name} (${bucket.pct}% automático)`;
-                const monthProducts = products.filter(p => p.month === currentM);
-                const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
-
-                if (existing) {
-                    if (existing.price !== amount) {
-                        try {
-                            await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
-                        } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
-                        existing.price = amount; existing.unitPrice = amount;
-                        renderApp();
-                    }
-                } else {
-                    await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
-                }
-            }
+            // Pedido explícito del dueño: el descuento se recalcula sobre TODO el ingreso del mes
+            // (sueldo + extras); antes el sueldo pisaba la parte de los ingresos extra
+            await applyAutoAllocationToWholeMonth();
         }
 
         // Se llama cada vez que se agrega un ingreso nuevo (voz, foto, manual) — aplica
@@ -3554,7 +3535,7 @@
             const rule = localStorage.getItem('allocation_rule');
             const buckets = getAutoDeductBuckets(rule);
             for (const bucket of buckets) {
-                const deductAmount = Math.round(amount * bucket.pct / 100);
+                const deductAmount = Math.round(amount * bucket.pct) / 100;
                 if (deductAmount <= 0) continue;
                 await addTransactionRecord({
                     name: `${bucket.name} (${bucket.pct}% automático)`,
@@ -5358,13 +5339,21 @@
             }
             errorEl.classList.add('hidden');
 
+            // Sin ninguna parte marcada "Apartar solo" no se descuenta nada: lo avisamos
+            // (antes se guardaba en silencio y la persona creía que se había aplicado)
+            if (!buckets.some(b => b.auto)) {
+                errorEl.textContent = 'Marcá "Apartar solo" en las partes que querés que se descuenten de tus movimientos (ej. Ahorro, Diezmo, Inversión). La parte para vivir dejala sin marcar.';
+                errorEl.classList.remove('hidden');
+                return;
+            }
+
             localStorage.setItem('allocation_rule', 'custom');
             localStorage.setItem('allocation_custom_buckets', JSON.stringify(buckets));
             renderAllocationResult(buckets);
 
             // A diferencia de las reglas predefinidas, "personalizada" sí se aplica
             // automáticamente apenas se guarda (antes no hacía nada al guardar).
-            await applyAutoAllocationToWholeMonth();
+            await applyAutoAllocationToWholeMonth(true);
         });
 
         let isRestoringAllocationRule = false; // evita re-aplicar el descuento solo por recargar la página
@@ -5372,35 +5361,52 @@
         // Aplica (o actualiza) el descuento automático sobre TODO el ingreso ya cargado
         // este mes (sueldo + ingresos extra) — para cuando la persona elige la regla
         // DESPUÉS de ya tener ingresos cargados, no solo hacia adelante.
-        async function applyAutoAllocationToWholeMonth() {
+        async function applyAutoAllocationToWholeMonth(announce = false) {
             const rule = localStorage.getItem('allocation_rule');
             const buckets = getAutoDeductBuckets(rule);
             if (buckets.length === 0) return;
 
             const totalIncome = getCurrentMonthIncomeForAllocation();
-            if (totalIncome <= 0) return;
+            if (totalIncome <= 0) {
+                if (announce) showToast('Guardado. Se va a apartar solo apenas cargues un ingreso este mes.');
+                return;
+            }
 
             const entryNames = buckets.map(b => `${b.name} (${b.pct}% automático)`);
             await removeStaleAutoAllocationSummaryEntries(entryNames);
 
+            const applied = [];
             for (const bucket of buckets) {
-                const amount = Math.round(totalIncome * bucket.pct / 100);
+                // Con centavos, para que el cálculo sea exacto
+                const amount = Math.round(totalIncome * bucket.pct) / 100;
                 const entryName = `${bucket.name} (${bucket.pct}% automático)`;
                 const monthProducts = products.filter(p => p.month === currentM);
-                const existing = monthProducts.find(p => p.type === 'egreso' && p.name === entryName);
+                const sameEntries = monthProducts.filter(p => p.type === 'egreso' && p.name === entryName);
+                const existing = sameEntries[0];
+                applied.push(`${bucket.name} ${formatMoney(amount)}`);
+
+                // Si quedaron varios (uno por cada ingreso), se unifican en uno solo con el
+                // total del mes, así no se descuenta dos veces lo mismo
+                for (const dup of sameEntries.slice(1)) {
+                    try {
+                        await sb.from('transactions').delete().eq('id', dup.id);
+                        products = products.filter(p => p.id !== dup.id);
+                    } catch (err) { console.warn('No se pudo unificar el egreso automático:', err); }
+                }
 
                 if (existing) {
-                    if (existing.price !== amount) {
+                    if (Number(existing.price) !== amount || sameEntries.length > 1) {
                         try {
                             await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
                         } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
                         existing.price = amount; existing.unitPrice = amount;
-                        renderApp();
                     }
                 } else {
                     await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
                 }
             }
+            renderApp();
+            if (announce) showToast(`✅ Apartado en tus egresos del mes: ${applied.join(' · ')}`);
         }
 
         document.getElementById('allocation-rule-select').addEventListener('change', async (e) => {
@@ -5438,7 +5444,7 @@
             // Solo aplicamos el descuento retroactivo si esto fue un cambio real de la
             // persona (no la restauración automática al recargar la página).
             if (!isRestoringAllocationRule) {
-                await applyAutoAllocationToWholeMonth();
+                await applyAutoAllocationToWholeMonth(true);
             }
         });
 
