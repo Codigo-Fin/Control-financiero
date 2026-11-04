@@ -1126,7 +1126,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 20 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 21 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -5071,6 +5071,70 @@
             });
         }
 
+        // Prepara la foto del ticket para que la IA la lea bien:
+        // - si es chica (captura, foto recortada), la agranda para que se lean los números;
+        // - si es un ticket largo y finito, lo corta en partes (con un poco de superposición)
+        //   para no achicar la letra hasta que sea ilegible;
+        // - si es enorme, la achica al tamaño que la IA aprovecha (1568 px).
+        function prepareReceiptImages(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+
+                img.onload = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    const w = img.naturalWidth || img.width;
+                    const h = img.naturalHeight || img.height;
+                    const MAX_EDGE = 1568;
+
+                    const render = (sy, sh, scale) => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = Math.max(1, Math.round(w * scale));
+                        canvas.height = Math.max(1, Math.round(sh * scale));
+                        const ctx = canvas.getContext('2d');
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
+                        ctx.fillStyle = '#fff';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, sy, w, sh, 0, 0, canvas.width, canvas.height);
+                        return canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+                    };
+
+                    if (h / w > 2.2) {
+                        // Ticket largo: ancho de ~1100 px (agrandando hasta 3 veces si hace falta)
+                        const scale = Math.min(3, 1100 / w);
+                        let tileH = 1500 / scale;
+                        let overlap = tileH * 0.1;
+                        let count = Math.ceil((h - overlap) / (tileH - overlap));
+                        if (count > 4) {
+                            count = 4;
+                            tileH = h / (count - (count - 1) * 0.1);
+                            overlap = tileH * 0.1;
+                        }
+                        const images = [];
+                        for (let i = 0; i < count; i++) {
+                            const sy = Math.min(Math.round(i * (tileH - overlap)), Math.max(0, h - tileH));
+                            const sh = Math.min(tileH, h - sy);
+                            images.push(render(sy, sh, Math.min(scale, MAX_EDGE / sh, MAX_EDGE / w)));
+                        }
+                        resolve({ images, mediaType: 'image/jpeg' });
+                        return;
+                    }
+
+                    const longEdge = Math.max(w, h);
+                    const scale = longEdge < 1200 ? Math.min(3, 1400 / longEdge) : Math.min(1, MAX_EDGE / longEdge);
+                    resolve({ images: [render(0, h, scale)], mediaType: 'image/jpeg' });
+                };
+
+                img.onerror = () => {
+                    URL.revokeObjectURL(objectUrl);
+                    reject(new Error('No se pudo leer la imagen'));
+                };
+
+                img.src = objectUrl;
+            });
+        }
+
         // ============================================================
         // 🔒 ZONA PROTEGIDA — LECTURA DE PDF Y FOTOS (NO TOCAR)
         // Esta función ya quedó funcionando bien después de varias vueltas.
@@ -5109,8 +5173,11 @@
                     body = { base64Data, mediaType: 'application/pdf', kind: 'pdf-document' };
                     statusEl.textContent = 'Analizando con IA...';
                 } else {
-                    const compressed = await compressImageToBase64(file);
-                    body = { base64Data: compressed.base64, mediaType: compressed.mediaType, kind: 'image' };
+                    // Pedido explícito del dueño: mejorar la lectura de fotos chicas o tickets largos
+                    const prepared = await prepareReceiptImages(file);
+                    body = prepared.images.length > 1
+                        ? { images: prepared.images, mediaType: prepared.mediaType, kind: 'image-tiles' }
+                        : { base64Data: prepared.images[0], mediaType: prepared.mediaType, kind: 'image' };
                 }
 
                 const resp = await fetch('/api/parse-receipt', {

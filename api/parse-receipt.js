@@ -36,7 +36,8 @@ export default async function handler(req, res) {
   if (!authUser) return;
 
   const { base64Data, images, mediaType, kind } = req.body || {};
-  const isMultiImage = kind === 'multi-image' && Array.isArray(images) && images.length > 0;
+  const isTiles = kind === 'image-tiles';
+  const isMultiImage = (kind === 'multi-image' || isTiles) && Array.isArray(images) && images.length > 0 && images.length <= 6;
   const isPdfDocument = kind === 'pdf-document';
 
   if (!isMultiImage && !base64Data) {
@@ -88,7 +89,9 @@ Reglas:
 - Para cualquier otro caso, casi siempre es un "egreso" (es un comprobante de algo que se pagó). Solo poné "ingreso" si es evidente que es un recibo de cobro a favor de la persona (recibo de sueldo, transferencia recibida, etc.).
 - "concept" tiene que ser el nombre del comercio o servicio si se lee (ej. "Factura de Edesur", "VEP AFIP", "Boleta de patentes"), o si no es legible, un resumen corto de lo comprado, nunca una lista larga de todos los ítems.
 - category tiene que ser EXACTAMENTE una de la lista.
-- Si las imágenes no se pueden leer bien, devolvé amount: null.
+- Si te llegan varias imágenes que son PARTES de un mismo ticket largo (cortado de arriba a abajo, con un poco de superposición entre una parte y la siguiente), es UN SOLO ticket: no sumes dos veces lo que aparece repetido en el borde, y el TOTAL suele estar en la última parte.
+- Comprobantes de transferencia o pago (Mercado Pago, Ualá, Brubank, bancos, capturas de pantalla): el monto es el importe transferido o pagado. Es "egreso" si la persona pagó o envió plata, e "ingreso" si dice "Recibiste", "Te transfirieron" o similar. concept = a quién se le pagó o de quién se recibió.
+- La imagen puede ser chica, borrosa o estar de costado: mirala con atención antes de rendirte. Solo si de verdad no se lee el monto, devolvé amount: null.
 - Devolvé SOLO el JSON, nada de explicaciones ni texto extra.`;
 
   // Armamos el bloque de contenido: PDF completo (la IA lo lee directo, sin necesitar
@@ -99,7 +102,19 @@ Reglas:
       ? images.map(img => ({ type: 'image', source: { type: 'base64', media_type: mediaType, data: img } }))
       : [{ type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } }];
 
-  try {
+  const userText = isTiles
+    ? 'Estas imágenes son partes, de arriba a abajo, de un mismo ticket largo. Analizalas todas y devolveme el JSON pedido.'
+    : (isMultiImage || isPdfDocument)
+      ? 'Estas son las páginas de un mismo comprobante/factura. Analizalas todas y devolveme el JSON pedido.'
+      : 'Analizá este comprobante y devolveme el JSON pedido.';
+
+  // Primero una lectura rápida; si no encuentra el monto, una segunda mirando con más detalle
+  // Si el modelo nuevo no estuviera disponible en la cuenta, usamos el de antes (así nunca se rompe)
+  let useLegacyModel = false;
+  async function askClaude(effort) {
+    const modelParams = useLegacyModel
+      ? { model: 'claude-haiku-4-5-20251001', max_tokens: 300 }
+      : { model: 'claude-haiku-5-5', max_tokens: 4000, output_config: { effort } };
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -108,37 +123,52 @@ Reglas:
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
+        ...modelParams,
         system: systemPrompt,
         messages: [{
           role: 'user',
           content: [
             ...contentBlocks,
-            { type: 'text', text: (isMultiImage || isPdfDocument) ? 'Estas son las páginas de un mismo comprobante/factura. Analizalas todas y devolveme el JSON pedido.' : 'Analizá este comprobante y devolveme el JSON pedido.' }
+            { type: 'text', text: userText }
           ]
         }]
       })
     });
 
     const data = await response.json();
-
     if (!response.ok) {
       console.error('Error de Anthropic:', JSON.stringify(data));
-      return res.status(500).json({ error: 'Error al interpretar con IA', detail: data?.error?.message || JSON.stringify(data) });
+      if (!useLegacyModel && (response.status === 400 || response.status === 404)) {
+        useLegacyModel = true;
+        return askClaude(effort);
+      }
+      return { error: data?.error?.message || JSON.stringify(data) };
     }
-
-    const textResponse = data.content?.[0]?.text || '{}';
-    const cleaned = textResponse.replace(/```json|```/g, '').trim();
-    let parsed;
+    // La respuesta puede traer bloques de razonamiento antes del texto
+    const textResponse = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('') || '{}';
+    const match = textResponse.replace(/```json|```/g, '').match(/\{[\s\S]*\}/);
     try {
-      parsed = JSON.parse(cleaned);
+      return { parsed: JSON.parse(match ? match[0] : textResponse) };
     } catch (e) {
       console.error('No se pudo parsear la respuesta de la IA:', textResponse);
+      return { parsed: null };
+    }
+  }
+
+  try {
+    let result = await askClaude('low');
+    if (result.error) {
+      return res.status(500).json({ error: 'Error al interpretar con IA', detail: result.error });
+    }
+    if (!result.parsed || result.parsed.amount == null) {
+      const retry = await askClaude('high');
+      if (retry.parsed) result = retry;
+    }
+    if (!result.parsed) {
       return res.status(500).json({ error: 'Respuesta de IA no interpretable' });
     }
 
-    return res.status(200).json(parsed);
+    return res.status(200).json(result.parsed);
   } catch (err) {
     console.error('Error interno en parse-receipt:', err.message);
     return res.status(500).json({ error: 'Error interno', detail: err.message });
