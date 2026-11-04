@@ -139,62 +139,100 @@
     <div class="fixed bottom-10 right-10 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none floating-card-2"></div>
 
     <!-- LOGIN / SIGNUP SCREEN -->
-    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gradient-to-br from-[#090d16] via-[#111827] to-[#06201b]">
-        <div class="glass-panel rounded-3xl p-8 w-full max-w-sm space-y-5 shadow-2xl">
-            <div class="text-center space-y-1">
-                <div class="mx-auto w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-2">
-                    <i class="fa-solid fa-arrow-rotate-right"></i>
+    <div id="login-screen" class="fixed inset-0 z-50 overflow-y-auto bg-black">
+        <style>
+            #login-screen .auth-glow { background: radial-gradient(520px 340px at 85% 10%, rgba(224,64,251,.16), transparent 70%), radial-gradient(520px 360px at 10% 90%, rgba(34,211,238,.14), transparent 70%); }
+            #login-screen .auth-card { background: rgba(8,10,18,.82); border: 1px solid rgba(255,255,255,.09); box-shadow: 0 0 0 1px rgba(34,211,238,.18), 0 0 50px rgba(34,211,238,.10); backdrop-filter: blur(14px); }
+            #login-screen .auth-input { background: #0b0e19; border: 1px solid rgba(255,255,255,.10); }
+            #login-screen .auth-input:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.18); }
+            #login-screen .auth-tab { color: #8a93a8; }
+            #login-screen .auth-tab[aria-selected="true"] { background: rgba(34,211,238,.14); color: #e0fbff; box-shadow: inset 0 0 0 1px rgba(34,211,238,.45); }
+            #login-screen .auth-primary { background: #22d3ee; color: #001318; box-shadow: 0 0 22px rgba(34,211,238,.5); }
+            #login-screen .auth-primary:hover { box-shadow: 0 0 30px rgba(34,211,238,.7); }
+            #login-screen .neon-title { text-shadow: 0 0 18px rgba(34,211,238,.45); }
+            #login-screen .ai-dot { box-shadow: 0 0 10px #e040fb; }
+        </style>
+        <div class="auth-glow min-h-full w-full flex items-center justify-center px-4 py-10">
+            <div class="w-full max-w-4xl grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+
+                <!-- Qué vas a tener (en celular queda arriba, resumido) -->
+                <div class="text-center md:text-left">
+                    <a href="/" class="inline-flex items-center gap-2 text-white font-semibold">
+                        <span class="w-9 h-9 rounded-xl bg-cyan-400 text-slate-950 flex items-center justify-center shadow-[0_0_18px_rgba(34,211,238,.6)]"><i class="fa-solid fa-arrow-rotate-right"></i></span>
+                        <span class="text-lg tracking-tight">Ressetia</span>
+                    </a>
+                    <h1 id="auth-title" class="neon-title text-3xl sm:text-4xl font-semibold tracking-tight text-white mt-6 leading-tight">Ordená tu plata en 2 minutos</h1>
+                    <p id="auth-subtitle" class="text-slate-400 mt-3 text-[15px]">Creá tu cuenta gratis y probá Ressetia con la Inteligencia Artificial incluida durante 14 días.</p>
+
+                    <ul id="auth-benefits" class="hidden md:flex flex-col gap-3 mt-8 text-left text-[15px]">
+                        <li class="flex gap-3 items-start"><span class="mt-0.5 w-7 h-7 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/40 text-fuchsia-300 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-microphone"></i></span><span class="text-slate-300"><b class="text-white font-semibold">Cargás gastos hablando</b> o con una foto del ticket, y la IA los ordena sola.</span></li>
+                        <li class="flex gap-3 items-start"><span class="mt-0.5 w-7 h-7 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/40 text-fuchsia-300 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-wand-magic-sparkles"></i></span><span class="text-slate-300"><b class="text-white font-semibold">Un asistente que te arma el plan</b> para salir de tus deudas con tus números reales.</span></li>
+                        <li class="flex gap-3 items-start"><span class="mt-0.5 w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-shield-heart"></i></span><span class="text-slate-300"><b class="text-white font-semibold">Fondo de emergencia, metas e inversiones</b>, todo en un solo lugar.</span></li>
+                    </ul>
+                    <p class="hidden md:block text-xs text-slate-500 mt-8">Tus datos son tuyos: no pedimos claves de tu banco y podés borrar tu cuenta cuando quieras.</p>
                 </div>
-                <h1 class="text-lg font-bold text-white">Ressetia</h1>
-                <p class="text-sm text-slate-400">Iniciá sesión o creá tu cuenta para continuar</p>
-            </div>
-            <div class="space-y-3">
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Email</label>
-                    <input type="email" id="auth-email" placeholder="tu@email.com"
-                        class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-400 mb-1">Contraseña</label>
-                    <div class="relative">
-                        <input type="password" id="auth-password" placeholder="••••••••"
-                            class="w-full bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2.5 pr-10 text-sm focus:outline-none focus:border-cyan-500 text-white placeholder-slate-500">
-                        <button type="button" id="btn-toggle-password" tabindex="-1" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-sm">
-                            <i id="toggle-password-icon" class="fa-solid fa-eye"></i>
+
+                <!-- Formulario -->
+                <div class="auth-card rounded-3xl p-6 sm:p-7 w-full max-w-md mx-auto">
+                    <div class="grid grid-cols-2 gap-1 p-1 rounded-2xl bg-white/[0.03] border border-white/10" role="tablist" aria-label="Elegí una opción">
+                        <button type="button" id="tab-signup" role="tab" aria-selected="true" class="auth-tab rounded-xl py-2.5 text-sm font-semibold transition-all">Crear cuenta</button>
+                        <button type="button" id="tab-signin" role="tab" aria-selected="false" class="auth-tab rounded-xl py-2.5 text-sm font-semibold transition-all">Ya tengo cuenta</button>
+                    </div>
+
+                    <form id="auth-form" class="space-y-4 mt-6" novalidate>
+                        <div>
+                            <label for="auth-email" class="block text-sm font-medium text-slate-300 mb-1.5">Tu email</label>
+                            <input type="email" id="auth-email" autocomplete="email" inputmode="email" placeholder="nombre@gmail.com"
+                                class="auth-input w-full rounded-xl px-4 py-3 text-[15px] text-white placeholder-slate-600 transition-all">
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label for="auth-password" class="block text-sm font-medium text-slate-300">Contraseña</label>
+                                <button type="button" id="btn-forgot-password" class="hidden text-xs text-cyan-400 hover:text-cyan-300">¿La olvidaste?</button>
+                            </div>
+                            <div class="relative">
+                                <input type="password" id="auth-password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"
+                                    class="auth-input w-full rounded-xl px-4 py-3 pr-11 text-[15px] text-white placeholder-slate-600 transition-all">
+                                <button type="button" id="btn-toggle-password" aria-label="Mostrar u ocultar la contraseña" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-sm p-1">
+                                    <i id="toggle-password-icon" class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p id="auth-message" class="text-xs min-h-[16px]" role="status" aria-live="polite"></p>
+
+                        <button type="submit" id="btn-signup" class="auth-primary w-full font-bold py-3.5 rounded-xl text-[15px] transition-all active:scale-[.98]">
+                            Crear mi cuenta gratis
                         </button>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between -mt-1">
-                    <button type="button" id="btn-forgot-password" class="text-[11px] text-cyan-400 hover:text-cyan-300 underline underline-offset-2">
-                        ¿Olvidaste tu contraseña?
-                    </button>
-                </div>
-                <p id="auth-message" class="text-xs min-h-[16px]"></p>
+                        <button type="submit" id="btn-signin" class="hidden auth-primary w-full font-bold py-3.5 rounded-xl text-[15px] transition-all active:scale-[.98]">
+                            Entrar a mi cuenta
+                        </button>
+                    </form>
 
-                <!-- Código de descuento (opcional) — si viene por link (?promo=CODIGO) se completa solo -->
-                <div id="promo-code-box" class="space-y-1.5">
-                    <button type="button" id="btn-toggle-promo" class="text-[11px] text-slate-500 hover:text-cyan-400 underline underline-offset-2">
-                        ¿Tenés un código de descuento?
-                    </button>
-                    <div id="promo-code-fields" class="hidden flex gap-2">
-                        <input type="text" id="promo-code-input" placeholder="Ej. CONTROL"
-                            class="flex-1 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs uppercase focus:outline-none focus:border-fuchsia-500 text-white placeholder-slate-500">
-                        <button type="button" id="btn-apply-promo" class="bg-fuchsia-500/20 hover:bg-fuchsia-500/30 border border-fuchsia-500/40 text-fuchsia-300 font-bold px-3 py-2 rounded-xl text-xs whitespace-nowrap">Aplicar</button>
-                    </div>
-                    <div id="promo-code-success" class="hidden bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 text-xs font-semibold px-3 py-2 rounded-xl text-center">
-                        🎉 ¡Tu registro tiene <span id="promo-code-pct">30</span>% OFF! Se va a aplicar automáticamente cuando actives tu plan.
-                    </div>
-                </div>
+                    <!-- Qué pasa después de registrarse (solo en "Crear cuenta") -->
+                    <div id="signup-extras" class="mt-5 space-y-4">
+                        <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+                            <p class="text-sm font-semibold text-white flex items-center gap-2"><span class="ai-dot w-2 h-2 rounded-full bg-fuchsia-400"></span>14 días gratis, con IA incluida</p>
+                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Después de crear tu cuenta elegís cómo vas a pagar cuando termine la prueba (Mercado Pago o transferencia). No se cobra nada durante los 14 días y cancelás cuando quieras.</p>
+                        </div>
 
-                <p class="text-[10px] text-slate-500 text-center">Al crear cuenta, en el siguiente paso vas a poder elegir tu plan y autorizar tu medio de pago (14 días gratis, sin cargo hasta entonces).</p>
+                        <!-- Código de descuento (opcional) — si viene por link (?promo=CODIGO) se completa solo -->
+                        <div id="promo-code-box" class="space-y-2">
+                            <button type="button" id="btn-toggle-promo" class="text-xs text-slate-400 hover:text-cyan-300">
+                                <i class="fa-solid fa-tag mr-1"></i> Tengo un código de descuento
+                            </button>
+                            <div id="promo-code-fields" class="hidden flex gap-2">
+                                <input type="text" id="promo-code-input" placeholder="Ej. CONTROL"
+                                    class="auth-input flex-1 min-w-0 rounded-xl px-3 py-2.5 text-sm uppercase text-white placeholder-slate-600">
+                                <button type="button" id="btn-apply-promo" class="bg-fuchsia-500/20 hover:bg-fuchsia-500/30 border border-fuchsia-500/40 text-fuchsia-300 font-bold px-4 rounded-xl text-xs whitespace-nowrap">Aplicar</button>
+                            </div>
+                            <div id="promo-code-success" class="hidden bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 text-xs font-semibold px-3 py-2 rounded-xl text-center">
+                                🎉 ¡Tu registro tiene <span id="promo-code-pct">30</span>% OFF! Se va a aplicar automáticamente cuando actives tu plan.
+                            </div>
+                        </div>
 
-                <div class="flex flex-col gap-2 pt-1">
-                    <button id="btn-signin" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all active:scale-95">
-                        Iniciar Sesión
-                    </button>
-                    <button id="btn-signup" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition-all active:scale-95">
-                        Crear Cuenta Nueva
-                    </button>
+                        <p class="text-xs text-slate-500 leading-relaxed"><i class="fa-solid fa-book-open text-emerald-400 mr-1"></i> <b class="text-slate-300 font-semibold">¿Compraste el ebook?</b> Creá tu cuenta con normalidad y, cuando entres, cargá tu código en Mi Perfil para activar la app de por vida.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1479,8 +1517,21 @@
             document.getElementById('app-content').classList.remove('hidden');
             document.getElementById('user-email-display').textContent = currentUser.email;
         }
+        const AUTH_ERRORS_ES = [
+            [/invalid login credentials/i, 'El email o la contraseña no coinciden. Revisalos o tocá "¿La olvidaste?".'],
+            [/user already registered|already been registered/i, 'Ese email ya tiene una cuenta. Tocá "Ya tengo cuenta" para entrar.'],
+            [/email not confirmed/i, 'Todavía no confirmaste tu email. Buscá el mail de Ressetia (mirá también en spam) y tocá el link.'],
+            [/password should be at least/i, 'La contraseña tiene que tener al menos 6 caracteres.'],
+            [/unable to validate email|invalid email|email address .* is invalid/i, 'Ese email no parece válido. Revisá que esté bien escrito.'],
+            [/rate limit|too many requests|for security purposes/i, 'Hiciste muchos intentos seguidos. Esperá un minuto y probá de nuevo.'],
+            [/failed to fetch|network/i, 'No hay conexión. Revisá tu internet y probá de nuevo.']
+        ];
         function setAuthMessage(msg, ok = false) {
             const el = document.getElementById('auth-message');
+            if (!ok && msg) {
+                const match = AUTH_ERRORS_ES.find(([re]) => re.test(msg));
+                if (match) msg = match[1];
+            }
             el.textContent = msg;
             el.className = ok ? 'text-cyan-400 text-xs min-h-[16px]' : 'text-rose-400 text-xs min-h-[16px]';
         }
@@ -1660,7 +1711,7 @@
                 showAppScreen();
                 await loadAllUserData();
             } else {
-                setAuthMessage('Cuenta creada. Revisá tu email para confirmar, luego iniciá sesión.', true);
+                setAuthMessage('¡Cuenta creada! Te mandamos un mail para confirmarla (mirá también en spam). Después volvé y entrá con "Ya tengo cuenta".', true);
             }
         }
 
@@ -1852,7 +1903,7 @@
 
         async function handleForgotPassword() {
             const email = document.getElementById('auth-email').value.trim();
-            if (!email) { setAuthMessage('Escribí tu email arriba y tocá de nuevo "¿Olvidaste tu contraseña?"'); return; }
+            if (!email) { setAuthMessage('Escribí tu email arriba y tocá de nuevo "¿La olvidaste?"'); return; }
             setAuthMessage('Enviando email de recuperación...', true);
             const { error } = await sb.auth.resetPasswordForEmail(email, {
                 redirectTo: window.location.href
@@ -1869,8 +1920,39 @@
             showLoginScreen();
         }
 
-        document.getElementById('btn-signin').addEventListener('click', handleSignIn);
-        document.getElementById('btn-signup').addEventListener('click', handleSignUp);
+        // Pestañas "Crear cuenta" / "Ya tengo cuenta": un solo botón visible por vez,
+        // así nunca queda la duda de cuál tocar.
+        let authMode = 'signup';
+        function setAuthMode(mode) {
+            authMode = mode;
+            const isSignup = mode === 'signup';
+            document.getElementById('tab-signup').setAttribute('aria-selected', String(isSignup));
+            document.getElementById('tab-signin').setAttribute('aria-selected', String(!isSignup));
+            document.getElementById('btn-signup').classList.toggle('hidden', !isSignup);
+            document.getElementById('btn-signin').classList.toggle('hidden', isSignup);
+            document.getElementById('btn-forgot-password').classList.toggle('hidden', isSignup);
+            document.getElementById('signup-extras').classList.toggle('hidden', !isSignup);
+            const pass = document.getElementById('auth-password');
+            pass.setAttribute('autocomplete', isSignup ? 'new-password' : 'current-password');
+            pass.placeholder = isSignup ? 'Mínimo 6 caracteres' : 'Tu contraseña';
+            document.getElementById('auth-title').textContent = isSignup ? 'Ordená tu plata en 2 minutos' : 'Qué bueno verte de nuevo';
+            document.getElementById('auth-subtitle').textContent = isSignup
+                ? 'Creá tu cuenta gratis y probá Ressetia con la Inteligencia Artificial incluida durante 14 días.'
+                : 'Entrá con el email y la contraseña que usaste al registrarte.';
+            setAuthMessage('', true);
+        }
+        document.getElementById('tab-signup').addEventListener('click', () => setAuthMode('signup'));
+        document.getElementById('tab-signin').addEventListener('click', () => setAuthMode('signin'));
+        document.getElementById('auth-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (authMode === 'signup') handleSignUp(); else handleSignIn();
+        });
+        // Arranca en "Ya tengo cuenta" si viene del botón Entrar (?modo=entrar)
+        // o si en este dispositivo ya se había entrado antes.
+        try {
+            const modeParam = new URLSearchParams(window.location.search).get('modo');
+            if (modeParam === 'entrar' || (modeParam !== 'registro' && localStorage.getItem('cached_user'))) setAuthMode('signin');
+        } catch (e) { /* sin acceso a localStorage: queda en "Crear cuenta" */ }
         document.getElementById('btn-forgot-password').addEventListener('click', handleForgotPassword);
 
         document.getElementById('btn-toggle-password').addEventListener('click', () => {
