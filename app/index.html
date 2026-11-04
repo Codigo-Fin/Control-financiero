@@ -1211,17 +1211,34 @@
                     <p class="text-[11px] text-slate-500">El primer paso para salir de deudas es protegerte con un capital de 1000 dólares o su equivalente en pesos ante imprevistos.</p>
                     <div>
                         <label>Meta objetivo ($)</label>
-                        <input type="number" id="emergencyBasicTarget" step="any" placeholder="Ej: 1500000">
+                        <div class="flex gap-2">
+                            <input type="number" id="emergencyBasicTarget" step="any" placeholder="Ej: 1600000">
+                            <button id="btnSaveEmergencyBasic" class="btn w-auto px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs whitespace-nowrap">Guardar meta</button>
+                        </div>
                     </div>
+
+                    <div class="bg-slate-950/60 border border-teal-500/20 rounded-2xl p-3 space-y-2">
+                        <div class="flex items-end justify-between gap-2">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-wide text-slate-500 font-bold">Ya ahorraste</p>
+                                <p id="emergencyBasicSaved" class="text-xl font-bold text-teal-300">$0</p>
+                            </div>
+                            <p id="emergencyBasicPct" class="text-2xl font-extrabold text-white">0%</p>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div id="emergencyBasicBar" class="bg-teal-400 h-2.5 rounded-full transition-all" style="width:0%"></div>
+                        </div>
+                        <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
+                    </div>
+
                     <div>
-                        <label>Ahorrado actualmente ($)</label>
-                        <input type="number" id="emergencyBasicCurrent" step="any" placeholder="Ej: 100000">
+                        <label>Sumar un aporte ($)</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="emergencyBasicAdd" step="any" min="0" placeholder="Ej: 100000">
+                            <button id="emergencyBasicAddBtn" class="btn w-auto px-4 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs whitespace-nowrap"><i class="fa-solid fa-plus"></i> Sumar</button>
+                        </div>
+                        <button type="button" id="emergencyBasicSetBtn" class="mt-1.5 text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2">¿Te equivocaste? Usar este número como total ahorrado</button>
                     </div>
-                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div id="emergencyBasicBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
-                    </div>
-                    <p id="emergencyBasicText" class="text-[11px] text-slate-400"></p>
-                    <button id="btnSaveEmergencyBasic" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
                     <button id="btnUseEmergencyForDebt" class="btn bg-slate-800 hover:bg-rose-500/20 border border-white/10 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs">
                         <i class="fa-solid fa-hand-holding-dollar"></i> Usar este fondo para pagar una deuda (opcional)
                     </button>
@@ -1235,17 +1252,34 @@
                     <p class="text-[11px] text-slate-500">Meta ej: $9.000.000</p>
                     <div>
                         <label>Meta objetivo ($)</label>
-                        <input type="number" id="emergencyFullTarget" step="any" placeholder="Ej: 9000000">
+                        <div class="flex gap-2">
+                            <input type="number" id="emergencyFullTarget" step="any" placeholder="Ej: 9000000">
+                            <button id="btnSaveEmergencyFull" class="btn w-auto px-4 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs whitespace-nowrap">Guardar meta</button>
+                        </div>
                     </div>
+
+                    <div class="bg-slate-950/60 border border-teal-500/20 rounded-2xl p-3 space-y-2">
+                        <div class="flex items-end justify-between gap-2">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-wide text-slate-500 font-bold">Ya ahorraste</p>
+                                <p id="emergencyFullSaved" class="text-xl font-bold text-teal-300">$0</p>
+                            </div>
+                            <p id="emergencyFullPct" class="text-2xl font-extrabold text-white">0%</p>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                            <div id="emergencyFullBar" class="bg-teal-400 h-2.5 rounded-full transition-all" style="width:0%"></div>
+                        </div>
+                        <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
+                    </div>
+
                     <div>
-                        <label>Ahorrado actualmente ($)</label>
-                        <input type="number" id="emergencyFullCurrent" step="any" placeholder="Ej: 300000">
+                        <label>Sumar un aporte ($)</label>
+                        <div class="flex gap-2">
+                            <input type="number" id="emergencyFullAdd" step="any" min="0" placeholder="Ej: 300000">
+                            <button id="emergencyFullAddBtn" class="btn w-auto px-4 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs whitespace-nowrap"><i class="fa-solid fa-plus"></i> Sumar</button>
+                        </div>
+                        <button type="button" id="emergencyFullSetBtn" class="mt-1.5 text-[11px] text-slate-500 hover:text-slate-300 underline underline-offset-2">¿Te equivocaste? Usar este número como total ahorrado</button>
                     </div>
-                    <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div id="emergencyFullBar" class="bg-teal-400 h-2 rounded-full transition-all" style="width:0%"></div>
-                    </div>
-                    <p id="emergencyFullText" class="text-[11px] text-slate-400"></p>
-                    <button id="btnSaveEmergencyFull" class="btn bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-300 text-xs">Guardar</button>
 
                     <!-- Bloqueo hasta cumplir requisitos -->
                     <div id="emergencyFullLock" class="hidden absolute inset-0 bg-slate-950/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center text-center p-5 space-y-2">
@@ -6416,19 +6450,62 @@
     document.getElementById('btnCalcFire').addEventListener('click', () => calculateFireNumber(true));
 
     // Fondos de emergencia (con meta, ahorrado y porcentaje)
-    function renderEmergencyBox(prefix) {
+    function formatPctEF(value) {
+        // 1 decimal si es chico (0,6%), entero si es grande (63%)
+        const v = value > 0 && value < 10 ? value.toFixed(1) : (Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, ''));
+        return v.replace('.', ',') + '%';
+    }
+
+    function emergencyProgress(prefix) {
         const target = parseFloat(localStorage.getItem(prefix + '_target')) || 0;
         const current = parseFloat(localStorage.getItem(prefix + '_current')) || 0;
-        document.getElementById(prefix + 'Target').value = target || '';
-        document.getElementById(prefix + 'Current').value = current || '';
         const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+        const missing = Math.max(0, target - current);
+        // Lo que falta se calcula sobre el % ya redondeado, así los dos siempre suman 100%
+        const shownPct = pct > 0 && pct < 10 ? Math.round(pct * 10) / 10 : Math.round(pct);
+        const missingPct = target > 0 ? Math.max(0, Math.round((100 - shownPct) * 10) / 10) : 0;
+        return { target, current, pct, shownPct, missing, missingPct };
+    }
+
+    function renderEmergencyBox(prefix) {
+        const { target, current, pct, shownPct, missing, missingPct } = emergencyProgress(prefix);
+        const targetInput = document.getElementById(prefix + 'Target');
+        if (document.activeElement !== targetInput) targetInput.value = target || '';
+        document.getElementById(prefix + 'Saved').textContent = `$${current.toLocaleString('es-AR')}`;
+        document.getElementById(prefix + 'Pct').textContent = target > 0 ? formatPctEF(shownPct) : '—';
         document.getElementById(prefix + 'Bar').style.width = pct + '%';
         const text = target > 0
             ? (pct >= 100
-                ? '¡Meta alcanzada! 🎉'
-                : `${pct.toFixed(0)}% logrado — te faltan $${(target - current).toLocaleString()} para la meta`)
-            : 'Definí tu meta para ver el progreso';
+                ? `¡Meta alcanzada! 🎉 Juntaste $${current.toLocaleString('es-AR')} de $${target.toLocaleString('es-AR')}.`
+                : `Te faltan $${missing.toLocaleString('es-AR')} (${formatPctEF(missingPct)}) para llegar a $${target.toLocaleString('es-AR')}.`)
+            : 'Poné tu meta y guardala para ver cuánto te falta.';
         document.getElementById(prefix + 'Text').textContent = text;
+    }
+
+    // Cada aporte se SUMA a lo que ya tenías (antes se reemplazaba)
+    async function addEmergencyContribution(prefix, mode) {
+        const input = document.getElementById(prefix + 'Add');
+        const amount = parseFloat(input.value);
+        if (isNaN(amount) || amount < 0 || (mode === 'add' && amount === 0)) {
+            await showAlertModal('Escribí cuánto querés sumar a tu fondo.');
+            return;
+        }
+        const before = parseFloat(localStorage.getItem(prefix + '_current')) || 0;
+        const next = mode === 'set' ? amount : before + amount;
+        localStorage.setItem(prefix + '_current', next);
+        input.value = '';
+        renderEmergencyBox(prefix);
+        updateEmergencyFullLock();
+        await saveStorage();
+
+        const { target, missing, missingPct, pct } = emergencyProgress(prefix);
+        let msg = mode === 'set'
+            ? `Listo, tu ahorro quedó en $${next.toLocaleString('es-AR')}.`
+            : `Sumaste $${amount.toLocaleString('es-AR')}. Ya tenés $${next.toLocaleString('es-AR')}.`;
+        if (target > 0) {
+            msg += pct >= 100 ? ' ¡Llegaste a tu meta! 🎉' : ` Te faltan $${missing.toLocaleString('es-AR')} (${formatPctEF(missingPct)}).`;
+        }
+        showLibertadToast(msg);
     }
 
     // Bloquea "Emergencia 3 a 6 Sueldos" hasta que: el fondo básico esté completo Y no haya deudas pendientes
@@ -6461,7 +6538,6 @@
 
     document.getElementById('btnSaveEmergencyBasic').addEventListener('click', async () => {
         localStorage.setItem('emergencyBasic_target', document.getElementById('emergencyBasicTarget').value || 0);
-        localStorage.setItem('emergencyBasic_current', document.getElementById('emergencyBasicCurrent').value || 0);
         renderEmergencyBox('emergencyBasic');
         updateEmergencyFullLock();
         await saveStorage();
@@ -6484,7 +6560,6 @@
         if (!ok) return;
 
         localStorage.setItem('emergencyBasic_current', 0);
-        document.getElementById('emergencyBasicCurrent').value = 0;
         renderEmergencyBox('emergencyBasic');
         updateEmergencyFullLock();
 
@@ -6498,9 +6573,20 @@
             return;
         }
         localStorage.setItem('emergencyFull_target', document.getElementById('emergencyFullTarget').value || 0);
-        localStorage.setItem('emergencyFull_current', document.getElementById('emergencyFullCurrent').value || 0);
         renderEmergencyBox('emergencyFull');
         await saveStorage();
+    });
+
+    document.getElementById('emergencyBasicAddBtn').addEventListener('click', () => addEmergencyContribution('emergencyBasic', 'add'));
+    document.getElementById('emergencyBasicSetBtn').addEventListener('click', () => addEmergencyContribution('emergencyBasic', 'set'));
+    const emergencyFullLocked = () => !document.getElementById('emergencyFullLock').classList.contains('hidden');
+    document.getElementById('emergencyFullAddBtn').addEventListener('click', async () => {
+        if (emergencyFullLocked()) { await showAlertModal('Todavía no cumplís los requisitos para cargar este fondo.'); return; }
+        addEmergencyContribution('emergencyFull', 'add');
+    });
+    document.getElementById('emergencyFullSetBtn').addEventListener('click', async () => {
+        if (emergencyFullLocked()) { await showAlertModal('Todavía no cumplís los requisitos para cargar este fondo.'); return; }
+        addEmergencyContribution('emergencyFull', 'set');
     });
 
     // Inyectar saldo a favor a una deuda (acción opcional, el usuario decide)
