@@ -1126,7 +1126,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 17 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 18 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -5510,95 +5510,194 @@
             return snapshot;
         }
 
-        // Elige la mejor voz en español disponible en el celular/navegador (esperando a que
-        // carguen, porque a veces tardan y si no, el navegador se queda "mudo" en silencio)
-        let cachedSpanishVoice = null;
-        function getBestSpanishVoice() {
-            if (cachedSpanishVoice) return cachedSpanishVoice;
-            const voices = window.speechSynthesis.getVoices();
-            if (!voices || voices.length === 0) return null;
+        // ============================================
+        // VOZ DEL ASISTENTE (compartida por Control Financiero y Libertad Financiera)
+        // 1) Si está configurada, usa la voz neuronal (/api/tts): suena como una persona.
+        // 2) Si no, la mejor voz de mujer en español que tenga el celular.
+        // Lee por frases, así "Pausa" y "Seguir" funcionan en todos los celulares
+        // (en Android el pause() del navegador muchas veces corta la lectura).
+        // ============================================
+        const RVoice = (() => {
+            let state = 'idle';          // idle | loading | playing | paused
+            let currentUi = null;        // controles del mensaje que se está leyendo
+            let audio = null;            // reproductor de la voz neuronal
+            let chunks = [];             // frases (voz del celular)
+            let chunkIdx = 0;
+            let neuralUnavailable = false;
+            let pausedByHide = false;
+            const neuralCache = new Map();
+            let cachedVoice = null;
 
-            const priorities = ['es-AR', 'es-419', 'es-MX', 'es-US', 'es-ES', 'es'];
-            const spanishVoices = voices.filter(v => v.lang && priorities.some(p => v.lang.toLowerCase().startsWith(p.toLowerCase())));
-            if (spanishVoices.length === 0) { cachedSpanishVoice = voices[0] || null; return cachedSpanishVoice; }
-
-            // Las voces "de red" (localService: false) suenan mucho más naturales que las básicas
-            // del celular (localService: true) — les damos prioridad siempre que existan.
-            const networkVoices = spanishVoices.filter(v => v.localService === false);
-            const pool = networkVoices.length > 0 ? networkVoices : spanishVoices;
-
-            // Dentro de ese grupo, preferimos una que suene a nombre de mujer
-            const femaleMatch = pool.find(v => /female|mujer|paulina|monica|mónica|helena|isabela|marisol|lucia|lucía|camila|valeria/i.test(v.name));
-            if (femaleMatch) { cachedSpanishVoice = femaleMatch; return femaleMatch; }
-
-            // Orden de preferencia de idioma dentro del grupo elegido
-            for (const lang of priorities) {
-                const anyMatch = pool.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
-                if (anyMatch) { cachedSpanishVoice = anyMatch; return anyMatch; }
+            function scoreVoice(v) {
+                const name = (v.name || '') + ' ' + (v.voiceURI || '');
+                const lang = (v.lang || '').toLowerCase().replace('_', '-');
+                if (!lang.startsWith('es')) return -1000;
+                let sc = 0;
+                if (lang.startsWith('es-ar')) sc += 30;
+                else if (/^es-(419|us|mx|co|cl|uy)/.test(lang)) sc += 20;
+                else if (lang.startsWith('es-es')) sc += 8;
+                if (/natural|neural|online|premium|enhanced|mejorad/i.test(name)) sc += 45;
+                if (/google/i.test(name)) sc += 15;
+                if (v.localService === false) sc += 10;
+                if (/female|mujer|femenin|paulina|m[oó]nica|sabina|dalia|elena|helena|laura|luc[ií]a|sof[ií]a|elvira|paloma|camila|valentina|marisol|isabela|ximena|catalina|renata|ver[oó]nica/i.test(name)) sc += 30;
+                if (/\bmale\b|hombre|masculin|jorge|diego|pablo|juan|carlos|ra[uú]l|enrique|tom[aá]s|alvaro|gonzalo|lorenzo/i.test(name)) sc -= 60;
+                return sc;
             }
-            cachedSpanishVoice = pool[0];
-            return cachedSpanishVoice;
-        }
-
-        if (window.speechSynthesis) {
-            window.speechSynthesis.onvoiceschanged = () => { cachedSpanishVoice = null; getBestSpanishVoice(); };
-            // Algunos navegadores ya tienen las voces cargadas al instante
-            getBestSpanishVoice();
-        }
-
-        let currentSpeakingBtn = null; // referencia al botón que disparó la lectura actual
-
-        function speakAssistantText(text, btnEl) {
-            if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel();
-
-            // Si ya había un botón mostrando "Detener" de una lectura anterior, lo
-            // volvemos a dejar como "Escuchar" antes de empezar esta nueva.
-            resetSpeakButton(currentSpeakingBtn);
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            const voice = getBestSpanishVoice();
-            if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
-            else { utterance.lang = 'es-AR'; }
-            utterance.rate = 1.15;
-            utterance.pitch = 1;
-
-            if (btnEl) {
-                currentSpeakingBtn = btnEl;
-                btnEl.innerHTML = '<i class="fa-solid fa-stop"></i> Detener';
-                btnEl.classList.add('text-rose-400');
-                btnEl.classList.remove('text-cyan-400');
+            function bestVoice() {
+                if (cachedVoice) return cachedVoice;
+                if (!window.speechSynthesis) return null;
+                const voices = window.speechSynthesis.getVoices() || [];
+                if (!voices.length) return null;
+                const ranked = voices.map(v => ({ v, sc: scoreVoice(v) })).filter(x => x.sc > -1000).sort((a, b) => b.sc - a.sc);
+                cachedVoice = ranked.length ? ranked[0].v : null;
+                return cachedVoice;
             }
-            utterance.onend = () => resetSpeakButton(btnEl);
-            utterance.onerror = () => resetSpeakButton(btnEl);
+            if (window.speechSynthesis) {
+                window.speechSynthesis.onvoiceschanged = () => { cachedVoice = null; bestVoice(); };
+                bestVoice();
+            }
 
-            window.speechSynthesis.speak(utterance);
-        }
+            function render(st) { state = st; if (currentUi) currentUi.render(st); }
 
-        function resetSpeakButton(btnEl) {
-            if (!btnEl) return;
-            btnEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
-            btnEl.classList.remove('text-rose-400');
-            btnEl.classList.add('text-cyan-400');
-            if (currentSpeakingBtn === btnEl) currentSpeakingBtn = null;
-        }
+            function splitIntoChunks(text) {
+                const parts = String(text).replace(/\s+/g, ' ').match(/[^.!?…:;\n]+[.!?…:;]*\s*/g) || [text];
+                // juntamos frases muy cortas para que suene fluido
+                const out = [];
+                parts.forEach(p => {
+                    const t = p.trim();
+                    if (!t) return;
+                    if (out.length && (out[out.length - 1].length < 60)) out[out.length - 1] += ' ' + t;
+                    else out.push(t);
+                });
+                return out.length ? out : [String(text)];
+            }
 
-        // Si se bloquea la pantalla (o se cambia de app) mientras está hablando,
-        // intentamos pausar en vez de dejar que se corte solo — y reanudar al volver.
-        // Aviso honesto: algunos celulares Android cortan la lectura igual al bloquear
-        // la pantalla, es una limitación del sistema operativo, no algo 100% controlable.
-        document.addEventListener('visibilitychange', () => {
-            if (!window.speechSynthesis) return;
-            if (document.hidden) {
-                if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-                    window.speechSynthesis.pause();
+            function speakChunk() {
+                if (state !== 'playing') return;
+                if (chunkIdx >= chunks.length) { finish(); return; }
+                const u = new SpeechSynthesisUtterance(chunks[chunkIdx]);
+                const v = bestVoice();
+                if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'es-AR'; }
+                u.rate = 1.0;
+                u.pitch = 1.05;
+                u.onend = () => { if (state === 'playing') { chunkIdx++; speakChunk(); } };
+                u.onerror = () => { if (state === 'playing') { chunkIdx++; speakChunk(); } };
+                window.speechSynthesis.speak(u);
+            }
+
+            async function getNeuralUrl(text) {
+                if (neuralCache.has(text)) return neuralCache.get(text);
+                const resp = await fetch('/api/tts', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ text }) });
+                if (resp.status === 501) { neuralUnavailable = true; throw new Error('sin voz neuronal'); }
+                if (!resp.ok) throw new Error('tts ' + resp.status);
+                const url = URL.createObjectURL(await resp.blob());
+                neuralCache.set(text, url);
+                return url;
+            }
+
+            function finish() {
+                if (audio) { audio.onended = null; audio.pause(); audio = null; }
+                render('idle');
+                currentUi = null;
+            }
+
+            async function play(text, ui) {
+                stop();
+                currentUi = ui;
+                render('loading');
+                if (!neuralUnavailable && userAccess.aiAllowed) {
+                    try {
+                        const url = await getNeuralUrl(text);
+                        if (currentUi !== ui) return; // tocaron otra cosa mientras cargaba
+                        audio = new Audio(url);
+                        audio.onended = () => finish();
+                        await audio.play();
+                        render('playing');
+                        return;
+                    } catch (e) {
+                        if (currentUi !== ui) return;
+                        audio = null;
+                    }
                 }
-            } else {
-                if (window.speechSynthesis.paused) {
-                    window.speechSynthesis.resume();
-                }
+                if (!window.speechSynthesis) { finish(); return; }
+                window.speechSynthesis.cancel();
+                chunks = splitIntoChunks(text);
+                chunkIdx = 0;
+                render('playing');
+                speakChunk();
             }
-        });
+
+            function pause() {
+                if (state !== 'playing') return;
+                if (audio) { audio.pause(); render('paused'); return; }
+                render('paused');                 // primero el estado, así el onend no avanza
+                window.speechSynthesis.cancel();  // y retomamos desde esta misma frase
+            }
+
+            function resume() {
+                if (state !== 'paused') return;
+                if (audio) { audio.play(); render('playing'); return; }
+                render('playing');
+                speakChunk();
+            }
+
+            function stop() {
+                const ui = currentUi;
+                if (audio) { audio.onended = null; audio.pause(); audio = null; }
+                if (window.speechSynthesis) { state = 'idle'; window.speechSynthesis.cancel(); }
+                if (ui) ui.render('idle');
+                state = 'idle';
+                currentUi = null;
+            }
+
+            // Si cambiás de app mientras habla, pausamos y retomamos al volver
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) {
+                    if (state === 'playing') { pausedByHide = true; pause(); }
+                } else if (pausedByHide) {
+                    pausedByHide = false;
+                    resume();
+                }
+            });
+
+            return { play, pause, resume, stop, get state() { return state; }, isCurrent: (ui) => currentUi === ui };
+        })();
+        window.RVoice = RVoice;
+
+        // Botones de audio de cada respuesta: Escuchar → Pausa / Detener → Seguir / Detener
+        function createSpeakControls(text) {
+            const wrap = document.createElement('div');
+            wrap.className = 'flex items-center gap-3';
+            const btnCls = 'text-xs font-semibold flex items-center gap-1.5';
+            const ui = {
+                render(st) {
+                    wrap.innerHTML = '';
+                    const mk = (html, cls, onClick) => {
+                        const b = document.createElement('button');
+                        b.type = 'button';
+                        b.className = `${btnCls} ${cls}`;
+                        b.innerHTML = html;
+                        b.addEventListener('click', onClick);
+                        wrap.appendChild(b);
+                    };
+                    if (st === 'idle') {
+                        mk('<i class="fa-solid fa-volume-high"></i> Escuchar', 'text-cyan-400 hover:text-cyan-300', () => RVoice.play(text, ui));
+                    } else if (st === 'loading') {
+                        mk('<i class="fa-solid fa-spinner fa-spin"></i> Preparando voz…', 'text-slate-400', () => {});
+                        mk('<i class="fa-solid fa-stop"></i> Detener', 'text-rose-400 hover:text-rose-300', () => RVoice.stop());
+                    } else if (st === 'playing') {
+                        mk('<i class="fa-solid fa-pause"></i> Pausa', 'text-amber-300 hover:text-amber-200', () => RVoice.pause());
+                        mk('<i class="fa-solid fa-stop"></i> Detener', 'text-rose-400 hover:text-rose-300', () => RVoice.stop());
+                    } else if (st === 'paused') {
+                        mk('<i class="fa-solid fa-play"></i> Seguir', 'text-emerald-400 hover:text-emerald-300', () => RVoice.resume());
+                        mk('<i class="fa-solid fa-stop"></i> Detener', 'text-rose-400 hover:text-rose-300', () => RVoice.stop());
+                    }
+                }
+            };
+            ui.render('idle');
+            return wrap;
+        }
+        window.createSpeakControls = createSpeakControls;
 
         // Traduce el código de sección que devuelve la IA a un texto de botón + acción de navegación
         const SECTION_LABELS = {
@@ -5636,21 +5735,8 @@
                 const actionsRow = document.createElement('div');
                 actionsRow.className = 'flex flex-wrap items-center gap-3';
 
-                // Botón para escuchar (y repetir tantas veces como quieras)
-                const speakBtn = document.createElement('button');
-                speakBtn.type = 'button';
-                speakBtn.className = 'text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5';
-                speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
-                speakBtn.addEventListener('click', () => {
-                    // Si ya está hablando ESTE mensaje, tocarlo de nuevo lo detiene.
-                    if (currentSpeakingBtn === speakBtn && window.speechSynthesis.speaking) {
-                        window.speechSynthesis.cancel();
-                        resetSpeakButton(speakBtn);
-                        return;
-                    }
-                    speakAssistantText(text, speakBtn);
-                });
-                actionsRow.appendChild(speakBtn);
+                // Escuchar / Pausa / Seguir / Detener (se puede repetir las veces que quieras)
+                actionsRow.appendChild(createSpeakControls(text));
 
                 // Link directo a la sección sugerida (si la IA indicó una)
                 if (suggestedSection && SECTION_LABELS[suggestedSection]) {
@@ -5841,7 +5927,7 @@
             const modal = document.getElementById('assistant-modal');
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
+            RVoice.stop();
         });
 
         // Preguntar por voz, dentro del chat del asistente
@@ -8439,82 +8525,7 @@
         };
     }
 
-    // Elige la mejor voz en español disponible (esperando a que carguen; si no, se queda mudo en silencio)
-    let cachedSpanishVoiceLF = null;
-    function getBestSpanishVoiceLF() {
-        if (cachedSpanishVoiceLF) return cachedSpanishVoiceLF;
-        const voices = window.speechSynthesis.getVoices();
-        if (!voices || voices.length === 0) return null;
-
-        const priorities = ['es-AR', 'es-419', 'es-MX', 'es-US', 'es-ES', 'es'];
-        const spanishVoices = voices.filter(v => v.lang && priorities.some(p => v.lang.toLowerCase().startsWith(p.toLowerCase())));
-        if (spanishVoices.length === 0) { cachedSpanishVoiceLF = voices[0] || null; return cachedSpanishVoiceLF; }
-
-        // Las voces "de red" (localService: false) suenan mucho más naturales que las básicas
-        // del celular (localService: true) — les damos prioridad siempre que existan.
-        const networkVoices = spanishVoices.filter(v => v.localService === false);
-        const pool = networkVoices.length > 0 ? networkVoices : spanishVoices;
-
-        const femaleMatch = pool.find(v => /female|mujer|paulina|monica|mónica|helena|isabela|marisol|lucia|lucía|camila|valeria/i.test(v.name));
-        if (femaleMatch) { cachedSpanishVoiceLF = femaleMatch; return femaleMatch; }
-
-        for (const lang of priorities) {
-            const anyMatch = pool.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
-            if (anyMatch) { cachedSpanishVoiceLF = anyMatch; return anyMatch; }
-        }
-        cachedSpanishVoiceLF = pool[0];
-        return cachedSpanishVoiceLF;
-    }
-    if (window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = () => { cachedSpanishVoiceLF = null; getBestSpanishVoiceLF(); };
-        getBestSpanishVoiceLF();
-    }
-    let currentSpeakingBtnLF = null;
-
-    function speakAssistantTextLF(text, btnEl) {
-        if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel();
-        resetSpeakButtonLF(currentSpeakingBtnLF);
-
-        const utterance = new SpeechSynthesisUtterance(text);
-        const voice = getBestSpanishVoiceLF();
-        if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
-        else { utterance.lang = 'es-AR'; }
-        utterance.rate = 1.15;
-        utterance.pitch = 1;
-
-        if (btnEl) {
-            currentSpeakingBtnLF = btnEl;
-            btnEl.innerHTML = '<i class="fa-solid fa-stop"></i> Detener';
-            btnEl.classList.add('text-rose-400');
-            btnEl.classList.remove('text-cyan-400');
-        }
-        utterance.onend = () => resetSpeakButtonLF(btnEl);
-        utterance.onerror = () => resetSpeakButtonLF(btnEl);
-
-        window.speechSynthesis.speak(utterance);
-    }
-
-    function resetSpeakButtonLF(btnEl) {
-        if (!btnEl) return;
-        btnEl.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
-        btnEl.classList.remove('text-rose-400');
-        btnEl.classList.add('text-cyan-400');
-        if (currentSpeakingBtnLF === btnEl) currentSpeakingBtnLF = null;
-    }
-
-    document.addEventListener('visibilitychange', () => {
-        if (!window.speechSynthesis) return;
-        if (document.hidden) {
-            if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-                window.speechSynthesis.pause();
-            }
-        } else {
-            if (window.speechSynthesis.paused) {
-                window.speechSynthesis.resume();
-            }
-        }
-    });
+    // La voz del asistente es la misma de Control Financiero (RVoice / createSpeakControls)
 
     const SECTION_LABELS_LF = {
         cuadrante: 'Ir a Control Financiero → Cuadrante de Flujo',
@@ -8534,9 +8545,10 @@
 
     function navigateToSuggestedSectionLF(section) {
         if (!section.startsWith('lf_')) {
-            // Llevamos directo a la pestaña específica en Control Financiero
-            // (antes solo abría la página sin ir al lugar exacto).
-            window.open(`index.html?goto=${section}`, '_blank');
+            // Control Financiero está en esta misma página: vamos directo a esa sección
+            document.getElementById('btn-close-assistant-lf').click();
+            switchTab(section);
+            window.scrollTo(0, 0);
             return;
         }
         document.getElementById('btn-close-assistant-lf').click();
@@ -8563,19 +8575,7 @@
             const actionsRow = document.createElement('div');
             actionsRow.className = 'flex flex-wrap items-center gap-3';
 
-            const speakBtn = document.createElement('button');
-            speakBtn.type = 'button';
-            speakBtn.className = 'text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1.5';
-            speakBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> Escuchar';
-            speakBtn.addEventListener('click', () => {
-                if (currentSpeakingBtnLF === speakBtn && window.speechSynthesis.speaking) {
-                    window.speechSynthesis.cancel();
-                    resetSpeakButtonLF(speakBtn);
-                    return;
-                }
-                speakAssistantTextLF(text, speakBtn);
-            });
-            actionsRow.appendChild(speakBtn);
+            actionsRow.appendChild(createSpeakControls(text));
 
             if (suggestedSection && SECTION_LABELS_LF[suggestedSection]) {
                 const goBtn = document.createElement('button');
@@ -8663,7 +8663,7 @@
         const modal = document.getElementById('assistant-modal-lf');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        RVoice.stop();
     });
 
     const AssistantSpeechRecognitionAPI_LF = window.SpeechRecognition || window.webkitSpeechRecognition;
