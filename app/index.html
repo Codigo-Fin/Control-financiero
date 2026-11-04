@@ -544,7 +544,7 @@
 
                 <div id="allocation-custom-builder" class="hidden space-y-2 bg-slate-900/60 rounded-2xl p-3">
                     <input type="text" id="allocation-custom-name" maxlength="40" placeholder="Nombre de tu regla (ej. Mi reparto)" class="w-full bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white">
-                    <p class="text-[11px] text-slate-400">Definí tus categorías y sus porcentajes (tienen que sumar 100%). Marcá <b class="text-cyan-300">"Apartar solo"</b> en las partes que querés que se descuenten de tus movimientos (ej. Ahorro); se aplica también a lo que ya cobraste este mes.</p>
+                    <p class="text-[11px] text-slate-400">Definí tus sobres y sus porcentajes (tienen que sumar 100%). Cada sobre aparta su parte de lo que cobrás: <b class="text-cyan-300">no es un gasto</b>. Solo baja cuando cargás un gasto de lo que elegiste en "Se usa con" (o un gasto con el mismo nombre del sobre).</p>
                     <div id="allocation-custom-rows" class="space-y-2"></div>
                     <div class="flex gap-2">
                         <button type="button" id="btn-add-allocation-row" class="text-xs bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-300 px-3 py-1.5 rounded-lg">+ Agregar categoría</button>
@@ -571,6 +571,16 @@
             <button onclick="switchTab('cuadrante')" title="Cuadrante de Flujo" class="bg-slate-800/80 hover:bg-cyan-500/10 border border-white/10 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-300 w-11 h-11 rounded-2xl flex items-center justify-center transition-all">
                 <i class="fa-solid fa-briefcase text-lg"></i>
             </button>
+        </div>
+
+        <!-- Sobres del reparto: plata apartada (no es gasto) -->
+        <div id="envelopes-panel" class="hidden glass-panel rounded-3xl p-5 sm:p-6 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+                <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2"><i class="fa-solid fa-envelope-open-text text-cyan-400"></i> Mis apartados del mes</h3>
+                <button type="button" onclick="switchTab('cuadrante')" class="text-[11px] text-cyan-300 hover:text-cyan-200 underline underline-offset-2 shrink-0">Cambiar reparto</button>
+            </div>
+            <p id="envelopes-summary" class="text-xs text-slate-400"></p>
+            <div id="envelopes-list" class="space-y-2"></div>
         </div>
 
         <!-- Modal: mes y calendario anual, con su propio ícono aparte -->
@@ -1134,7 +1144,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 24 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 25 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -3475,92 +3485,143 @@
             showToast(`✅ Pagaste ${formatMoney(pending.amount)} de tu deuda con tu Patrimonio Neto.`);
         }
 
-        // Devuelve qué parte de la regla de reparto elegida se "aparta" automáticamente
-        // (la porción que sale de circulación: diezmo, inversión, ahorro). El resto
-        // ("Vivir", "Necesidades", "Deseos") se sigue gastando con normalidad, sin tocar.
-        // Devuelve SIEMPRE una lista (puede ser de 1, varias, o ninguna) de las partes
-        // que se apartan solas como egreso. Para las reglas predefinidas es una sola;
-        // para "personalizada" son todas las que la persona marcó "Apartar solo".
-        // 🔒 ZONA PROTEGIDA — REPARTO DE MI DINERO Y DESCUENTO AUTOMÁTICO (NO TOCAR)
-        // Ya quedó funcionando bien (predefinidas + personalizada, sin duplicar al
-        // cambiar de regla). No modificar getAutoDeductBuckets, removeStaleAutoAllocationSummaryEntries,
-        // applyAutoAllocationToSalary, applyAutoAllocationToIncome, ni applyAutoAllocationToWholeMonth
-        // salvo pedido explícito y puntual sobre esto mismo.
-        function getAutoDeductBuckets(ruleCode) {
-            const predefined = {
-                diezmo: [{ name: 'Ofrenda / Diezmo', pct: 10 }],
-                babilonia: [{ name: 'Invertir', pct: 10 }],
-                ramsey: [{ name: 'Invertir', pct: 65 }],
-                '503020': [{ name: 'Ahorro', pct: 20 }]
-            };
-            if (predefined[ruleCode]) return predefined[ruleCode];
-            // Reglas propias guardadas (sobreviven al reinicio total)
-            if (typeof ruleCode === 'string' && ruleCode.startsWith('saved:')) {
-                const preset = getSavedAllocationRule(ruleCode);
-                return preset ? preset.buckets.filter(b => b.auto).map(b => ({ name: b.name, pct: b.pct })) : [];
-            }
-            if (ruleCode === 'custom') {
-                try {
-                    const saved = JSON.parse(localStorage.getItem('allocation_custom_buckets') || '[]');
-                    return saved.filter(b => b.auto).map(b => ({ name: b.name, pct: b.pct }));
-                } catch (e) { return []; }
-            }
-            return [];
+        // ============================================
+        // REPARTO EN SOBRES (pedido explícito del dueño)
+        // Lo que se reparte NO es un gasto: es plata APARTADA (reservada) para un fin.
+        // Cada parte del reparto es un "sobre": se le asigna su % de lo cobrado en el mes,
+        // y el sobre solo baja cuando se carga un gasto real que le corresponde (por la
+        // categoría elegida o porque el gasto se llama igual que el sobre).
+        // Antes se creaban egresos "(N% automático)": ya no se crean, y los del mes en
+        // curso se limpian solos.
+        // ============================================
+        const AUTO_ENTRY_RE = /\(\d+(?:[.,]\d+)?% automático\)$/;
+
+        function normEnvelopeText(s) {
+            return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+                .replace(/^\s*\d+\s*[-.)]\s*/, '').replace(/\s+/g, ' ').trim();
         }
 
-        // Si se cambia de regla (ej. de Diezmo a 50/30/20), hay que borrar el egreso
-        // "resumen del mes" que había quedado de la regla ANTERIOR — si no, se van
-        // acumulando descuentos de reglas viejas y suma todo mal. Esto NO toca los
-        // egresos puntuales que ya se generaron día a día con "applyAutoAllocationToIncome"
-        // (esos son historial real de lo que se descontó en su momento, no se tocan).
+        // Sugerencia de categoría según el nombre del sobre ('' = solo por nombre, '*' = todos los otros gastos)
+        const ENVELOPE_CATEGORY_GUESS = [
+            [/combust|nafta|gnc|diesel|sube|transporte/, 'Transporte'],
+            [/manten|mecanic|service|taller|repuesto/, 'Mecánica y Mantenimiento'],
+            [/super|almacen|mercader|comida|hogar/, 'Almacén, Súper y Mayoristas'],
+            [/servicio|luz|internet|expensa/, 'Servicios'],
+            [/farmacia|salud|remedio/, 'Farmacia'],
+            [/mascota/, 'Mascotas'],
+            [/ropa|vestimenta/, 'Vestimenta'],
+            [/salida|diversion|ocio|deseo/, 'Salidas y Diversión'],
+            [/vivir|necesidad|gasto/, '*']
+        ];
+        function guessEnvelopeCategory(name) {
+            const n = normEnvelopeText(name);
+            for (const [re, cat] of ENVELOPE_CATEGORY_GUESS) if (re.test(n)) return cat;
+            return '';
+        }
+        function getEnvelopeCategory(bucket) {
+            return (bucket && typeof bucket.cat === 'string') ? bucket.cat : guessEnvelopeCategory(bucket?.name);
+        }
+
+        // Las partes de la regla en uso (o null si no hay ninguna elegida)
+        function getActiveAllocationBuckets() {
+            const rule = localStorage.getItem('allocation_rule');
+            if (!rule || rule === 'none' || rule === 'custom') return null;
+            if (rule.startsWith('saved:')) return getSavedAllocationRule(rule)?.buckets || null;
+            return ALLOCATION_RULES[rule] || null;
+        }
+
+        // Calcula cada sobre: apartado (según lo cobrado), usado (gastos que le tocan) y lo que queda
+        function computeEnvelopes(monthProducts) {
+            const buckets = getActiveAllocationBuckets();
+            if (!buckets || buckets.length === 0) return null;
+            const list = monthProducts || products.filter(p => p.month === currentM);
+            const income = (Number(salary) || 0) + list.filter(p => p.type === 'ingreso').reduce((a, p) => a + (Number(p.price) || 0), 0);
+            const envs = buckets.map(b => ({
+                name: b.name, pct: b.pct, color: b.color || '#22d3ee',
+                cat: getEnvelopeCategory(b), key: normEnvelopeText(b.name),
+                assigned: Math.round(income * b.pct) / 100, spent: 0
+            }));
+            list.filter(p => p.type === 'egreso' && !AUTO_ENTRY_RE.test(p.name || '')).forEach(e => {
+                const en = normEnvelopeText(e.name);
+                const ec = e.category || '';
+                // 1) se llama como el sobre  2) es de la categoría del sobre  3) el sobre de "todos los otros gastos"
+                const target = envs.find(v => v.key.length >= 3 && (en.includes(v.key) || normEnvelopeText(ec) === v.key))
+                    || envs.find(v => v.cat && v.cat !== '*' && v.cat === ec)
+                    || envs.find(v => v.cat === '*');
+                if (target) target.spent += Number(e.price) || 0;
+            });
+            envs.forEach(v => { v.spent = Math.round(v.spent * 100) / 100; v.left = Math.round((v.assigned - v.spent) * 100) / 100; });
+            const totalLeft = envs.reduce((a, v) => a + Math.max(0, v.left), 0);
+            return { income, envs, totalLeft };
+        }
+
+        function renderEnvelopesPanel(monthProducts) {
+            const panel = document.getElementById('envelopes-panel');
+            if (!panel) return;
+            const data = computeEnvelopes(monthProducts);
+            if (!data) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+            document.getElementById('envelopes-summary').innerHTML = data.income > 0
+                ? `De lo que cobraste este mes (${formatMoney(data.income)}) tenés <b class="text-cyan-300">${formatMoney(data.totalLeft)}</b> apartado sin usar. Lo apartado no cuenta como gasto: baja solo cuando cargás un gasto de ese sobre.`
+                : 'Cuando cargues un ingreso, se va a repartir solo en tus sobres. Lo apartado no cuenta como gasto.';
+            document.getElementById('envelopes-list').innerHTML = data.envs.map(v => {
+                const usedPct = v.assigned > 0 ? Math.min(100, (v.spent / v.assigned) * 100) : (v.spent > 0 ? 100 : 0);
+                const over = v.left < 0;
+                const link = v.cat === '*' ? 'todos los otros gastos' : (v.cat || 'gastos con este nombre');
+                return `
+                    <div class="bg-slate-900/60 rounded-xl p-2.5 space-y-1.5">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="flex items-center gap-2 min-w-0">
+                                <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color:${v.color}"></span>
+                                <span class="text-xs sm:text-sm text-slate-200 font-semibold truncate">${escapeHtml(v.name)} <span class="text-[10px] text-slate-500 font-normal">(${v.pct}%)</span></span>
+                            </span>
+                            <span class="text-xs sm:text-sm font-bold shrink-0 ${over ? 'text-rose-400' : 'text-white'}">${over ? 'Te pasaste ' + formatMoney(-v.left) : 'Queda ' + formatMoney(v.left)}</span>
+                        </div>
+                        <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${usedPct}%; background-color:${over ? '#fb7185' : v.color}"></div></div>
+                        <p class="text-[10px] text-slate-500">Apartado ${formatMoney(v.assigned)} · Usado ${formatMoney(v.spent)} · Se usa con: ${escapeHtml(link)}</p>
+                    </div>`;
+            }).join('');
+        }
+
+        // Mantengo el nombre por compatibilidad: ya no hay partes que se descuenten como gasto
+        function getAutoDeductBuckets() { return []; }
+
+        // Borra los egresos "(N% automático)" del mes en curso (del sistema viejo, o al
+        // cambiar de regla): lo apartado ya no se registra como gasto
         async function removeStaleAutoAllocationSummaryEntries(exceptNames) {
             const exceptList = Array.isArray(exceptNames) ? exceptNames : [exceptNames];
-            const monthProducts = products.filter(p => p.month === currentM);
-            const staleOnes = monthProducts.filter(p =>
+            const staleOnes = products.filter(p =>
+                p.month === currentM &&
                 p.type === 'egreso' &&
-                /\(\d+% automático\)$/.test(p.name) &&
+                AUTO_ENTRY_RE.test(p.name || '') &&
                 !exceptList.includes(p.name)
             );
             for (const item of staleOnes) {
                 try {
-                    await sb.from('transactions').delete().eq('id', item.id);
+                    const { error } = await sb.from('transactions').delete().eq('id', item.id);
+                    if (error) throw error;
                     products = products.filter(p => p.id !== item.id);
                 } catch (err) {
                     console.warn('No se pudo borrar el egreso automático viejo:', err);
                 }
             }
+            return staleOnes.length;
         }
 
-        // Se llama cada vez que se guarda el sueldo fijo (mensual/quincenal). Crea o
-        // actualiza un egreso automático por mes por CADA categoría marcada para apartar.
-        async function applyAutoAllocationToSalary() {
-            const rule = localStorage.getItem('allocation_rule');
-            const buckets = getAutoDeductBuckets(rule);
-            if (buckets.length === 0 || incomeFrequency === 'diario' || !salary) return;
-            // Pedido explícito del dueño: el descuento se recalcula sobre TODO el ingreso del mes
-            // (sueldo + extras); antes el sueldo pisaba la parte de los ingresos extra
-            await applyAutoAllocationToWholeMonth();
+        // Limpieza única por sesión de los egresos automáticos viejos del mes en curso
+        let legacyAutoCleanupDone = false;
+        function maybeCleanupLegacyAutoEntries() {
+            if (legacyAutoCleanupDone || !currentUser || !navigator.onLine) return;
+            if (!products.some(p => p.month === currentM && p.type === 'egreso' && AUTO_ENTRY_RE.test(p.name || ''))) return;
+            legacyAutoCleanupDone = true;
+            removeStaleAutoAllocationSummaryEntries(null).then(n => {
+                if (n > 0) { renderApp(); showToast('Tu reparto ahora es en sobres: lo apartado ya no cuenta como gasto.'); }
+            });
         }
 
-        // Se llama cada vez que se agrega un ingreso nuevo (voz, foto, manual) — aplica
-        // la misma porción automática sobre ESE monto puntual (cubre a quien cobra por día),
-        // por CADA categoría marcada para apartar.
-        async function applyAutoAllocationToIncome(amount, dateVal) {
-            const rule = localStorage.getItem('allocation_rule');
-            const buckets = getAutoDeductBuckets(rule);
-            for (const bucket of buckets) {
-                const deductAmount = Math.round(amount * bucket.pct) / 100;
-                if (deductAmount <= 0) continue;
-                await addTransactionRecord({
-                    name: `${bucket.name} (${bucket.pct}% automático)`,
-                    dateVal,
-                    amount: deductAmount,
-                    categoryVal: bucket.name,
-                    fuelTypeVal: null,
-                    typeVal: 'egreso'
-                });
-            }
-        }
+        // Ya no crean gastos: los sobres se recalculan solos con cada ingreso o gasto
+        async function applyAutoAllocationToSalary() { }
+        async function applyAutoAllocationToIncome() { }
 
         async function addTransactionRecord({ name, dateVal, amount, categoryVal, fuelTypeVal, typeVal }) {
             const monthVal = dateVal.substring(0, 7);
@@ -4176,6 +4237,8 @@
             renderCategoryChart(monthProducts);
             renderMovimientosColumns(monthProducts);
             renderTopMovements(monthProducts);
+            renderEnvelopesPanel(monthProducts);
+            maybeCleanupLegacyAutoEntries();
 
             // Si ya hay una regla de reparto elegida, la recalculamos con los datos reales del mes
             const activeRule = document.getElementById('allocation-rule-select')?.value;
@@ -5314,18 +5377,33 @@
             }).join('');
         }
 
-        function addAllocationCustomRow(name = '', pct = '', auto = false) {
+        function addAllocationCustomRow(name = '', pct = '', cat = null) {
             const row = document.createElement('div');
-            row.className = 'flex gap-2 items-center allocation-custom-row';
+            row.className = 'allocation-custom-row bg-slate-800/40 rounded-xl p-2 space-y-1.5';
+            const current = (cat === null || cat === undefined) ? guessEnvelopeCategory(name) : cat;
+            const opts = [['', 'Solo gastos con este nombre'], ['*', 'Todos los otros gastos']]
+                .concat(LEMON_CATEGORIES.map(c => [c.value, c.emoji + ' ' + c.value]))
+                .map(([v, t]) => `<option value="${escapeHtml(v)}" ${v === current ? 'selected' : ''}>${escapeHtml(t)}</option>`).join('');
             row.innerHTML = `
-                <input type="text" placeholder="Nombre (ej. Ahorro)" value="${escapeHtml(String(name))}" class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-name">
-                <input type="number" placeholder="%" value="${pct}" class="w-16 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-pct">
-                <label class="flex items-center gap-1 text-[10px] text-slate-400 whitespace-nowrap" title="Si lo marcás, esta parte se descuenta sola de Egresos cada vez que entra plata. Dejalo sin marcar para la parte que es para vivir/gastar normal.">
-                    <input type="checkbox" class="alloc-auto custom-checkbox" ${auto ? 'checked' : ''}> Apartar solo
+                <div class="flex gap-2 items-center">
+                    <input type="text" placeholder="Nombre (ej. Nafta)" value="${escapeHtml(String(name))}" class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-name">
+                    <input type="number" step="any" inputmode="decimal" placeholder="%" value="${pct}" class="w-16 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white alloc-pct">
+                    <button type="button" class="text-rose-400 hover:text-rose-300 text-xs px-2" onclick="this.closest('.allocation-custom-row').remove()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <label class="flex items-center gap-2 text-[10px] text-slate-400">
+                    <span class="whitespace-nowrap">Se usa con:</span>
+                    <select class="alloc-cat flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white">${opts}</select>
                 </label>
-                <button type="button" class="text-rose-400 hover:text-rose-300 text-xs px-2" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
             `;
             document.getElementById('allocation-custom-rows').appendChild(row);
+            // Si cambia el nombre y todavía no eligió categoría a mano, se la sugerimos
+            const nameInput = row.querySelector('.alloc-name');
+            const catSelect = row.querySelector('.alloc-cat');
+            catSelect.addEventListener('change', () => { catSelect.dataset.touched = '1'; });
+            nameInput.addEventListener('change', () => {
+                if (catSelect.dataset.touched) return;
+                catSelect.value = guessEnvelopeCategory(nameInput.value);
+            });
         }
 
         document.getElementById('btn-add-allocation-row').addEventListener('click', () => addAllocationCustomRow());
@@ -5427,7 +5505,7 @@
             document.getElementById('allocation-custom-error').classList.add('hidden');
             document.getElementById('allocation-custom-name').value = preset ? preset.name : '';
             document.getElementById('allocation-custom-rows').innerHTML = '';
-            if (preset) preset.buckets.forEach(b => addAllocationCustomRow(b.name, b.pct, b.auto));
+            if (preset) preset.buckets.forEach(b => addAllocationCustomRow(b.name, b.pct, getEnvelopeCategory(b)));
             else { addAllocationCustomRow(); addAllocationCustomRow(); }
         }
 
@@ -5504,9 +5582,9 @@
             rows.forEach((row, i) => {
                 const name = row.querySelector('.alloc-name').value.trim();
                 const pct = parseFloat(row.querySelector('.alloc-pct').value) || 0;
-                const auto = row.querySelector('.alloc-auto').checked;
+                const cat = row.querySelector('.alloc-cat').value;
                 if (name && pct > 0) {
-                    buckets.push({ name, pct, color: colors[i % colors.length], auto });
+                    buckets.push({ name, pct, color: colors[i % colors.length], cat, auto: true });
                     total += pct;
                 }
             });
@@ -5518,14 +5596,6 @@
                 return;
             }
             errorEl.classList.add('hidden');
-
-            // Sin ninguna parte marcada "Apartar solo" no se descuenta nada: lo avisamos
-            // (antes se guardaba en silencio y la persona creía que se había aplicado)
-            if (!buckets.some(b => b.auto)) {
-                errorEl.textContent = 'Marcá "Apartar solo" en las partes que querés que se descuenten de tus movimientos (ej. Ahorro, Diezmo, Inversión). La parte para vivir dejala sin marcar.';
-                errorEl.classList.remove('hidden');
-                return;
-            }
 
             // Se guarda como regla propia en la cuenta (nueva, o editando una existente)
             const prefs = getAllocPrefs();
@@ -5550,55 +5620,14 @@
 
         let isRestoringAllocationRule = false; // evita re-aplicar el descuento solo por recargar la página
 
-        // Aplica (o actualiza) el descuento automático sobre TODO el ingreso ya cargado
-        // este mes (sueldo + ingresos extra) — para cuando la persona elige la regla
-        // DESPUÉS de ya tener ingresos cargados, no solo hacia adelante.
+        // Al elegir o guardar una regla: se limpian los egresos automáticos viejos del mes
+        // y se muestran los sobres (lo apartado no se registra como gasto)
         async function applyAutoAllocationToWholeMonth(announce = false) {
-            const rule = localStorage.getItem('allocation_rule');
-            const buckets = getAutoDeductBuckets(rule);
-            if (buckets.length === 0) return;
-
-            const totalIncome = getCurrentMonthIncomeForAllocation();
-            if (totalIncome <= 0) {
-                if (announce) showToast('Guardado. Se va a apartar solo apenas cargues un ingreso este mes.');
-                return;
-            }
-
-            const entryNames = buckets.map(b => `${b.name} (${b.pct}% automático)`);
-            await removeStaleAutoAllocationSummaryEntries(entryNames);
-
-            const applied = [];
-            for (const bucket of buckets) {
-                // Con centavos, para que el cálculo sea exacto
-                const amount = Math.round(totalIncome * bucket.pct) / 100;
-                const entryName = `${bucket.name} (${bucket.pct}% automático)`;
-                const monthProducts = products.filter(p => p.month === currentM);
-                const sameEntries = monthProducts.filter(p => p.type === 'egreso' && p.name === entryName);
-                const existing = sameEntries[0];
-                applied.push(`${bucket.name} ${formatMoney(amount)}`);
-
-                // Si quedaron varios (uno por cada ingreso), se unifican en uno solo con el
-                // total del mes, así no se descuenta dos veces lo mismo
-                for (const dup of sameEntries.slice(1)) {
-                    try {
-                        await sb.from('transactions').delete().eq('id', dup.id);
-                        products = products.filter(p => p.id !== dup.id);
-                    } catch (err) { console.warn('No se pudo unificar el egreso automático:', err); }
-                }
-
-                if (existing) {
-                    if (Number(existing.price) !== amount || sameEntries.length > 1) {
-                        try {
-                            await sb.from('transactions').update({ price: amount, unit_price: amount }).eq('id', existing.id);
-                        } catch (err) { console.warn('No se pudo actualizar el egreso automático:', err); }
-                        existing.price = amount; existing.unitPrice = amount;
-                    }
-                } else {
-                    await addTransactionRecord({ name: entryName, dateVal: todayDate, amount, categoryVal: bucket.name, fuelTypeVal: null, typeVal: 'egreso' });
-                }
-            }
+            await removeStaleAutoAllocationSummaryEntries(null);
             renderApp();
-            if (announce) showToast(`✅ Apartado en tus egresos del mes: ${applied.join(' · ')}`);
+            if (announce && getActiveAllocationBuckets()) {
+                showToast('✅ Listo: lo que cobrás se reparte en tus sobres (lo ves en Mis Movimientos). No cuenta como gasto.');
+            }
         }
 
         document.getElementById('allocation-rule-select').addEventListener('change', async (e) => {
