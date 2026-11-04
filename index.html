@@ -3,246 +3,531 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ressetia — Tomá el control de tu dinero, antes de que el dinero te controle a vos</title>
-<meta name="description" content="La app argentina que te ayuda a salir de deudas, controlar tus gastos y empezar a invertir. 14 días gratis. Con IA por voz y foto.">
-<script src="https://cdn.tailwindcss.com"></script>
+<title>Ressetia — La app con IA que ordena tu plata</title>
+<meta name="description" content="Hablale a tu plata: decile tus gastos, sacale foto al ticket y preguntale cómo salir de tus deudas. Ressetia es la app argentina de finanzas personales con Inteligencia Artificial. 14 días gratis.">
+<meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   :root {
-    --bg-deep: #05070d;
-    --bg-panel: #0b0f1a;
+    --void: #000000;
+    --panel: #07080f;
+    --line: rgba(255,255,255,0.09);
     --cyan: #22d3ee;
-    --cyan-dim: #0891b2;
-    --rose: #fb7185;
-    --fuchsia: #d946ef;
-    --ink: #f1f5f9;
-    --ink-dim: #94a3b8;
+    --fuchsia: #e040fb;
+    --violet: #8b5cf6;
+    --money: #4ade80;
+    --debt: #fb7185;
+    --text: #eef2ff;
+    --muted: #8a93a8;
+    --display: 'Unbounded', sans-serif;
+    --body: 'Manrope', sans-serif;
   }
-  * { font-family: 'Inter', sans-serif; }
-  h1, h2, h3, .display { font-family: 'Sora', sans-serif; }
-  body {
-    background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(34,211,238,0.12), transparent),
-                radial-gradient(ellipse 60% 40% at 90% 20%, rgba(217,70,239,0.08), transparent),
-                var(--bg-deep);
-    color: var(--ink);
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--void); color: var(--text); font-family: var(--body); font-size: 17px; line-height: 1.6; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; border-radius: 8px; }
+  .wrap { width: 100%; max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- tubo de neón: el recurso visual de toda la página ---------- */
+  .neon-cyan { color: var(--cyan); text-shadow: 0 0 6px rgba(34,211,238,.9), 0 0 22px rgba(34,211,238,.55), 0 0 48px rgba(34,211,238,.35); }
+  .neon-fuchsia { color: #f5b8ff; text-shadow: 0 0 6px rgba(224,64,251,.95), 0 0 22px rgba(224,64,251,.6), 0 0 52px rgba(224,64,251,.4); }
+
+  /* ---------- botones ---------- */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--body); font-weight: 800; font-size: 1rem; border-radius: 999px; padding: 16px 30px; cursor: pointer; border: 0; transition: transform .15s ease, box-shadow .2s ease; }
+  .btn-primary { background: var(--cyan); color: #001318; box-shadow: 0 0 0 1px rgba(34,211,238,.6), 0 0 24px rgba(34,211,238,.55), 0 0 60px rgba(34,211,238,.25); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(34,211,238,.8), 0 0 34px rgba(34,211,238,.75), 0 0 80px rgba(34,211,238,.35); }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid rgba(224,64,251,.55); box-shadow: inset 0 0 14px rgba(224,64,251,.18), 0 0 18px rgba(224,64,251,.18); }
+  .btn-ghost:hover { border-color: var(--fuchsia); box-shadow: inset 0 0 18px rgba(224,64,251,.3), 0 0 26px rgba(224,64,251,.35); }
+
+  /* ---------- nav en píldora ---------- */
+  .nav { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 14px; border-radius: 999px; background: rgba(8,9,16,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); width: max-content; max-width: calc(100% - 24px); }
+  .brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: .95rem; margin-right: 6px; }
+  .brand-mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--cyan), #0891b2); display: grid; place-items: center; color: #001318; font-size: .8rem; box-shadow: 0 0 14px rgba(34,211,238,.6); }
+  .nav-link { font-size: .88rem; font-weight: 600; color: var(--muted); padding: 8px 12px; border-radius: 999px; }
+  .nav-link:hover { color: var(--text); }
+  .nav-cta { font-size: .88rem; font-weight: 800; padding: 9px 16px; border-radius: 999px; color: var(--text); border: 1px solid rgba(224,64,251,.6); box-shadow: inset 0 0 12px rgba(224,64,251,.25), 0 0 16px rgba(224,64,251,.25); white-space: nowrap; }
+  @media (max-width: 640px) { .nav-link { display: none; } }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; padding: 130px 0 70px; }
+  .hero::before { content: ""; position: absolute; inset: 0; background:
+      radial-gradient(600px 380px at 78% 38%, rgba(224,64,251,.16), transparent 70%),
+      radial-gradient(520px 340px at 18% 20%, rgba(34,211,238,.12), transparent 70%); pointer-events: none; }
+  .hero-grid { position: relative; display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
+  .ai-chip { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; font-weight: 700; color: #f5b8ff; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(224,64,251,.45); background: rgba(224,64,251,.08); box-shadow: 0 0 18px rgba(224,64,251,.2); }
+  .ai-chip i { color: var(--fuchsia); }
+  .hero h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.3rem, 5.6vw, 4.4rem); line-height: 1.04; letter-spacing: -0.02em; margin: 22px 0 20px; }
+  .hero h1 .line2 { display: block; font-weight: 600; font-size: .66em; line-height: 1.15; margin-top: .35em; }
+  .rotator { display: block; min-height: 2.3em; }
+  .rotator span { display: inline; }
+  .hero .lead { font-size: 1.12rem; color: #c3c9d9; max-width: 34em; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 32px; align-items: center; }
+  .hero-note { font-size: .88rem; color: var(--muted); margin-top: 16px; }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 56px; } .hero { padding-top: 110px; } }
+
+  /* ---------- el celular con la IA trabajando ---------- */
+  .phone-stage { position: relative; display: flex; justify-content: center; }
+  .phone { position: relative; width: 310px; max-width: 86vw; height: 620px; border-radius: 44px; padding: 14px; background: #05060b;
+    box-shadow: 0 0 0 2px rgba(34,211,238,.75), 0 0 22px rgba(34,211,238,.55), 0 0 70px rgba(34,211,238,.25), inset 0 0 0 1px rgba(255,255,255,.04); }
+  .phone::after { content: ""; position: absolute; inset: -18px; border-radius: 58px; border: 1px solid rgba(224,64,251,.35); box-shadow: 0 0 30px rgba(224,64,251,.25); pointer-events: none; }
+  .screen { height: 100%; border-radius: 32px; background: linear-gradient(180deg, #0a0c17, #05060b); overflow: hidden; display: flex; flex-direction: column; }
+  .notch { width: 92px; height: 22px; border-radius: 0 0 14px 14px; background: #000; margin: 0 auto; flex-shrink: 0; }
+  .screen-top { padding: 12px 18px 10px; border-bottom: 1px solid var(--line); }
+  .screen-top small { color: var(--muted); font-size: .72rem; }
+  .balance { font-family: var(--display); font-weight: 800; font-size: 1.6rem; color: var(--money); text-shadow: 0 0 14px rgba(74,222,128,.45); font-variant-numeric: tabular-nums; transition: color .3s; }
+  .chat { flex: 1; padding: 14px 14px 10px; display: flex; flex-direction: column; justify-content: flex-end; gap: 9px; overflow: hidden; }
+  .msg { max-width: 86%; font-size: .82rem; line-height: 1.45; padding: 9px 12px; border-radius: 16px; opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .35s ease; }
+  .msg.show { opacity: 1; transform: none; }
+  .msg.user { align-self: flex-end; background: rgba(34,211,238,.14); border: 1px solid rgba(34,211,238,.35); border-bottom-right-radius: 5px; }
+  .msg.ai { align-self: flex-start; background: rgba(224,64,251,.1); border: 1px solid rgba(224,64,251,.35); border-bottom-left-radius: 5px; }
+  .msg.ai b { color: #f5b8ff; }
+  .msg .tag { display: inline-flex; align-items: center; gap: 5px; font-size: .68rem; font-weight: 700; color: #f5b8ff; margin-bottom: 3px; }
+  .msg.entry { align-self: stretch; max-width: 100%; display: flex; justify-content: space-between; align-items: center; background: #0d1020; border: 1px solid var(--line); }
+  .msg.entry .amt { color: var(--debt); font-weight: 800; }
+  .wave { display: inline-flex; gap: 3px; align-items: center; height: 14px; margin-right: 6px; vertical-align: middle; }
+  .wave i { width: 3px; border-radius: 2px; background: var(--cyan); animation: wave 0.9s ease-in-out infinite; }
+  .wave i:nth-child(2) { animation-delay: .15s } .wave i:nth-child(3) { animation-delay: .3s } .wave i:nth-child(4) { animation-delay: .45s }
+  @keyframes wave { 0%,100% { height: 4px } 50% { height: 14px } }
+  .screen-input { margin: 0 12px 14px; display: flex; align-items: center; gap: 8px; padding: 9px 10px 9px 14px; border-radius: 999px; background: #0d1020; border: 1px solid var(--line); font-size: .78rem; color: var(--muted); }
+  .screen-input .mic { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--cyan); color: #001318; box-shadow: 0 0 14px rgba(34,211,238,.7); }
+  .float-label { position: absolute; font-size: .8rem; font-weight: 700; padding: 8px 12px; border-radius: 12px; background: rgba(8,9,16,.85); border: 1px solid var(--line); backdrop-filter: blur(8px); white-space: nowrap; }
+  .float-label i { margin-right: 6px; }
+  .fl-1 { top: 200px; left: -8%; color: #a5f3fc; border-color: rgba(34,211,238,.45); box-shadow: 0 0 18px rgba(34,211,238,.25); }
+  .fl-2 { bottom: 110px; right: -4%; color: #f5b8ff; border-color: rgba(224,64,251,.45); box-shadow: 0 0 18px rgba(224,64,251,.25); }
+  @media (max-width: 520px) { .fl-1 { left: 0; top: 30px } .fl-2 { right: 0; bottom: 70px } .phone { height: 580px } }
+
+  /* ---------- secciones ---------- */
+  section { position: relative; }
+  .block { padding: 110px 0; }
+  .block-head { max-width: 760px; margin: 0 auto 56px; text-align: center; }
+  .block-head h2 { font-family: var(--display); font-weight: 800; font-size: clamp(1.9rem, 4.2vw, 3.1rem); line-height: 1.1; letter-spacing: -0.015em; }
+  .block-head p { color: var(--muted); font-size: 1.08rem; margin-top: 16px; }
+
+  /* números gigantes de la realidad argentina */
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 28px; overflow: hidden; }
+  .stat { background: var(--void); padding: 44px 30px; text-align: center; }
+  .stat .big { font-family: var(--display); font-weight: 800; font-size: clamp(3rem, 8vw, 5.4rem); line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat p { color: #c3c9d9; margin-top: 14px; max-width: 22em; margin-left: auto; margin-right: auto; }
+  .source { text-align: center; color: #5d6478; font-size: .78rem; margin-top: 18px; }
+  @media (max-width: 640px) { .stats { grid-template-columns: 1fr; } }
+
+  /* lo que hace la IA */
+  .ai-rows { display: flex; flex-direction: column; gap: 26px; }
+  .ai-row { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding: 36px; border-radius: 32px; background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)); border: 1px solid var(--line); }
+  .ai-row:nth-child(even) .ai-visual { order: -1; }
+  .ai-row h3 { font-family: var(--display); font-weight: 600; font-size: clamp(1.4rem, 2.8vw, 2rem); line-height: 1.15; margin: 14px 0 12px; }
+  .ai-row p { color: #c3c9d9; }
+  .ai-row .ex { margin-top: 16px; font-size: .92rem; color: var(--muted); }
+  .ai-row .ex q { color: var(--text); font-style: normal; }
+  .ai-badge { display: inline-flex; align-items: center; gap: 8px; font-size: .82rem; font-weight: 700; color: #f5b8ff; }
+  .ai-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fuchsia); box-shadow: 0 0 10px var(--fuchsia); }
+  .ai-visual { min-height: 230px; border-radius: 24px; background: #05060b; border: 1px solid var(--line); display: grid; place-items: center; padding: 28px; position: relative; overflow: hidden; }
+  @media (max-width: 820px) { .ai-row { grid-template-columns: 1fr; padding: 24px; gap: 24px; } .ai-row:nth-child(even) .ai-visual { order: 0; } }
+
+  /* visual: voz */
+  .voice-vis { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; }
+  .bars { display: flex; gap: 5px; align-items: center; height: 70px; }
+  .bars i { width: 6px; border-radius: 4px; background: var(--cyan); box-shadow: 0 0 10px rgba(34,211,238,.7); }
+  .parsed { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .pill { font-size: .8rem; font-weight: 700; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); background: #0d1020; }
+  .pill.c { border-color: rgba(34,211,238,.45); color: #a5f3fc; }
+  .pill.f { border-color: rgba(224,64,251,.45); color: #f5b8ff; }
+  .pill.r { border-color: rgba(251,113,133,.45); color: #fecdd3; }
+
+  /* visual: ticket escaneado */
+  .ticket { width: 190px; background: #f4f6fb; color: #1b1f2b; border-radius: 6px; padding: 16px 14px; font-size: .72rem; line-height: 1.7; position: relative; box-shadow: 0 0 40px rgba(224,64,251,.25); }
+  .ticket b { display: block; text-align: center; font-size: .8rem; margin-bottom: 6px; }
+  .ticket .row { display: flex; justify-content: space-between; }
+  .ticket .tot { border-top: 1px dashed #9aa1b2; margin-top: 6px; padding-top: 6px; font-weight: 800; }
+  .scan { position: absolute; left: -8px; right: -8px; height: 3px; top: 10%; background: var(--fuchsia); box-shadow: 0 0 14px 3px rgba(224,64,251,.8); animation: scan 2.6s ease-in-out infinite alternate; }
+  @keyframes scan { to { top: 90%; } }
+  .ticket-out { position: absolute; right: 18px; bottom: 18px; }
+
+  /* visual: asistente */
+  .advice { width: 100%; max-width: 330px; display: flex; flex-direction: column; gap: 10px; }
+  .advice .msg { opacity: 1; transform: none; max-width: 92%; }
+
+  /* pasos (sí es una secuencia) */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; }
+  .step { padding: 30px 26px; border-radius: 26px; border: 1px solid var(--line); background: var(--panel); }
+  .step .n { font-family: var(--display); font-weight: 800; font-size: 2.6rem; line-height: 1; }
+  .step h3 { font-size: 1.12rem; font-weight: 800; margin: 18px 0 8px; }
+  .step p { color: var(--muted); font-size: .96rem; }
+  @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
+
+  /* el resto de la app */
+  .tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 28px; overflow: hidden; }
+  .tool { background: var(--void); padding: 30px 26px; }
+  .tool i { font-size: 1.3rem; color: var(--cyan); text-shadow: 0 0 12px rgba(34,211,238,.6); }
+  .tool h3 { font-size: 1.05rem; font-weight: 800; margin: 14px 0 6px; }
+  .tool p { color: var(--muted); font-size: .94rem; }
+  @media (max-width: 820px) { .tools { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 540px) { .tools { grid-template-columns: 1fr; } }
+
+  /* precios */
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; max-width: 860px; margin: 0 auto; }
+  .plan { position: relative; padding: 34px 30px; border-radius: 30px; background: var(--panel); border: 1px solid var(--line); display: flex; flex-direction: column; }
+  .plan.star { border-color: rgba(34,211,238,.7); box-shadow: 0 0 0 1px rgba(34,211,238,.35), 0 0 40px rgba(34,211,238,.22), inset 0 0 40px rgba(34,211,238,.05); }
+  .plan .ribbon { position: absolute; top: -13px; left: 30px; font-size: .78rem; font-weight: 800; padding: 5px 12px; border-radius: 999px; background: var(--cyan); color: #001318; box-shadow: 0 0 16px rgba(34,211,238,.6); }
+  .plan h3 { font-size: 1.05rem; font-weight: 800; color: #c3c9d9; }
+  .plan .price { font-family: var(--display); font-weight: 800; font-size: 2.9rem; margin: 10px 0 2px; font-variant-numeric: tabular-nums; }
+  .plan .price small { font-family: var(--body); font-size: 1rem; font-weight: 600; color: var(--muted); }
+  .plan .save { color: var(--money); font-weight: 700; font-size: .92rem; }
+  .plan ul { list-style: none; margin: 22px 0 28px; display: flex; flex-direction: column; gap: 10px; font-size: .95rem; color: #c3c9d9; }
+  .plan li { display: flex; gap: 10px; }
+  .plan li i { color: var(--cyan); margin-top: 5px; font-size: .8rem; }
+  .plan li.ai i { color: var(--fuchsia); }
+  .plan .btn { margin-top: auto; width: 100%; }
+  .plans-note { text-align: center; color: var(--muted); font-size: .9rem; margin-top: 22px; }
+  .ebook { max-width: 860px; margin: 34px auto 0; display: flex; gap: 22px; align-items: center; padding: 26px 28px; border-radius: 26px; border: 1px dashed rgba(74,222,128,.45); background: rgba(74,222,128,.04); }
+  .ebook .ic { width: 54px; height: 54px; flex-shrink: 0; border-radius: 16px; display: grid; place-items: center; font-size: 1.4rem; color: var(--money); background: rgba(74,222,128,.1); border: 1px solid rgba(74,222,128,.35); }
+  .ebook h3 { font-size: 1.08rem; font-weight: 800; }
+  .ebook p { color: var(--muted); font-size: .94rem; margin-top: 4px; }
+  .ebook a { margin-left: auto; white-space: nowrap; font-weight: 800; color: var(--money); padding: 12px 18px; border-radius: 999px; border: 1px solid rgba(74,222,128,.45); }
+  .ebook a:hover { background: rgba(74,222,128,.1); }
+  @media (max-width: 760px) { .plans { grid-template-columns: 1fr; } .ebook { flex-direction: column; text-align: center; } .ebook a { margin: 6px 0 0; } }
+
+  /* preguntas */
+  .faq { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+  .faq details { border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+  .faq summary { cursor: pointer; list-style: none; padding: 20px 24px; font-weight: 800; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary i { color: var(--cyan); transition: transform .2s; }
+  .faq details[open] summary i { transform: rotate(45deg); }
+  .faq details p { padding: 0 24px 22px; color: #c3c9d9; }
+
+  /* cierre con cartel de neón */
+  .final { padding: 120px 0 130px; text-align: center; overflow: hidden; }
+  .final::before { content: ""; position: absolute; inset: 0; background: radial-gradient(520px 300px at 50% 55%, rgba(224,64,251,.18), transparent 70%); pointer-events: none; }
+  .sign { position: relative; display: inline-block; font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 7vw, 5.2rem); line-height: 1.05; padding: 26px 34px; border-radius: 28px; border: 2px solid rgba(224,64,251,.75); box-shadow: 0 0 20px rgba(224,64,251,.5), inset 0 0 20px rgba(224,64,251,.3); }
+  .final p { position: relative; color: #c3c9d9; margin: 30px auto 34px; max-width: 34em; }
+  .final .btn { position: relative; }
+  .flicker { animation: flicker 4.5s infinite; }
+  @keyframes flicker { 0%, 90%, 100% { opacity: 1 } 91% { opacity: .55 } 92% { opacity: 1 } 94% { opacity: .7 } 95% { opacity: 1 } }
+
+  footer { border-top: 1px solid var(--line); padding: 32px 0 44px; color: #5d6478; font-size: .84rem; text-align: center; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .msg { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
   }
-  .neon-text { text-shadow: 0 0 24px rgba(34,211,238,0.5); }
-  .glass { background: rgba(15,23,42,0.55); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.08); }
-  .grad-cyan { background: linear-gradient(135deg, #22d3ee, #0891b2); }
-  @keyframes spinOnce { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-  .reset-spin { animation: spinOnce 3.5s cubic-bezier(0.65,0,0.35,1) 1; }
-  @keyframes pulseSlow { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
-  .pulse-slow { animation: pulseSlow 2.4s ease-in-out infinite; }
-  .num-counter { font-variant-numeric: tabular-nums; }
-  ::selection { background: rgba(34,211,238,0.3); }
 </style>
 </head>
-<body class="antialiased">
+<body>
 
-<!-- NAV -->
-<nav class="fixed top-0 w-full z-50 glass">
-  <div class="max-w-6xl mx-auto px-5 py-3.5 flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <div class="w-9 h-9 rounded-xl grad-cyan flex items-center justify-center text-slate-950">
-        <i class="fa-solid fa-arrow-rotate-right"></i>
-      </div>
-      <span class="font-bold text-lg display">Ressetia</span>
-    </div>
-    <a href="https://www.ressetia.com/app" class="grad-cyan text-slate-950 font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl hover:brightness-110 transition-all">
-      Probar 14 días gratis
-    </a>
-  </div>
+<nav class="nav" aria-label="Principal">
+  <a href="#" class="brand"><span class="brand-mark"><i class="fa-solid fa-rotate-right"></i></span>Ressetia</a>
+  <a class="nav-link" href="#ia">La IA</a>
+  <a class="nav-link" href="#precios">Precios</a>
+  <a class="nav-link" href="#preguntas">Preguntas</a>
+  <a class="nav-cta" href="https://www.ressetia.com/app">Entrar</a>
 </nav>
 
 <!-- HERO -->
-<section class="pt-32 pb-20 px-5 max-w-6xl mx-auto">
-  <div class="grid md:grid-cols-2 gap-12 items-center">
+<header class="hero">
+  <div class="wrap hero-grid">
     <div>
-      <div class="inline-flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-bold px-3.5 py-1.5 rounded-full mb-6">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>Oferta de lanzamiento — quedan cupos limitados</span>
-      </div>
-      <h1 class="display text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] mb-6">
-        Tu plata te está <span class="text-rose-400">controlando</span> a vos.<br>
-        <span class="neon-text text-cyan-300">Dale vuelta.</span>
+      <span class="ai-chip"><i class="fa-solid fa-wand-magic-sparkles"></i> Finanzas personales con Inteligencia Artificial</span>
+      <h1>
+        Hablale a tu plata.
+        <span class="line2 neon-cyan rotator" aria-live="polite"><span id="rotator-text">La IA te dice en qué se te va.</span></span>
       </h1>
-      <p class="text-slate-300 text-base sm:text-lg leading-relaxed mb-8 max-w-lg">
-        Ressetia es la app que te muestra, con IA y en segundos, en qué se te va la plata, cómo salir de tus deudas paso a paso, y cómo empezar a invertir lo que te queda — todo desde el celular, hablando o sacando una foto.
-      </p>
-      <div class="flex flex-col sm:flex-row gap-3 mb-6">
-        <a href="https://www.ressetia.com/app" class="grad-cyan text-slate-950 font-bold px-7 py-3.5 rounded-2xl text-center hover:brightness-110 transition-all shadow-[0_0_30px_rgba(34,211,238,0.35)]">
-          Empezar gratis por 14 días →
-        </a>
+      <p class="lead">Decile a Ressetia lo que gastaste, sacale una foto al ticket o preguntale cómo salir de tus deudas. La IA anota, ordena y te responde con tus números reales, desde el celular.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="https://www.ressetia.com/app">Probar 14 días gratis</a>
+        <a class="btn btn-ghost" href="#ia">Ver qué hace la IA</a>
       </div>
-      <p class="text-[11px] text-slate-500">No se cobra nada durante los 14 días. Cancelás cuando quieras.</p>
+      <p class="hero-note">Sin cargo durante 14 días. Cancelás cuando quieras.</p>
     </div>
 
-    <!-- Signature visual: el cuadrante de flujo, animado, como espejo del producto real -->
-    <div class="relative flex items-center justify-center">
-      <div class="absolute w-64 h-64 rounded-full bg-cyan-500/10 blur-3xl"></div>
-      <div class="relative w-full max-w-sm aspect-square glass rounded-3xl p-6 grid grid-cols-2 grid-rows-2 gap-3">
-        <div class="rounded-2xl bg-slate-900/60 border border-white/5 flex flex-col items-center justify-center gap-1 p-3">
-          <span class="text-2xl">👔</span><span class="text-[11px] font-bold text-slate-300">Empleado</span>
-        </div>
-        <div class="rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex flex-col items-center justify-center gap-1 p-3">
-          <span class="text-2xl">🏢</span><span class="text-[11px] font-bold text-cyan-300">Dueño de Negocio</span>
-        </div>
-        <div class="rounded-2xl bg-slate-900/60 border border-white/5 flex flex-col items-center justify-center gap-1 p-3">
-          <span class="text-2xl">🛠️</span><span class="text-[11px] font-bold text-slate-300">Autoempleado</span>
-        </div>
-        <div class="rounded-2xl bg-fuchsia-500/10 border border-fuchsia-500/30 flex flex-col items-center justify-center gap-1 p-3">
-          <span class="text-2xl">📈</span><span class="text-[11px] font-bold text-fuchsia-300">Inversionista</span>
-        </div>
-        <div class="col-span-2 flex items-center justify-center gap-2 pt-1">
-          <div class="w-8 h-8 rounded-full grad-cyan flex items-center justify-center reset-spin">
-            <i class="fa-solid fa-arrow-rotate-right text-slate-950 text-xs"></i>
+    <div class="phone-stage" aria-label="Demostración de la app: la IA registra un gasto dicho por voz y responde una consulta sobre deudas">
+      <div class="phone">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="screen-top">
+            <small>Te queda este mes</small>
+            <div class="balance" id="demo-balance">$184.500</div>
           </div>
-          <span class="text-[11px] text-slate-400">Tu punto de partida, hoy</span>
+          <div class="chat" id="demo-chat" aria-hidden="true"></div>
+          <div class="screen-input">Decí un gasto o preguntá algo <span class="mic"><i class="fa-solid fa-microphone"></i></span></div>
         </div>
       </div>
+      <span class="float-label fl-1"><i class="fa-solid fa-microphone"></i>Cargás hablando</span>
+      <span class="float-label fl-2"><i class="fa-solid fa-wand-magic-sparkles"></i>La IA te responde</span>
+    </div>
+  </div>
+</header>
+
+<!-- REALIDAD -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>No es que no sepas administrarte. Nadie te lo hizo fácil.</h2>
+      <p>Esto es lo que pasa hoy en los hogares argentinos.</p>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="big neon-cyan">92,3%</div><p>de los hogares tiene alguna deuda pendiente</p></div>
+      <div class="stat"><div class="big neon-fuchsia">7 de 10</div><p>personas conviven con estrés financiero todos los días</p></div>
+      <div class="stat"><div class="big neon-fuchsia">83%</div><p>de los hogares no logra ahorrar nada, mes tras mes</p></div>
+      <div class="stat"><div class="big neon-cyan">5%</div><p>de la gente en el mundo se siente segura con su plata</p></div>
+    </div>
+    <p class="source">Fuentes: D'Alessio Irol, Mercer, ODSA-UCA, Allianz Global Wealth Report (2025-2026)</p>
+  </div>
+</section>
+
+<!-- LA IA -->
+<section class="block" id="ia">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>La IA hace la parte aburrida. Vos decidís.</h2>
+      <p>Tres cosas que antes te llevaban una planilla y una tarde entera.</p>
+    </div>
+
+    <div class="ai-rows">
+      <article class="ai-row">
+        <div>
+          <span class="ai-badge"><span class="dot"></span>Con IA</span>
+          <h3>Cargás tus gastos hablando</h3>
+          <p>Tocás el micrófono y lo decís como se lo dirías a un amigo. La IA entiende el monto, si es gasto o ingreso, y lo pone en la categoría correcta.</p>
+          <p class="ex">Por ejemplo: <q>Pagué veinte lucas de nafta</q></p>
+        </div>
+        <div class="ai-visual">
+          <div class="voice-vis">
+            <div class="bars" aria-hidden="true">
+              <i style="height:18px"></i><i style="height:38px"></i><i style="height:60px"></i><i style="height:30px"></i><i style="height:52px"></i><i style="height:68px"></i><i style="height:40px"></i><i style="height:24px"></i><i style="height:56px"></i><i style="height:34px"></i><i style="height:16px"></i>
+            </div>
+            <div class="parsed">
+              <span class="pill r">−$20.000</span>
+              <span class="pill c"><i class="fa-solid fa-car"></i> Transporte</span>
+              <span class="pill f">Nafta</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="ai-row">
+        <div>
+          <span class="ai-badge"><span class="dot"></span>Con IA</span>
+          <h3>Le sacás una foto al ticket y listo</h3>
+          <p>Ticket del súper, factura de la luz en PDF o el resumen de un pedido: la IA lee el total, reconoce el comercio y lo anota solo.</p>
+          <p class="ex">Funciona con fotos de la cámara, de la galería y con facturas en PDF.</p>
+        </div>
+        <div class="ai-visual">
+          <div class="ticket" aria-hidden="true">
+            <b>SUPERMERCADO</b>
+            <div class="row"><span>Leche x2</span><span>2.600</span></div>
+            <div class="row"><span>Pan</span><span>3.100</span></div>
+            <div class="row"><span>Yerba 1kg</span><span>4.900</span></div>
+            <div class="row"><span>Detergente</span><span>2.300</span></div>
+            <div class="row tot"><span>TOTAL</span><span>12.900</span></div>
+            <div class="scan"></div>
+          </div>
+          <div class="ticket-out parsed"><span class="pill f"><i class="fa-solid fa-check"></i> Súper · −$12.900</span></div>
+        </div>
+      </article>
+
+      <article class="ai-row">
+        <div>
+          <span class="ai-badge"><span class="dot"></span>Con IA</span>
+          <h3>Un asistente que mira tus números de verdad</h3>
+          <p>Preguntale en qué estás gastando de más o cómo salir de una deuda. Te contesta con un plan concreto, paso a paso, usando lo que cargaste en la app.</p>
+          <p class="ex">Te orienta y te lleva a la sección de la app donde hacerlo. No reemplaza a un asesor matriculado.</p>
+        </div>
+        <div class="ai-visual">
+          <div class="advice" aria-hidden="true">
+            <div class="msg user">¿Qué deuda pago primero?</div>
+            <div class="msg ai"><span class="tag"><i class="fa-solid fa-wand-magic-sparkles"></i> Ressetia IA</span><br>Empezá por la tarjeta ($86.000): es la más chica. Con tu saldo a favor de $40.000 la bajás a la mitad hoy.</div>
+          </div>
+        </div>
+      </article>
     </div>
   </div>
 </section>
 
-<!-- PROBLEMA: datos reales -->
-<section class="py-16 px-5 border-t border-white/5">
-  <div class="max-w-5xl mx-auto text-center mb-12">
-    <p class="text-rose-400 font-bold text-xs uppercase tracking-widest mb-3">La realidad, con números</p>
-    <h2 class="display text-2xl sm:text-3xl font-bold max-w-2xl mx-auto leading-snug">
-      No es que no sepas administrarte. Es que nadie te enseñó, y el sistema no te lo hace fácil.
-    </h2>
-  </div>
-  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
-    <div class="glass rounded-2xl p-5 text-center">
-      <p class="display text-4xl font-extrabold text-rose-400 mb-1">92,3%</p>
-      <p class="text-xs text-slate-400">de los hogares argentinos tiene algún tipo de deuda pendiente hoy</p>
+<!-- PASOS -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>Empezás en 2 minutos</h2>
     </div>
-    <div class="glass rounded-2xl p-5 text-center">
-      <p class="display text-4xl font-extrabold text-cyan-300 mb-1">7 de 10</p>
-      <p class="text-xs text-slate-400">personas en Argentina conviven con estrés financiero todos los días</p>
-    </div>
-    <div class="glass rounded-2xl p-5 text-center">
-      <p class="display text-4xl font-extrabold text-fuchsia-400 mb-1">83%</p>
-      <p class="text-xs text-slate-400">de los hogares no logra ahorrar nada, mes tras mes</p>
-    </div>
-    <div class="glass rounded-2xl p-5 text-center">
-      <p class="display text-4xl font-extrabold text-amber-300 mb-1">5%</p>
-      <p class="text-xs text-slate-400">de la gente en el mundo se siente realmente segura con su plata</p>
-    </div>
-  </div>
-  <p class="text-center text-[11px] text-slate-600 mt-6">Fuentes: D'Alessio Irol, Mercer, ODSA-UCA, Allianz Global Wealth Report (2025-2026)</p>
-</section>
-
-<!-- SOLUCIÓN / FEATURES -->
-<section class="py-20 px-5 border-t border-white/5">
-  <div class="max-w-5xl mx-auto text-center mb-14">
-    <p class="text-cyan-400 font-bold text-xs uppercase tracking-widest mb-3">Cómo lo resolvemos</p>
-    <h2 class="display text-3xl sm:text-4xl font-extrabold">Una app, todo lo que necesitás</h2>
-  </div>
-  <div class="grid md:grid-cols-2 gap-5 max-w-5xl mx-auto">
-    <div class="glass rounded-3xl p-6 space-y-3">
-      <div class="w-11 h-11 rounded-2xl bg-sky-400/20 text-sky-300 flex items-center justify-center text-lg"><i class="fa-solid fa-microphone"></i></div>
-      <h3 class="font-bold text-lg">Cargá gastos hablando</h3>
-      <p class="text-sm text-slate-400">Decís "gasté 5000 en el super" y ya quedó anotado. Sacale una foto al ticket o subí el PDF de la factura — la IA hace el resto.</p>
-    </div>
-    <div class="glass rounded-3xl p-6 space-y-3">
-      <div class="w-11 h-11 rounded-2xl bg-fuchsia-500/20 text-fuchsia-300 flex items-center justify-center text-lg"><i class="fa-solid fa-comment-dots"></i></div>
-      <h3 class="font-bold text-lg">Un asistente que te guía</h3>
-      <p class="text-sm text-slate-400">Preguntale "¿en qué estoy gastando más?" o "¿cómo salgo de esta deuda?" y te responde con un plan concreto, mirando tus números reales.</p>
-    </div>
-    <div class="glass rounded-3xl p-6 space-y-3">
-      <div class="w-11 h-11 rounded-2xl bg-rose-500/20 text-rose-300 flex items-center justify-center text-lg"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-      <h3 class="font-bold text-lg">Salí de tus deudas, en orden</h3>
-      <p class="text-sm text-slate-400">Prioridad de pago sugerida, fondo de emergencia, y un lugar para cargar cualquier ingreso extra y decidir si va a la deuda o se guarda.</p>
-    </div>
-    <div class="glass rounded-3xl p-6 space-y-3">
-      <div class="w-11 h-11 rounded-2xl bg-amber-400/20 text-amber-300 flex items-center justify-center text-lg"><i class="fa-solid fa-scale-balanced"></i></div>
-      <h3 class="font-bold text-lg">Repartí tu plata sola</h3>
-      <p class="text-sm text-slate-400">Elegí una regla (el diezmo, la del hombre más rico de Babilonia, Dave Ramsey, 50/30/20) y la app aparta el porcentaje automático, sin que hagas nada.</p>
+    <div class="steps">
+      <div class="step"><div class="n neon-cyan">1</div><h3>Creás tu cuenta</h3><p>Con tu mail. Activás los 14 días gratis con todo incluido, IA también.</p></div>
+      <div class="step"><div class="n neon-fuchsia">2</div><h3>Cargás tu primer gasto</h3><p>Hablando, con una foto o a mano. Tarda menos que mandar un audio.</p></div>
+      <div class="step"><div class="n neon-cyan">3</div><h3>Ves tu panorama real</h3><p>Cuánto entra, cuánto sale, qué deuda atacar primero y cuánto podés ahorrar.</p></div>
     </div>
   </div>
 </section>
 
-<!-- CÓMO FUNCIONA -->
-<section class="py-16 px-5 border-t border-white/5 max-w-4xl mx-auto">
-  <h2 class="display text-2xl sm:text-3xl font-extrabold text-center mb-10">Empezar te lleva 2 minutos</h2>
-  <div class="grid sm:grid-cols-3 gap-6">
-    <div class="text-center">
-      <div class="w-12 h-12 rounded-2xl grad-cyan text-slate-950 font-extrabold flex items-center justify-center mx-auto mb-3">1</div>
-      <p class="text-sm font-semibold">Te registrás y activás tus 14 días gratis</p>
+<!-- TODO LO DEMÁS -->
+<section class="block">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>Y todo lo que necesitás para salir adelante</h2>
+      <p>Las herramientas del método, ya armadas dentro de la app.</p>
     </div>
-    <div class="text-center">
-      <div class="w-12 h-12 rounded-2xl grad-cyan text-slate-950 font-extrabold flex items-center justify-center mx-auto mb-3">2</div>
-      <p class="text-sm font-semibold">Cargás tu primer gasto hablando o con una foto</p>
-    </div>
-    <div class="text-center">
-      <div class="w-12 h-12 rounded-2xl grad-cyan text-slate-950 font-extrabold flex items-center justify-center mx-auto mb-3">3</div>
-      <p class="text-sm font-semibold">Ves tu panorama real, por primera vez</p>
+    <div class="tools">
+      <div class="tool"><i class="fa-solid fa-link-slash"></i><h3>Salida de deudas</h3><p>Prioridad de pago sugerida, de la más chica a la más grande, y registro de cada pago.</p></div>
+      <div class="tool"><i class="fa-solid fa-shield-heart"></i><h3>Fondo de emergencia</h3><p>Primero los 1.000 dólares básicos, después de 3 a 6 sueldos para dormir tranquilo.</p></div>
+      <div class="tool"><i class="fa-solid fa-chart-pie"></i><h3>Reparto automático</h3><p>Elegís una regla (50/30/20, el diezmo, la de Babilonia) y la app aparta tu porcentaje sola.</p></div>
+      <div class="tool"><i class="fa-solid fa-arrow-trend-up"></i><h3>Inversiones</h3><p>Seguís lo que compraste y calculás tu número de libertad financiera.</p></div>
+      <div class="tool"><i class="fa-solid fa-plane-departure"></i><h3>Mis sueños</h3><p>Metas de ahorro con nombre propio: el viaje, el auto, la casa.</p></div>
+      <div class="tool"><i class="fa-solid fa-wifi"></i><h3>Funciona sin señal</h3><p>Cargás aunque no tengas internet y se sincroniza solo cuando vuelve.</p></div>
     </div>
   </div>
 </section>
 
-<!-- OFERTA / PRECIO -->
-<section id="oferta" class="py-20 px-5 border-t border-white/5">
-  <div class="max-w-4xl mx-auto text-center mb-10">
-    <div class="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold px-3.5 py-1.5 rounded-full mb-5">
-      <i class="fa-solid fa-wand-magic-sparkles"></i>
-      <span>Plan Premium con IA · 14 días gratis</span>
+<!-- PRECIOS -->
+<section class="block" id="precios">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>Menos que un café por día</h2>
+      <p>Probás 14 días gratis con la IA incluida. Si no te sirve, cancelás antes y no pagás nada.</p>
     </div>
-    <h2 class="display text-3xl sm:text-4xl font-extrabold mb-3">Menos que un café por día</h2>
-    <p class="text-slate-400 max-w-xl mx-auto">Todo Ressetia + la Inteligencia Artificial: asistente financiero, lectura de tickets y facturas, y carga por voz inteligente. Probalo 14 días gratis y cancelá cuando quieras.</p>
-  </div>
-
-  <div class="grid sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
-    <div class="glass rounded-3xl p-7 space-y-4 border-2 border-white/10">
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Premium Mensual</p>
-      <div>
-        <p class="display text-4xl font-extrabold text-cyan-300">$6.999<span class="text-base text-slate-500 font-normal">/mes</span></p>
+    <div class="plans">
+      <div class="plan">
+        <h3>Premium mensual</h3>
+        <div class="price">$6.999<small>/mes</small></div>
+        <ul>
+          <li class="ai"><i class="fa-solid fa-wand-magic-sparkles"></i>Asistente financiero con IA</li>
+          <li class="ai"><i class="fa-solid fa-wand-magic-sparkles"></i>Lectura de tickets y facturas</li>
+          <li class="ai"><i class="fa-solid fa-wand-magic-sparkles"></i>Carga por voz inteligente</li>
+          <li><i class="fa-solid fa-check"></i>Toda la app: deudas, fondos, inversiones y metas</li>
+        </ul>
+        <a class="btn btn-ghost" href="https://www.ressetia.com/app">Empezar gratis</a>
       </div>
-      <a href="https://www.ressetia.com/app" class="block text-center grad-cyan text-slate-950 font-bold py-3 rounded-xl hover:brightness-110 transition-all">Empezar gratis</a>
-    </div>
-    <div class="glass rounded-3xl p-7 space-y-4 border-2 border-cyan-400/50 relative">
-      <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyan-400 text-slate-950 text-[10px] font-extrabold px-3 py-1 rounded-full">MÁS ELEGIDO</span>
-      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Premium Anual</p>
-      <div>
-        <p class="display text-4xl font-extrabold text-cyan-300">$69.000<span class="text-base text-slate-500 font-normal">/año</span></p>
-        <p class="text-xs text-emerald-300 font-semibold mt-1">Ahorrás $14.988 frente al mensual</p>
+      <div class="plan star">
+        <span class="ribbon">El más elegido</span>
+        <h3>Premium anual</h3>
+        <div class="price">$69.000<small>/año</small></div>
+        <div class="save">Ahorrás $14.988 frente al mensual</div>
+        <ul>
+          <li class="ai"><i class="fa-solid fa-wand-magic-sparkles"></i>Todo lo del plan mensual</li>
+          <li><i class="fa-solid fa-check"></i>Un solo pago al año</li>
+          <li><i class="fa-solid fa-check"></i>Precio congelado por 12 meses</li>
+        </ul>
+        <a class="btn btn-primary" href="https://www.ressetia.com/app">Empezar gratis</a>
       </div>
-      <a href="https://www.ressetia.com/app" class="block text-center grad-cyan text-slate-950 font-bold py-3 rounded-xl hover:brightness-110 transition-all">Empezar gratis</a>
     </div>
-  </div>
-  <p class="text-center text-[11px] text-slate-600 mt-6">14 días 100% gratis. Pagás con Mercado Pago o por transferencia, y no se cobra nada hasta el día 15. Cancelá cuando quieras, sin vueltas.</p>
+    <p class="plans-note">Pagás con Mercado Pago o por transferencia. No se cobra nada hasta el día 15.</p>
 
-  <!-- Alternativa de pago único: eBook + app Básica de por vida -->
-  <div class="max-w-3xl mx-auto mt-10 glass rounded-3xl p-6 sm:p-7 border-2 border-emerald-500/30 flex flex-col sm:flex-row items-center gap-5">
-    <div class="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
-      <i class="fa-solid fa-book-open text-emerald-300 text-2xl"></i>
+    <div class="ebook">
+      <div class="ic"><i class="fa-solid fa-book-open"></i></div>
+      <div>
+        <h3>¿Preferís pagar una sola vez?</h3>
+        <p>Llevate el eBook El Plan de Rescate Financiero con la app Básica de por vida (sin IA) y 5 herramientas, por $27.000.</p>
+      </div>
+      <a href="https://plan.ressetia.com/">Ver el eBook</a>
     </div>
-    <div class="flex-1 text-center sm:text-left">
-      <p class="text-xs font-bold text-emerald-300 uppercase tracking-wide">¿Preferís pagar una sola vez?</p>
-      <h3 class="display text-xl font-bold mt-1">eBook + App Ressetia Básica de por vida</h3>
-      <p class="text-sm text-slate-400 mt-1">El Plan de Rescate Financiero + 5 herramientas + la app para siempre (sin funciones de IA). <b class="text-slate-200">$27.000, pago único.</b></p>
-    </div>
-    <a href="https://plan.ressetia.com/" class="w-full sm:w-auto text-center bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-bold px-5 py-3 rounded-xl transition-all whitespace-nowrap">Ver el eBook →</a>
   </div>
 </section>
 
-<!-- CTA FINAL -->
-<section class="py-20 px-5 border-t border-white/5 text-center">
-  <h2 class="display text-3xl sm:text-4xl font-extrabold max-w-xl mx-auto mb-4">
-    El mejor momento para ordenar tu plata fue ayer. El segundo mejor es ahora.
-  </h2>
-  <p class="text-slate-400 mb-8">Sin excusas, sin vueltas. 14 días gratis, empezás en 2 minutos.</p>
-  <a href="https://www.ressetia.com/app" class="inline-block grad-cyan text-slate-950 font-bold px-9 py-4 rounded-2xl hover:brightness-110 transition-all shadow-[0_0_40px_rgba(34,211,238,0.4)]">
-    Quiero tomar el control de mi dinero →
-  </a>
+<!-- PREGUNTAS -->
+<section class="block" id="preguntas">
+  <div class="wrap">
+    <div class="block-head"><h2>Preguntas frecuentes</h2></div>
+    <div class="faq">
+      <details>
+        <summary>¿Me cobran algo durante la prueba? <i class="fa-solid fa-plus"></i></summary>
+        <p>No. Los primeros 14 días son gratis, con la IA incluida. Si no cancelás, el cobro empieza el día 15 según el plan que elegiste.</p>
+      </details>
+      <details>
+        <summary>¿Qué pasa si no quiero pagar la IA? <i class="fa-solid fa-plus"></i></summary>
+        <p>La app sigue sirviendo para cargar todo a mano. Si querés la app para siempre sin suscripción, viene de regalo con el eBook El Plan de Rescate Financiero: es la versión Básica, sin las funciones de IA.</p>
+      </details>
+      <details>
+        <summary>¿Necesito instalar algo? <i class="fa-solid fa-plus"></i></summary>
+        <p>No. Ressetia funciona desde el navegador del celular o la compu. Si querés, la agregás a la pantalla de inicio y se abre como una app más.</p>
+      </details>
+      <details>
+        <summary>¿Mis datos están seguros? <i class="fa-solid fa-plus"></i></summary>
+        <p>Tus datos se guardan en tu cuenta y solo vos los ves. No pedimos claves de tu banco. Podés borrar tu cuenta y todo lo que cargaste cuando quieras, desde Mi Perfil.</p>
+      </details>
+      <details>
+        <summary>¿Cómo cancelo? <i class="fa-solid fa-plus"></i></summary>
+        <p>Desde Mi Perfil, en Suscripción, con un toque. Si tenés algún problema con un cobro, escribinos por WhatsApp desde la misma sección.</p>
+      </details>
+    </div>
+  </div>
 </section>
 
-<footer class="py-8 px-5 border-t border-white/5 text-center text-[11px] text-slate-600">
-  <p>Ressetia © 2026. Esta herramienta te ayuda a organizar y entender tus finanzas — no reemplaza a un asesor financiero matriculado.</p>
+<!-- CIERRE -->
+<section class="final">
+  <div class="wrap">
+    <div class="sign neon-fuchsia flicker">Resetiá tu plata</div>
+    <p>El mejor momento para ordenar tus finanzas fue ayer. El segundo mejor es hoy, y te lleva 2 minutos.</p>
+    <a class="btn btn-primary" href="https://www.ressetia.com/app">Probar 14 días gratis</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Ressetia © 2026 · Esta herramienta te ayuda a organizar y entender tus finanzas. No reemplaza a un asesor financiero matriculado.</div>
 </footer>
 
+<script>
+  (function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Título que va cambiando: lo que la IA resuelve por vos
+    var phrases = [
+      'La IA te dice en qué se te va.',
+      'La IA arma tu plan para salir de deudas.',
+      'La IA te muestra cuánto podés ahorrar.'
+    ];
+    var rot = document.getElementById('rotator-text');
+    var pi = 0;
+    if (!reduce) {
+      setInterval(function () {
+        pi = (pi + 1) % phrases.length;
+        rot.style.transition = 'opacity .3s';
+        rot.style.opacity = '0';
+        setTimeout(function () { rot.textContent = phrases[pi]; rot.style.opacity = '1'; }, 300);
+      }, 3200);
+    }
+
+    // Demo del celular: la IA trabajando en una conversación real de uso
+    var chat = document.getElementById('demo-chat');
+    var balance = document.getElementById('demo-balance');
+    var script = [
+      { cls: 'user', html: '<span class="wave"><i></i><i></i><i></i><i></i></span>"Gasté doce mil en el súper"' },
+      { cls: 'entry', html: '<span><i class="fa-solid fa-cart-shopping" style="color:#22d3ee;margin-right:6px"></i>Almacén y Súper</span><span class="amt">−$12.000</span>', balance: '$172.500' },
+      { cls: 'user', html: '¿Cómo salgo de mis deudas?' },
+      { cls: 'ai', html: '<span class="tag"><i class="fa-solid fa-wand-magic-sparkles"></i> Ressetia IA</span><br>Tenés 3 deudas. Atacá primero la <b>tarjeta ($86.000)</b>, que es la más chica. Si apartás <b>$30.000 por mes</b>, en 3 meses te la sacás de encima.' }
+    ];
+
+    function render(all) {
+      chat.innerHTML = '';
+      script.forEach(function (s, i) {
+        var d = document.createElement('div');
+        d.className = 'msg ' + s.cls;
+        d.innerHTML = s.html;
+        chat.appendChild(d);
+        if (all) d.classList.add('show');
+      });
+      if (all) balance.textContent = '$172.500';
+    }
+
+    if (reduce) { render(true); return; }
+
+    function play() {
+      render(false);
+      balance.textContent = '$184.500';
+      var nodes = chat.querySelectorAll('.msg');
+      script.forEach(function (s, i) {
+        setTimeout(function () {
+          nodes[i].classList.add('show');
+          if (s.balance) balance.textContent = s.balance;
+        }, 700 + i * 1500);
+      });
+      setTimeout(play, 700 + script.length * 1500 + 3500);
+    }
+    play();
+  })();
+</script>
 </body>
 </html>
