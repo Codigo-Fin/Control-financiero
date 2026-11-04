@@ -33,7 +33,23 @@
     <!-- Estas dos no hacen falta para lo primero que ve la persona (armar el PDF del
          comprobante y los gráficos son acciones posteriores) — "defer" deja que la
          pantalla se pinte primero, y las termina de cargar justo después. -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" defer></script>
+    <script>
+        // La librería de PDF pesa casi 1 MB: la bajamos recién cuando alguien pide un PDF,
+        // así no frena la apertura de la app.
+        window.loadHtml2Pdf = function () {
+            if (window.html2pdf) return Promise.resolve();
+            if (!window.__html2pdfPromise) {
+                window.__html2pdfPromise = new Promise((resolve, reject) => {
+                    const sc = document.createElement('script');
+                    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+                    sc.onload = () => resolve();
+                    sc.onerror = () => { window.__html2pdfPromise = null; reject(new Error('No se pudo cargar el generador de PDF')); };
+                    document.head.appendChild(sc);
+                });
+            }
+            return window.__html2pdfPromise;
+        };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 
     <style>
@@ -276,6 +292,22 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Arranque instantáneo: si en este celular ya había una sesión guardada, ocultamos
+        // la pantalla de ingreso desde el primer momento (la sesión se verifica igual
+        // enseguida, y si venció se vuelve a mostrar).
+        (function () {
+            try {
+                const hasUser = !!localStorage.getItem('cached_user');
+                const hasToken = Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+                if (hasUser && hasToken && !/type=recovery/.test(location.hash)) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    window.__ressetiaFastBoot = true;
+                }
+            } catch (e) { /* sin acceso a localStorage: arranque normal */ }
+        })();
+    </script>
 
     <!-- Prueba terminada: hay que elegir un plan para seguir (los datos quedan guardados) -->
     <div id="paywall-screen" class="hidden fixed inset-0 z-[45] overflow-y-auto bg-black">
@@ -2516,6 +2548,23 @@
         async function checkSession() {
             if (isPasswordRecoveryFlow) return; // ya se está mostrando el modal de nueva contraseña
 
+            // Arranque instantáneo: mostramos YA lo último guardado en este celular
+            // mientras se verifica la sesión y se traen los datos frescos.
+            if (window.__ressetiaFastBoot && navigator.onLine) {
+                const bootUser = getCachedUser();
+                if (bootUser) {
+                    currentUser = bootUser;
+                    const cache = loadLocalDataCache();
+                    showAppScreen();
+                    if (cache) {
+                        salary = cache.salary; incomeFrequency = cache.incomeFrequency; products = cache.products || [];
+                        selectedMonthFilter = currentM;
+                        renderApp();
+                    }
+                    if (window.LF && !document.getElementById('tab-panel-lf').classList.contains('hidden')) window.LF.refresh();
+                }
+            }
+
             // Sin internet: la validación de sesión contra el servidor puede tardar
             // mucho o fallar — si ya habías entrado antes en este dispositivo, te
             // dejamos pasar directo con esa sesión guardada, sin obligarte a loguearte.
@@ -3058,7 +3107,8 @@
                     const hasAccess = subscriptionActive || trialActive || settings.lifetime_access === true;
                     if (hasAccess) {
                         hidePaywall();
-                        setTimeout(() => { if (window.LF) window.LF.ensureReady(); }, 1200);
+                        if (window.LF && !document.getElementById('tab-panel-lf').classList.contains('hidden')) window.LF.refresh();
+                        else setTimeout(() => { if (window.LF) window.LF.ensureReady(); }, 1200);
                         await offerPaymentSetupIfNeeded(settings);
                         checkTrialEndingSoon(settings);
                     } else {
@@ -3945,6 +3995,7 @@
             };
 
             try {
+                await loadHtml2Pdf();
                 const worker = html2pdf().set(opt).from(template);
                 const pdfBlob = await worker.outputPdf('blob');
                 template.style.display = 'none';
@@ -4649,6 +4700,16 @@
             btn.addEventListener('click', () => openMovementSection(btn.dataset.accordion, true));
         });
 
+        // Al abrir la app volvemos a la última pestaña que usaste (por defecto, Inicio)
+        function getStartTab() {
+            try {
+                const last = localStorage.getItem('last_tab') || '';
+                if (last.startsWith('lf:')) return last.slice(3);
+                if (last && last !== 'lf' && document.getElementById('tab-panel-' + last)) return last;
+            } catch (e) {}
+            return 'resumen';
+        }
+
         function switchTab(tabName) {
             // "Ingresos" y "Egresos" ahora viven DENTRO de "Mis Movimientos" (resumen),
             // como secciones del acordeón — si algo pide ir directo ahí (menú, asistente
@@ -4682,6 +4743,7 @@
 
             document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
             document.getElementById('tab-panel-' + tabName).classList.remove('hidden');
+            if (tabName !== 'lf') { try { localStorage.setItem('last_tab', tabName); } catch (e) {} }
 
             if (tabName === 'resumen') openMovementSection(currentMovementSubTab, false);
 
@@ -5856,10 +5918,10 @@
             if (e.key === 'Enter') sendAssistantMessage();
         });
 
-        window.onload = function() {
+        function startApp() {
             applyLargeTextMode(localStorage.getItem('large_text_mode') === '1');
             updateFormSubtypes();
-            switchTab('resumen');
+            switchTab(getStartTab());
             checkGotoParam();
             restoreAllocationRule();
             checkSession().then(() => { checkReturnFromPayment(); checkPatrimonioPaymentConfirmation(); fetchInvestmentsTotal(); loadSaldoFavorContra(); });
@@ -5937,7 +5999,10 @@
                     localStorage.setItem('assistant_hint_shown', '1');
                 }, 2500);
             }
-        };
+        }
+        // Arrancamos apenas está todo el HTML (no esperamos a que bajen imágenes y fuentes)
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startApp);
+        else setTimeout(startApp, 0);
     </script>
 
     <script>
@@ -6712,6 +6777,48 @@
         render();
     }
 
+    // Paga todo lo que queda de la deuda de una vez (con confirmación, porque es más plata)
+    async function payTotal(id) {
+        const debt = debts.find(d => d.id == id);
+        if (!debt || debt.amount <= 0) return;
+        const payAmount = debt.amount;
+        const ok = await showConfirmModal(`¿Pagar el total de "${debt.name}" ($${payAmount.toLocaleString()})? Se registra como gasto en tus movimientos y la deuda queda saldada.`);
+        if (!ok) return;
+
+        // Igual que el pago mínimo: primero el gasto en Control Financiero, después la deuda
+        try {
+            const { error } = await lfTx().insert({
+                user_id: currentUser.id,
+                name: `Pago total de deuda - ${debt.name}`,
+                date: new Date().toISOString().slice(0, 10),
+                month: new Date().toISOString().slice(0, 7),
+                qty_num: 1, unit: '', unit_price: payAmount, price: payAmount,
+                category: 'Servicios', fuel_type: null, type: 'egreso', icon: '💳', completed: false
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error('No se pudo registrar el pago total en Control Financiero:', err);
+            await showAlertModal('No se pudo confirmar el pago ahora mismo. No se descontó nada de tu deuda. Probá de nuevo en un momento.');
+            return;
+        }
+
+        debt.amount = 0;
+        debt.cleared = true;
+        history.unshift({
+            date: new Date().toLocaleDateString(),
+            category: 'Pago Total',
+            detail: `Pago total de ${debt.name}`,
+            amount: payAmount,
+            targetName: debt.name,
+            isMin: false
+        });
+
+        await saveStorage();
+        await fetchExternalPatrimonioNeto();
+        render();
+        await showAlertModal(`¡Felicidades! Has liquidado por completo: ${debt.name}`);
+    }
+
     btnCancelEdit.addEventListener('click', resetForm);
 
     function resetForm() {
@@ -7078,8 +7185,11 @@
                         <p>Saldo Restante: <span class="text-white font-bold">$${debt.amount.toLocaleString()}</span></p>
                         <p>Pago Mínimo Mensual: $${debt.minPayment.toLocaleString()}</p>
                     </div>
-                    <div class="flex gap-2 flex-wrap pt-1">
-                        <button onclick="payMin(${debt.id})" class="flex-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold px-3 py-2 rounded-lg">Pagar Mínimo</button>
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button onclick="payMin(${debt.id})" class="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-xs font-bold px-3 py-2 rounded-lg">Pagar Mínimo</button>
+                        <button onclick="payTotal(${debt.id})" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-xs font-bold px-3 py-2 rounded-lg">Pago Total</button>
+                    </div>
+                    <div class="flex gap-2">
                         <button onclick="editDebt(${debt.id})" class="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-bold px-3 py-2 rounded-lg">Editar</button>
                         <button onclick="deleteDebt(${debt.id})" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold px-3 py-2 rounded-lg"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
@@ -7250,6 +7360,7 @@
         };
 
         try {
+            await loadHtml2Pdf();
             const worker = html2pdf().set(opt).from(template);
             const pdfBlob = await worker.outputPdf('blob');
             template.style.display = 'none';
@@ -8406,6 +8517,7 @@
     window.editDebt = editDebt;
     window.injectInvestToDebt = injectInvestToDebt;
     window.payMin = payMin;
+    window.payTotal = payTotal;
     window.payOneCuotaGeneric = payOneCuotaGeneric;
     window.promptAportarMeta = promptAportarMeta;
     window.switchLfTab = switchLfTab;
@@ -8440,6 +8552,7 @@
             if (typeof closeSideMenu === 'function') closeSideMenu();
             switchTab('lf');
             window.LF.show(LF_TABS.includes(tab) ? tab : 'saldo');
+            try { localStorage.setItem('last_tab', 'lf:' + (LF_TABS.includes(tab) ? tab : 'saldo')); } catch (e) {}
             window.scrollTo(0, 0);
             document.querySelectorAll('a.bottomnav-btn[href^="libertad-financiera.html"]').forEach((a) => {
                 const goto = new URL(a.getAttribute('href'), location.href).searchParams.get('goto');
