@@ -904,12 +904,12 @@
                         <h3 class="font-bold text-sm sm:text-base text-white flex items-center gap-2">
                             <i class="fa-solid fa-star text-fuchsia-400"></i> Suscripción Premium
                         </h3>
-                        <p class="text-xs sm:text-sm text-slate-400 mt-1">Accedé a todas las funciones sin límites, incluyendo Libertad Financiera.</p>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">Plan con IA: asistente financiero, lectura de tickets/facturas y voz inteligente. Incluye todo el plan Básico.</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         <button id="btn-subscribe"
                             class="bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
-                            <i class="fa-solid fa-credit-card"></i> Suscribirme
+                            <i class="fa-solid fa-credit-card"></i> <span id="btn-subscribe-label">Suscribirme</span>
                         </button>
                         <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');"
                             class="bg-fuchsia-500/10 hover:bg-fuchsia-500/20 border border-fuchsia-500/30 text-fuchsia-300 font-bold px-5 py-2.5 rounded-xl text-sm transition-all flex items-center gap-2">
@@ -917,6 +917,9 @@
                         </button>
                         <span id="premium-badge" class="hidden bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
                             <i class="fa-solid fa-circle-check"></i> Ya sos Premium
+                        </span>
+                        <span id="lifetime-badge" class="hidden bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-bold px-5 py-2.5 rounded-xl text-sm items-center gap-2">
+                            <i class="fa-solid fa-infinity"></i> Plan Básico de por vida
                         </span>
                     </div>
                 </div>
@@ -927,6 +930,17 @@
                     <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
                         <i class="fa-solid fa-arrows-rotate"></i> Cambiar a Plan Anual ($69.990)
                     </button>
+                </div>
+
+                <!-- Bono del ebook: canjear código → plan Básico de por vida (sin IA) -->
+                <div id="ebook-code-box" class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
+                    <p class="text-sm font-semibold text-emerald-300"><i class="fa-solid fa-book"></i> ¿Compraste el ebook? Activá tu app de por vida</p>
+                    <p class="text-[11px] text-slate-400">Ingresá el código que viene en el ebook. Te da acceso de por vida a todo el plan Básico (sin funciones de IA).</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="ebook-code-input" placeholder="Ej. EBOOK-XXXXXX" class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-emerald-500">
+                        <button type="button" id="btn-redeem-ebook" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold px-3 rounded-xl whitespace-nowrap">Activar</button>
+                    </div>
+                    <p id="ebook-code-status" class="text-[11px] hidden"></p>
                 </div>
 
                 <!-- Opciones de plan (ocultas hasta que se toque Suscribirme) -->
@@ -1192,6 +1206,7 @@
                 <button id="btn-payment-choice-yes" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all">Sí</button>
                 <button id="btn-payment-choice-no" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold py-3 rounded-xl text-sm transition-all">No</button>
             </div>
+            <button id="btn-payment-choice-ebook" class="text-xs text-emerald-300 hover:text-emerald-200 underline underline-offset-2"><i class="fa-solid fa-book"></i> Compré el ebook, tengo un código</button>
         </div>
     </div>
 
@@ -1292,7 +1307,37 @@
         const SUPABASE_URL = 'https://tqbfggzcmfnsobggmyuk.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // 🔒 Headers para llamar a nuestras funciones /api: mandan el token de la
+        // sesión para que el servidor sepa QUIÉN pide (y no se pueda actuar en
+        // nombre de otra persona ni usar la IA sin estar logueado).
+        async function authHeaders() {
+            const headers = { 'Content-Type': 'application/json' };
+            try {
+                const { data: { session } } = await sb.auth.getSession();
+                if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+            } catch (e) { /* sin sesión: el servidor responde 401 */ }
+            return headers;
+        }
+
+        // Escapa texto ingresado por la persona antes de meterlo en innerHTML.
+        function escapeHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
         let currentUser = null;
+        // Qué puede usar la persona. Por defecto la IA queda habilitada (si no se
+        // pudo verificar, decide el servidor, que es el que manda de verdad).
+        let userAccess = { aiAllowed: true, lifetimeBasic: false, subscriptionActive: false };
+
+        // Aviso amable cuando alguien del plan Básico toca una función con IA.
+        async function showAiUpsell(featureName) {
+            const ok = await showConfirmModal(`✨ ${featureName} usa Inteligencia Artificial y es parte del plan Premium con IA. Tu plan Básico sigue funcionando igual (podés cargar todo a mano o por voz). ¿Querés ver el plan con IA?`);
+            if (ok) {
+                if (typeof switchTab === 'function') switchTab('perfil');
+                document.getElementById('plan-options-box')?.classList.remove('hidden');
+                document.getElementById('plan-options-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
 
         const getCurrentMonthStr = () => {
             const now = new Date();
@@ -1668,7 +1713,7 @@
         async function offerPaymentSetupIfNeeded(settings) {
             // Si ya tiene una suscripción configurada (mp_preapproval_id), ya es premium,
             // o ya eligió cómo va a pagar (aunque haya sido "transferencia"), no repetimos esto.
-            if (!settings || settings.mp_preapproval_id || settings.is_premium || settings.payment_preference) return;
+            if (!settings || settings.mp_preapproval_id || settings.is_premium || settings.lifetime_access || settings.payment_preference) return;
 
             // Primer paso: preguntamos con qué método prefiere pagar.
             document.getElementById('payment-method-choice-modal').classList.remove('hidden');
@@ -1687,6 +1732,50 @@
             const savedPromo = localStorage.getItem('pending_promo_code');
             if (savedPromo) {
                 document.getElementById('discount-code-input').value = savedPromo;
+            }
+        });
+
+        document.getElementById('btn-payment-choice-ebook').addEventListener('click', () => {
+            document.getElementById('payment-method-choice-modal').classList.add('hidden');
+            document.getElementById('payment-method-choice-modal').classList.remove('flex');
+            if (typeof switchTab === 'function') switchTab('perfil');
+            const input = document.getElementById('ebook-code-input');
+            input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => input?.focus(), 400);
+        });
+
+        document.getElementById('btn-redeem-ebook').addEventListener('click', async () => {
+            if (!currentUser) return;
+            const input = document.getElementById('ebook-code-input');
+            const statusEl = document.getElementById('ebook-code-status');
+            const btn = document.getElementById('btn-redeem-ebook');
+            const code = input.value.trim();
+            statusEl.classList.remove('hidden', 'text-emerald-400', 'text-rose-400');
+            if (!code) {
+                statusEl.classList.add('text-rose-400');
+                statusEl.textContent = 'Escribí el código del ebook.';
+                return;
+            }
+            btn.disabled = true;
+            statusEl.textContent = 'Verificando...';
+            try {
+                const resp = await fetch('/api/subscription', {
+                    method: 'POST',
+                    headers: await authHeaders(),
+                    body: JSON.stringify({ action: 'redeem-lifetime', code })
+                });
+                const data = await resp.json();
+                if (!resp.ok || !data.ok) throw new Error(data.error || 'Código inválido');
+                userAccess.lifetimeBasic = true;
+                applyPremiumUI(userAccess.subscriptionActive, null, true);
+                statusEl.classList.add('text-emerald-400');
+                statusEl.textContent = '¡Listo! Ya tenés el plan Básico de por vida.';
+                showToast('🎉 ¡App activada de por vida!');
+            } catch (err) {
+                statusEl.classList.add('text-rose-400');
+                statusEl.textContent = err.message;
+            } finally {
+                btn.disabled = false;
             }
         });
 
@@ -1722,7 +1811,7 @@
                 try {
                     const resp = await fetch('/api/subscription', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: await authHeaders(),
                         body: JSON.stringify({ action: 'create-trial', userId: currentUser.id, userEmail: currentUser.email, plan, price, discountCode })
                     });
                     const subData = await resp.json();
@@ -1800,7 +1889,16 @@
         // ============================================
         // CARGA DE DATOS
         // ============================================
-        function applyPremiumUI(isPremium, currentPlan) {
+        function applyPremiumUI(isPremium, currentPlan, isLifetime = userAccess.lifetimeBasic) {
+            const lifetimeBadge = document.getElementById('lifetime-badge');
+            const ebookBox = document.getElementById('ebook-code-box');
+            if (lifetimeBadge) {
+                lifetimeBadge.classList.toggle('hidden', !isLifetime);
+                lifetimeBadge.classList.toggle('flex', !!isLifetime);
+            }
+            if (ebookBox) ebookBox.classList.toggle('hidden', !!isLifetime);
+            const subscribeLabel = document.getElementById('btn-subscribe-label');
+            if (subscribeLabel) subscribeLabel.textContent = isLifetime ? 'Activar IA (Premium)' : 'Suscribirme';
             const btnSubscribe = document.getElementById('btn-subscribe');
             const badge = document.getElementById('premium-badge');
             const btnUnsub = document.getElementById('btn-unsubscribe');
@@ -1828,7 +1926,7 @@
         }
 
         function checkTrialEndingSoon(settings) {
-            if (!settings || !settings.trial_ends_at || settings.is_premium) return;
+            if (!settings || !settings.trial_ends_at || settings.is_premium || settings.lifetime_access) return;
             const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
             if (daysLeft <= 2 && daysLeft >= 0) {
                 const toast = document.getElementById('trial-ending-toast');
@@ -1898,7 +1996,13 @@
                     incomeFrequency = settings.income_frequency || 'mensual';
                     const subscriptionActive = settings.is_premium === true &&
                         (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
-                    applyPremiumUI(subscriptionActive, settings.current_plan);
+                    const trialActive = !!settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
+                    userAccess = {
+                        subscriptionActive,
+                        lifetimeBasic: settings.lifetime_access === true,
+                        aiAllowed: subscriptionActive || trialActive
+                    };
+                    applyPremiumUI(subscriptionActive, settings.current_plan, settings.lifetime_access === true);
                     await offerPaymentSetupIfNeeded(settings);
                     checkTrialEndingSoon(settings);
                     if (settings.avatar_url && typeof showAvatarEverywhere === 'function') showAvatarEverywhere(settings.avatar_url);
@@ -2523,7 +2627,7 @@
             return `
                 <div class="glass-card rounded-2xl p-3 flex items-center justify-between border-l-4 ${colorClass}">
                     <div class="min-w-0">
-                        <p class="text-xs sm:text-sm font-semibold text-white truncate">${item.icon || ''} ${item.name} ${pendingBadge}</p>
+                        <p class="text-xs sm:text-sm font-semibold text-white truncate">${item.icon || ''} ${escapeHtml(item.name)} ${pendingBadge}</p>
                         <p class="text-[10px] text-slate-400">${formatDateDisplay(item.date)} · ${item.category}</p>
                     </div>
                     <div class="flex items-center gap-2 flex-shrink-0 ml-2">
@@ -2720,7 +2824,7 @@
                 categoryItems[cat].forEach(item => {
                     rowsHTML += `
                         <tr>
-                            <td style="padding:4px 6px; font-size:12px; font-weight:normal; color:#333; border-bottom:1px solid #eee;">${item.name} — ${formatDateDisplay(item.date)} ${item.completed ? '(Pagado)' : '(Pendiente)'}</td>
+                            <td style="padding:4px 6px; font-size:12px; font-weight:normal; color:#333; border-bottom:1px solid #eee;">${escapeHtml(item.name)} — ${formatDateDisplay(item.date)} ${item.completed ? '(Pagado)' : '(Pendiente)'}</td>
                             <td style="padding:4px 6px; font-size:12px; font-weight:normal; color:#333; text-align:right; border-bottom:1px solid #eee;">${formatMoney(item.price)}</td>
                         </tr>`;
                 });
@@ -3065,7 +3169,7 @@
                 try {
                     const resp = await fetch('/api/subscription', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: await authHeaders(),
                         body: JSON.stringify({ action: 'create', userId: currentUser.id, userEmail: currentUser.email, plan, price })
                     });
                     const data = await resp.json();
@@ -3090,11 +3194,12 @@
             const btnUnsub = document.getElementById('btn-unsubscribe');
             btnUnsub.textContent = 'Procesando...';
             try {
-                await fetch('/api/subscription', {
+                const cancelResp = await fetch('/api/subscription', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: await authHeaders(),
                     body: JSON.stringify({ action: 'cancel', userId: currentUser.id })
                 });
+                if (!cancelResp.ok) throw new Error('No se pudo cancelar');
                 await showAlertModal('Lamentamos que te vayas, esperamos volverte a ver pronto.');
                 applyPremiumUI(false);
                 showToast('Suscripción dada de baja');
@@ -3119,7 +3224,7 @@
             try {
                 const resp = await fetch('/api/delete-account', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: await authHeaders(),
                     body: JSON.stringify({ userId: currentUser.id })
                 });
                 const result = await resp.json();
@@ -3146,8 +3251,8 @@
             try {
                 const resp = await fetch('/api/subscription', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'change-plan', userId: currentUser.id, userEmail: currentUser.email, newPlan: 'anual', newPrice: 25000 })
+                    headers: await authHeaders(),
+                    body: JSON.stringify({ action: 'change-plan', userId: currentUser.id, userEmail: currentUser.email, newPlan: 'anual', newPrice: 69990 })
                 });
                 const data = await resp.json();
                 if (data.init_point) {
@@ -3637,21 +3742,27 @@
                 let parsed;
                 let usedAI = true;
                 try {
+                    // Plan Básico (sin IA): usamos directo el detector simple, sin avisos.
+                    if (!userAccess.aiAllowed) throw Object.assign(new Error('sin IA'), { silent: true });
                     const resp = await fetch('/api/parse-voice-expense', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: await authHeaders(),
                         body: JSON.stringify({ transcript })
                     });
                     const respData = await resp.json();
+                    if (resp.status === 403 && respData.code === 'AI_REQUIRES_PREMIUM') {
+                        userAccess.aiAllowed = false;
+                        throw Object.assign(new Error('sin IA'), { silent: true });
+                    }
                     if (!resp.ok || respData.error) throw new Error(respData.error || 'Fallo la IA');
                     parsed = respData;
                 } catch (err) {
-                    console.warn('No se pudo usar la IA, usando el detector simple como respaldo:', err);
-                    usedAI = false;
+                    if (!err.silent) console.warn('No se pudo usar la IA, usando el detector simple como respaldo:', err);
+                    usedAI = err.silent ? null : false;
                     parsed = parseVoiceTranscript(transcript);
                 }
 
-                if (!usedAI) {
+                if (usedAI === false) {
                     showToast('⚠️ No se pudo conectar con la IA, se usó el detector simple (menos preciso)', 'warning');
                 }
 
@@ -3750,6 +3861,10 @@
                 showToast('📴 Sin acceso a internet — leer fotos y PDF con IA necesita conexión. Podés anotarlo a mano mientras tanto.', 'warning');
                 return;
             }
+            if (!userAccess.aiAllowed) {
+                await showAiUpsell('Leer tickets y facturas automáticamente');
+                return;
+            }
             statusEl.textContent = 'Leyendo y analizando con IA...';
             try {
                 let body;
@@ -3776,10 +3891,16 @@
 
                 const resp = await fetch('/api/parse-receipt', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: await authHeaders(),
                     body: JSON.stringify(body)
                 });
                 const parsed = await resp.json();
+                if (resp.status === 403 && parsed.code === 'AI_REQUIRES_PREMIUM') {
+                    userAccess.aiAllowed = false;
+                    statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
+                    await showAiUpsell('Leer tickets y facturas automáticamente');
+                    return;
+                }
                 if (!resp.ok || parsed.error) throw new Error((parsed.error || 'Fallo la IA') + (parsed.detail ? ` — ${parsed.detail}` : ''));
 
                 await addTransactionFromParsed(parsed, kind === 'pdf' ? 'Factura' : 'Comprobante');
@@ -3894,7 +4015,7 @@
                     <div class="flex items-center justify-between bg-slate-900/60 rounded-xl p-2.5">
                         <div class="flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full" style="background-color:${b.color || '#22d3ee'}"></span>
-                            <span class="text-xs sm:text-sm text-slate-200 font-semibold">${b.name}</span>
+                            <span class="text-xs sm:text-sm text-slate-200 font-semibold">${escapeHtml(b.name)}</span>
                         </div>
                         <div class="text-right">
                             <span class="text-xs sm:text-sm font-bold text-white">${formatMoney(amount)}</span>
@@ -4554,6 +4675,11 @@
             const question = input.value.trim();
             if (!question || !currentUser) return;
 
+            if (!userAccess.aiAllowed) {
+                await showAiUpsell('El asistente financiero');
+                return;
+            }
+
             addAssistantMessage(question, true);
             input.value = '';
 
@@ -4568,12 +4694,17 @@
                 const snapshot = await buildFinancialSnapshot();
                 const resp = await fetch('/api/finzia-assistant', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: await authHeaders(),
                     body: JSON.stringify({ question, snapshot, history: assistantConversation })
                 });
                 const data = await resp.json();
                 loadingBubble.remove();
 
+                if (resp.status === 403 && data.code === 'AI_REQUIRES_PREMIUM') {
+                    userAccess.aiAllowed = false;
+                    addAssistantMessage('El asistente es parte del plan Premium con IA. Podés activarlo desde Mi Perfil, en Suscripción.', false, 'suscripcion');
+                    return;
+                }
                 if (!resp.ok || data.error) throw new Error(data.error || 'Error del asistente');
 
                 addAssistantMessage(data.answer, false, data.suggestedSection);

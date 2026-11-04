@@ -93,7 +93,8 @@
                 <i class="fa-solid fa-star text-amber-400 text-2xl"></i>
                 <h2 class="text-white font-bold text-base">Tu prueba gratis terminó</h2>
                 <p class="text-slate-400 text-sm">Libertad Financiera es parte de la suscripción premium. Suscribite para seguir usándola.</p>
-                <a href="index.html" class="block bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-sm">Ver Suscripción</a>
+                <a href="index.html?goto=suscripcion" class="block bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold py-2.5 rounded-xl text-sm">Ver Suscripción</a>
+                <a href="index.html?goto=suscripcion" class="block text-xs text-emerald-300 underline underline-offset-2">¿Compraste el ebook? Activá tu acceso de por vida con tu código</a>
             </div>
         </div>
     </div>
@@ -997,6 +998,23 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRxYmZnZ3pjbWZuc29iZ2dteXVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4OTEyODcsImV4cCI6MjEwMjQ2NzI4N30.Ve3uI9gJL3VlMON92CVF-6ZZmk0vSBG_HKgbRJ7NJ5c';
     const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    // 🔒 Headers para llamar a nuestras funciones /api: mandan el token de la
+    // sesión para que el servidor sepa QUIÉN pide (y no se pueda actuar en
+    // nombre de otra persona ni usar la IA sin estar logueado).
+    async function authHeaders() {
+        const headers = { 'Content-Type': 'application/json' };
+        try {
+            const { data: { session } } = await sb.auth.getSession();
+            if (session?.access_token) headers['Authorization'] = `Bearer ${session.access_token}`;
+        } catch (e) { /* sin sesión: el servidor responde 401 */ }
+        return headers;
+    }
+
+    // Escapa texto ingresado por la persona antes de meterlo en innerHTML.
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
         function showAvatarEverywhere(url) {
             const imgEl = document.getElementById('header-avatar-img');
             const iconEl = document.getElementById('header-avatar-icon');
@@ -1011,6 +1029,13 @@
             }
         }
     let currentUser = null;
+    // Por defecto la IA queda habilitada; el servidor es el que decide de verdad.
+    let aiAllowedLF = true;
+
+    async function showAiUpsellLF(featureName) {
+        const ok = await showConfirmModal(`✨ ${featureName} usa Inteligencia Artificial y es parte del plan Premium con IA. Tu plan Básico sigue funcionando igual (podés cargar todo a mano). ¿Querés ver el plan con IA?`);
+        if (ok) window.location.href = 'index.html?goto=suscripcion';
+    }
 
     let debts = [];
     let investments = [];
@@ -1131,7 +1156,7 @@
             usedCache = true;
         } else {
             try {
-                const { data } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary, avatar_url').eq('user_id', currentUser.id).maybeSingle();
+                const { data } = await sb.from('user_settings').select('is_premium, trial_ends_at, subscription_ends_at, salary, avatar_url, lifetime_access').eq('user_id', currentUser.id).maybeSingle();
                 if (data) {
                     settings = data;
                     saveAccessCache(data);
@@ -1152,7 +1177,9 @@
         const subscriptionActive = settings && settings.is_premium === true &&
             (settings.subscription_ends_at === null || new Date(settings.subscription_ends_at) > new Date());
         const trialActive = settings && settings.trial_ends_at && new Date(settings.trial_ends_at) > new Date();
-        const hasAccess = subscriptionActive || trialActive;
+        const lifetimeBasic = settings && settings.lifetime_access === true;
+        const hasAccess = subscriptionActive || trialActive || lifetimeBasic;
+        aiAllowedLF = !!(subscriptionActive || trialActive);
 
         if (!hasAccess) {
             // Si esto pasó SIN internet y encima sin ninguna copia guardada, es mejor
@@ -1172,7 +1199,7 @@
         if (usedCache) {
             document.getElementById('trial-banner').textContent = '📴 Sin conexión — mostrando tu último acceso guardado en este dispositivo.';
             document.getElementById('trial-banner').classList.remove('hidden');
-        } else if (trialActive && !subscriptionActive) {
+        } else if (trialActive && !subscriptionActive && !lifetimeBasic) {
             const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
             document.getElementById('trial-banner').textContent = `Estás en tu prueba gratis — te quedan ${daysLeft} día(s).`;
             document.getElementById('trial-banner').classList.remove('hidden');
@@ -1976,7 +2003,7 @@
             return `
                 <div>
                     <div class="flex justify-between text-[11px] text-slate-300 mb-1">
-                        <span class="truncate pr-2">${item.name}</span>
+                        <span class="truncate pr-2">${escapeHtml(item.name)}</span>
                         <span class="whitespace-nowrap font-semibold">$${item.total.toLocaleString()}</span>
                     </div>
                     <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
@@ -2139,7 +2166,7 @@
                 item.innerHTML = `
                     <div class="flex justify-between items-center gap-2">
                         <div class="min-w-0">
-                            <strong class="text-sm text-white block truncate">${inv.name} ${ticker ? `<span class="text-purple-400 text-[10px]">(${ticker})</span>` : ''}</strong>
+                            <strong class="text-sm text-white block truncate">${escapeHtml(inv.name)} ${ticker ? `<span class="text-purple-400 text-[10px]">(${ticker})</span>` : ''}</strong>
                             <p class="text-xs text-slate-400 mt-0.5">${inv.qty} u. x $${inv.price.toLocaleString()} (compra) = <strong class="text-purple-300">$${itemVal.toLocaleString()}</strong></p>
                         </div>
                         <div class="flex gap-1.5 flex-shrink-0">
@@ -2182,7 +2209,7 @@
                 item.className = `bg-slate-950/60 border rounded-xl p-4 space-y-2 ${isTarget ? 'border-cyan-500/40 border-l-4 border-l-cyan-500 bg-cyan-500/5' : 'border-rose-500/20 border-l-4 border-l-rose-500'}`;
                 item.innerHTML = `
                     <div class="flex items-center justify-between flex-wrap gap-1">
-                        <strong class="text-sm text-white">${debt.name}</strong>
+                        <strong class="text-sm text-white">${escapeHtml(debt.name)}</strong>
                         ${isTarget ? '<span class="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-bold">🎯 PRIORITARIA</span>' : ''}
                     </div>
                     <div class="text-xs text-slate-400 space-y-0.5">
@@ -2207,7 +2234,7 @@
                 const item = document.createElement('div');
                 item.className = 'bg-slate-950/40 border border-slate-500/20 border-l-4 border-l-slate-500 rounded-xl p-3 flex items-center justify-between opacity-60';
                 item.innerHTML = `
-                    <strong class="text-sm text-slate-300 line-through">✔ ${debt.name}</strong>
+                    <strong class="text-sm text-slate-300 line-through">✔ ${escapeHtml(debt.name)}</strong>
                     <button onclick="deleteDebt(${debt.id})" class="text-slate-500 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-trash-can"></i></button>
                 `;
                 clearedList.appendChild(item);
@@ -2225,7 +2252,7 @@
                 hItem.innerHTML = `
                     <div class="min-w-0">
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded ${badgeClass}">${item.category}</span>
-                        <strong class="text-sm text-white ml-1">${item.detail}</strong>
+                        <strong class="text-sm text-white ml-1">${escapeHtml(item.detail)}</strong>
                         <div class="text-xs text-slate-400 mt-0.5">Acreedor: ${item.targetName} (${item.date})</div>
                     </div>
                     <div class="font-bold text-sm flex-shrink-0 ${item.isMin ? 'text-sky-400' : 'text-cyan-400'}">-$${item.amount.toLocaleString()}</div>
@@ -2275,7 +2302,7 @@
                     <tr>
                         <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.date}</td>
                         <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.category}</td>
-                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${h.detail} <span style="color:#999;">(${h.targetName})</span></td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${escapeHtml(h.detail)} <span style="color:#999;">(${escapeHtml(h.targetName)})</span></td>
                         <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; font-weight:bold; border-bottom:1px solid #eee;">$${h.amount.toLocaleString()}</td>
                     </tr>`;
             });
@@ -2288,7 +2315,7 @@
             investments.forEach(inv => {
                 investRows += `
                     <tr>
-                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${inv.name}</td>
+                        <td style="padding:5px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;">${escapeHtml(inv.name)}</td>
                         <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; border-bottom:1px solid #eee;">${inv.qty} u. x $${inv.price.toLocaleString()}</td>
                         <td style="padding:5px 6px; font-size:11px; color:#333; text-align:right; font-weight:bold; border-bottom:1px solid #eee;">$${(inv.qty * inv.price).toLocaleString()}</td>
                     </tr>`;
@@ -2800,7 +2827,7 @@
                 return `
                     <div class="glass-panel rounded-2xl p-4 space-y-2 border border-white/10">
                         <div class="flex items-center justify-between">
-                            <h3 class="font-bold text-white text-sm">${p.name}</h3>
+                            <h3 class="font-bold text-white text-sm">${escapeHtml(p.name)}</h3>
                             <span class="text-[10px] font-bold ${statusColors[p.status] || 'text-slate-400'}">${statusLabels[p.status] || p.status}</span>
                         </div>
                         <p class="text-[11px] text-slate-500">${p.problem_solved}</p>
@@ -3089,12 +3116,21 @@
     }
 
     async function callVoiceParser(transcript, context) {
+        if (!aiAllowedLF) {
+            showAiUpsellLF('Completar formularios por voz');
+            throw new Error('sin IA');
+        }
         const resp = await fetch('/api/parse-libertad-voice', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: await authHeaders(),
             body: JSON.stringify({ transcript, context })
         });
         const parsed = await resp.json();
+        if (resp.status === 403 && parsed.code === 'AI_REQUIRES_PREMIUM') {
+            aiAllowedLF = false;
+            showAiUpsellLF('Completar formularios por voz');
+            throw new Error('sin IA');
+        }
         if (!resp.ok || parsed.error) throw new Error(parsed.error || 'Fallo la IA');
         return parsed;
     }
@@ -3506,6 +3542,11 @@
         const question = input.value.trim();
         if (!question || !currentUser) return;
 
+        if (!aiAllowedLF) {
+            await showAiUpsellLF('El asistente financiero');
+            return;
+        }
+
         addAssistantMessageLF(question, true);
         input.value = '';
 
@@ -3519,11 +3560,16 @@
             const snapshot = await buildFinancialSnapshotLF();
             const resp = await fetch('/api/finzia-assistant', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: await authHeaders(),
                 body: JSON.stringify({ question, snapshot, history: assistantConversationLF })
             });
             const data = await resp.json();
             loadingBubble.remove();
+            if (resp.status === 403 && data.code === 'AI_REQUIRES_PREMIUM') {
+                aiAllowedLF = false;
+                addAssistantMessageLF('El asistente es parte del plan Premium con IA. Podés activarlo desde Mi Perfil, en Suscripción.', false, 'suscripcion');
+                return;
+            }
             if (!resp.ok || data.error) throw new Error(data.error || 'Error del asistente');
 
             addAssistantMessageLF(data.answer, false, data.suggestedSection);

@@ -10,6 +10,8 @@
 // plan asociado, y esa URL exacta muestra "Esta página no existe" para
 // cualquier cuenta. La misma URL SIN ese parámetro funciona bien. Esta función
 // lo saca antes de mandarle el link al usuario.
+import { requireAuth, PLAN_PRICES } from './_auth.js';
+
 function limpiarInitPoint(initPoint) {
   if (!initPoint) return initPoint;
   try {
@@ -203,6 +205,33 @@ async function handleChangePlan(req, res, { MP_ACCESS_TOKEN, SUPABASE_URL, SUPAB
   return res.status(200).json({ init_point: limpiarInitPoint(data.init_point) });
 }
 
+async function handleRedeemLifetime(req, res, { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY }) {
+  const code = String(req.body.code || '').trim().toUpperCase().slice(0, 64);
+  if (!code) return res.status(400).json({ error: 'Ingresá el código del ebook' });
+
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/redeem_lifetime_code`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_code: code, p_user: req.body.userId })
+  });
+  const result = await resp.json();
+  if (!resp.ok) {
+    console.error('Error al canjear código del ebook:', result);
+    return res.status(500).json({ error: 'No se pudo canjear el código. Probá de nuevo.' });
+  }
+
+  const messages = {
+    ok: null,
+    already: null,
+    invalid: 'Ese código no existe. Revisalo en la última página del ebook.',
+    exhausted: 'Ese código ya no tiene cupos disponibles. Escribinos por WhatsApp.'
+  };
+  if (result === 'ok' || result === 'already') {
+    return res.status(200).json({ ok: true, alreadyHad: result === 'already' });
+  }
+  return res.status(400).json({ error: messages[result] || 'Código inválido' });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
@@ -215,12 +244,33 @@ export default async function handler(req, res) {
     }
     req.body = parsedBody || {};
     const { action } = req.body;
+
+    // 🔒 El usuario sale del token de sesión, NUNCA del body (si no, cualquiera
+    // podía cancelar o cambiar la suscripción de otra persona sabiendo su ID).
+    const user = await requireAuth(req, res);
+    if (!user) return;
+    req.body.userId = user.id;
+    req.body.userEmail = user.email;
+
+    // 🔒 El precio lo pone el servidor según el plan, no el navegador.
+    req.body.plan = req.body.plan === 'anual' ? 'anual' : 'mensual';
+    req.body.price = PLAN_PRICES[req.body.plan];
+    if (req.body.newPlan !== undefined) {
+      req.body.newPlan = req.body.newPlan === 'anual' ? 'anual' : 'mensual';
+      req.body.newPrice = PLAN_PRICES[req.body.newPlan];
+    }
     const env = {
       MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN,
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
       SITE_URL: process.env.SITE_URL || `https://${req.headers.host}`
     };
+
+    // 🎁 Canje del código del ebook → plan Básico de por vida (sin IA).
+    // No necesita Mercado Pago, por eso va antes de ese chequeo.
+    if (action === 'redeem-lifetime') {
+      return await handleRedeemLifetime(req, res, env);
+    }
 
     if (!env.MP_ACCESS_TOKEN) {
       return res.status(500).json({ error: 'Falta configurar MP_ACCESS_TOKEN en Vercel' });
@@ -231,7 +281,7 @@ export default async function handler(req, res) {
       case 'create-trial': return await handleCreateTrial(req, res, env);
       case 'cancel': return await handleCancel(req, res, env);
       case 'change-plan': return await handleChangePlan(req, res, env);
-      default: return res.status(400).json({ error: 'action inválida (usar: create, create-trial, cancel, change-plan)', detail: `Recibido: ${JSON.stringify(action)}` });
+      default: return res.status(400).json({ error: 'action inválida (usar: create, create-trial, cancel, change-plan, redeem-lifetime)', detail: `Recibido: ${JSON.stringify(action)}` });
     }
   } catch (err) {
     console.error(`Error interno en subscription:`, err.message, err.stack);

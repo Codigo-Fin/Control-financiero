@@ -3,10 +3,17 @@
 // completa de su situación financiera (armada en el frontend), y responde con un
 // diagnóstico concreto y pasos accionables — sin desviarse de tema ni preguntar de más.
 
+import { requireAiAccess } from './_auth.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
+
+  // 🔒 Solo usuarios logueados: si no, cualquiera desde afuera podía gastar
+  // los créditos de la API de IA llamando a esta URL directamente.
+  const authUser = await requireAiAccess(req, res);
+  if (!authUser) return;
 
   const { question, snapshot, history } = req.body || {};
   if (!question || !snapshot) {
@@ -103,11 +110,17 @@ ${debtStatusLine}
 
   const messages = [];
   if (Array.isArray(history)) {
-    history.forEach(h => {
-      if (h.role && h.content) messages.push({ role: h.role, content: h.content });
+    // Solo los últimos 10 mensajes y con roles válidos: evita que una conversación
+    // muy larga (o un pedido armado a mano) dispare el costo de la IA.
+    history.slice(-10).forEach(h => {
+      if ((h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string') {
+        messages.push({ role: h.role, content: h.content.slice(0, 4000) });
+      }
     });
+    // La API exige que la conversación arranque con un mensaje de "user".
+    while (messages.length && messages[0].role !== 'user') messages.shift();
   }
-  messages.push({ role: 'user', content: `${dataContext}\n\nPregunta de la persona: ${question}` });
+  messages.push({ role: 'user', content: `${dataContext}\n\nPregunta de la persona: ${String(question).slice(0, 2000)}` });
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {

@@ -2,10 +2,17 @@
 // Interpreta frases habladas para 3 formularios distintos de Libertad Financiera:
 // registrar una deuda, cargar un ingreso extra, o registrar una compra de inversión.
 
+import { requireAiAccess } from './_auth.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
+
+  // 🔒 Solo usuarios logueados: si no, cualquiera desde afuera podía gastar
+  // los créditos de la API de IA llamando a esta URL directamente.
+  const authUser = await requireAiAccess(req, res);
+  if (!authUser) return;
 
   const { transcript, context } = req.body || {};
   if (!transcript || !context) {

@@ -1,15 +1,18 @@
 // api/delete-account.js
 // Borra la cuenta y TODOS los datos de la persona, de forma permanente.
 // Requisito obligatorio de Apple/Google para aprobar la app en las tiendas.
+import { requireAuth } from './_auth.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  const { userId } = req.body || {};
-  if (!userId) {
-    return res.status(400).json({ error: 'Falta el ID de usuario' });
-  }
+  // 🔒 Solo se puede borrar la cuenta propia: el ID sale del token de sesión,
+  // no del body (antes cualquiera podía borrar la cuenta de otra persona).
+  const user = await requireAuth(req, res);
+  if (!user) return;
+  const userId = user.id;
 
   const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tqbfggzcmfnsobggmyuk.supabase.co';
   const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
