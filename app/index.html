@@ -1706,6 +1706,15 @@
             setAuthMessage('Creando cuenta...', true);
             const { data, error } = await sb.auth.signUp({ email, password });
             if (error) { setAuthMessage(error.message); return; }
+            // Si el email ya estaba registrado, Supabase responde "ok" pero sin
+            // identidades y NO manda ningún mail (para no revelar qué emails existen).
+            // Acá lo detectamos para no decir "cuenta creada" cuando no lo es.
+            if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+                setAuthMode('signin');
+                document.getElementById('auth-email').value = email;
+                setAuthMessage('Ese email ya tiene una cuenta. Entrá con tu contraseña o tocá "¿La olvidaste?" para crear una nueva.');
+                return;
+            }
             if (data.session) {
                 currentUser = data.user;
                 showAppScreen();
