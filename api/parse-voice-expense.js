@@ -23,6 +23,12 @@ const CATEGORIES = [
   'Otros'
 ];
 
+// Los INGRESOS tienen sus propias categorías (iguales a las de la app)
+const INCOME_CATEGORIES = [
+  'Chofer Apps', 'Ventas', 'Ventas Online', 'E-commerce', 'Ingreso Extra',
+  'Influencer', 'Meta Ads', 'Negocio', 'Otros'
+];
+
 import { requireAiAccess } from './_auth.js';
 
 export default async function handler(req, res) {
@@ -49,7 +55,7 @@ export default async function handler(req, res) {
 {
   "amount": <número, el monto en pesos argentinos, o null si no se entendió>,
   "type": "egreso" o "ingreso",
-  "category": una de estas exactas: ${CATEGORIES.join(', ')},
+  "category": si type es "egreso", una de estas exactas: ${CATEGORIES.join(', ')}. Si type es "ingreso", una de estas exactas: ${INCOME_CATEGORIES.join(', ')},
   "customCategory": <string corto sugerido SOLO si category es "Otros", si no null>,
   "fuelType": "Nafta", "GNC", "Diesel" o "SUBE" SOLO si category es "Transporte", si no null,
   "concept": <nombre CORTO y prolijo del concepto/producto, 2-4 palabras máximo>
@@ -88,9 +94,12 @@ Reglas importantes sobre CONCEPT:
 
 Ejemplos (frase hablada → JSON esperado):
 - "10000 pesos en nafta gasté" → {"amount": 10000, "type": "egreso", "category": "Transporte", "customCategory": null, "fuelType": "Nafta", "concept": "Nafta"}
-- "me ingreso un millón quinientos mil pesos argentinos" → {"amount": 1500000, "type": "ingreso", "category": "Otros", "customCategory": "Ingreso Extra", "fuelType": null, "concept": "Ingreso Extra"}
-- "me ingreso 50000 pesos" → {"amount": 50000, "type": "ingreso", "category": "Otros", "customCategory": "Ingreso Extra", "fuelType": null, "concept": "Ingreso Extra"}
-- "ingreso 50000 pesos de un curso de capcut" → {"amount": 50000, "type": "ingreso", "category": "Librería y Capacitación", "customCategory": null, "fuelType": null, "concept": "Curso de CapCut"}
+- "me ingreso un millón quinientos mil pesos argentinos" → {"amount": 1500000, "type": "ingreso", "category": "Ingreso Extra", "customCategory": null, "fuelType": null, "concept": "Ingreso Extra"}
+- "me ingreso 50000 pesos" → {"amount": 50000, "type": "ingreso", "category": "Ingreso Extra", "customCategory": null, "fuelType": null, "concept": "Ingreso Extra"}
+- "ingreso 50000 pesos de un curso de capcut" → {"amount": 50000, "type": "ingreso", "category": "Ventas Online", "customCategory": null, "fuelType": null, "concept": "Curso de CapCut"}
+- "cobré 30000 de viajes de uber" → {"amount": 30000, "type": "ingreso", "category": "Chofer Apps", "customCategory": null, "fuelType": null, "concept": "Viajes Uber"}
+- "vendí por mercado libre 45000" → {"amount": 45000, "type": "ingreso", "category": "E-commerce", "customCategory": null, "fuelType": null, "concept": "Venta Mercado Libre"}
+- "gané 80000 dando clases de guitarra" → {"amount": 80000, "type": "ingreso", "category": "Otros", "customCategory": "Clases", "fuelType": null, "concept": "Clases de guitarra"}
 - "hoy compre ropa a 100000 pesos" → {"amount": 100000, "type": "egreso", "category": "Vestimenta", "customCategory": null, "fuelType": null, "concept": "Ropa"}
 - "gorra deportiva 5600" → {"amount": 5600, "type": "egreso", "category": "Vestimenta", "customCategory": null, "fuelType": null, "concept": "Gorra deportiva"}
 - "rasuradora philips 12000" → {"amount": 12000, "type": "egreso", "category": "Belleza y Cuidado Personal", "customCategory": null, "fuelType": null, "concept": "Rasuradora Philips"}

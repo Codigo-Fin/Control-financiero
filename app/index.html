@@ -660,6 +660,10 @@
                     <div>
                         <p class="text-[11px] text-slate-500 uppercase tracking-wide font-bold mb-2">Categoría</p>
                         <div id="lemon-quickadd-categories" class="flex flex-wrap gap-2"></div>
+                        <div id="lemon-quickadd-other-wrap" class="hidden mt-3">
+                            <input type="text" id="lemon-quickadd-other" maxlength="40" placeholder="Escribí la categoría (ej: Clases particulares)" class="w-full bg-slate-900/80 border border-lime-400/50 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-lime-400">
+                            <p class="text-[11px] text-slate-500 mt-1">Queda guardada para la próxima vez.</p>
+                        </div>
                     </div>
 
                     <div>
@@ -2334,9 +2338,24 @@
 
         const CHART_COLORS = ['#22d3ee', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#14b8a6', '#84cc16', '#6366f1', '#d946ef', '#22d3ee', '#a3e635', '#fb7185', '#c084fc'];
 
+        // Categorías propias de los INGRESOS (los gastos usan las de siempre)
+        const INCOME_CATEGORIES = [
+            { value: 'Chofer Apps', emoji: '🚗' },
+            { value: 'Ventas', emoji: '🛍️' },
+            { value: 'Ventas Online', emoji: '💻' },
+            { value: 'E-commerce', emoji: '📦' },
+            { value: 'Ingreso Extra', emoji: '💵' },
+            { value: 'Influencer', emoji: '🤳' },
+            { value: 'Meta Ads', emoji: '📣' },
+            { value: 'Negocio', emoji: '🏪' },
+            { value: 'Otros', emoji: '✍️' }
+        ];
+
         function getCategoryEmoji(catName) {
             if (!catName) return '🛒';
             const c = catName.toLowerCase().trim();
+            const income = INCOME_CATEGORIES.find(ic => ic.value.toLowerCase() === c);
+            if (income) return income.emoji;
             if (c.includes('belleza') || c.includes('cuidado personal')) return '💄';
             if (c.includes('limpieza')) return '🧼';
             if (c.includes('mecanic') || c.includes('mecánica') || c.includes('mantenimiento')) return '🔧';
@@ -4128,7 +4147,7 @@
 
         document.getElementById('reset-btn').addEventListener('click', async () => {
             if (!currentUser) return;
-            const step1 = await showConfirmModal('Esto borra TODOS tus gastos e ingresos registrados, para empezar de cero. ¿Continuar?', true);
+            const step1 = await showConfirmModal('Esto borra TODOS tus gastos e ingresos registrados y tu saldo a favor, para empezar de cero. Tus deudas e inversiones no se tocan. ¿Continuar?', true);
             if (!step1) return;
             const step2 = await showConfirmModal('Confirmá de nuevo: esta acción no se puede deshacer. ¿Reiniciar todo ahora?', true);
             if (!step2) return;
@@ -4145,6 +4164,11 @@
             await saveSalaryToDB();
             products = [];
             renderApp();
+            if (window.LF) {
+                await window.LF.clearCreditBalance();
+                await window.LF.reload();
+            }
+            loadSaldoFavorContra();
             showToast('Lista restablecida correctamente');
         });
 
@@ -4178,6 +4202,8 @@
             // Limpiamos toda copia local guardada en este dispositivo
             localStorage.removeItem(`finzia_lf_snapshot_${currentUser.id}`);
             localStorage.removeItem(`finzia_lf_rawdata_${currentUser.id}`);
+            localStorage.removeItem(`lf_backup_${currentUser.id}`);
+            ['emergencyBasic_target', 'emergencyBasic_current', 'emergencyFull_target', 'emergencyFull_current'].forEach(k => localStorage.removeItem(k));
             localStorage.removeItem(`pending_sync_${currentUser.id}`);
             localStorage.removeItem(`finzia_chat_${currentUser.id}`);
             localStorage.removeItem('allocation_rule');
@@ -4192,6 +4218,8 @@
             incomeFrequency = 'mensual';
             products = [];
             renderApp();
+            if (window.LF) await window.LF.reload();
+            loadSaldoFavorContra();
             showToast('✅ Reinicio total completado. Todo quedó en cero, de verdad.');
         });
 
@@ -4417,10 +4445,11 @@
             if (!currentUser) return;
             try {
                 const raw = localStorage.getItem(`finzia_lf_snapshot_${currentUser.id}`);
-                if (!raw) return; // todavía no visitó Libertad Financiera, no hay nada que mostrar
+                const box = document.getElementById('saldo-favor-contra-box');
+                if (!raw) { box.classList.add('hidden'); return; } // todavía no hay datos de deudas/saldo
                 const snap = JSON.parse(raw);
                 const monto = snap.saldo_favor_o_contra || 0;
-                const box = document.getElementById('saldo-favor-contra-box');
+                if (Math.round(monto) === 0 && !(snap.deuda_total > 0)) { box.classList.add('hidden'); return; }
                 const label = document.getElementById('saldo-favor-contra-label');
                 const amountEl = document.getElementById('saldo-favor-contra-amount');
                 const detail = document.getElementById('saldo-favor-contra-detail');
@@ -4478,6 +4507,7 @@
 
         // Lista de categorías (misma que ya usa el resto de la app) para armar las
         // pastillas grandes de "Categoría" del modal nuevo.
+
         const LEMON_CATEGORIES = [
             { value: 'Belleza y Cuidado Personal', emoji: '💄' },
             { value: 'Limpieza del Hogar', emoji: '🧼' },
@@ -4499,22 +4529,55 @@
         ];
         let lemonSelectedCategory = null;
 
-        function buildLemonCategoryPills() {
+        // Categorías propias de los INGRESOS (los gastos siguen con LEMON_CATEGORIES).
+        // Las que la persona escribe en "Otros" se guardan para que le aparezcan la próxima vez.
+        function getCustomIncomeCategories() {
+            try { return JSON.parse(localStorage.getItem('custom_income_categories') || '[]'); } catch (e) { return []; }
+        }
+        function saveCustomIncomeCategory(name) {
+            const clean = name.trim();
+            if (!clean || INCOME_CATEGORIES.some(c => c.value.toLowerCase() === clean.toLowerCase())) return;
+            const list = getCustomIncomeCategories().filter(c => c.toLowerCase() !== clean.toLowerCase());
+            list.unshift(clean);
+            try { localStorage.setItem('custom_income_categories', JSON.stringify(list.slice(0, 12))); } catch (e) {}
+        }
+
+        function buildLemonCategoryPills(tipo = 'egreso') {
             const container = document.getElementById('lemon-quickadd-categories');
-            container.innerHTML = LEMON_CATEGORIES.map(c => `
-                <button type="button" data-lemon-cat="${c.value}" class="lemon-cat-pill px-4 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-1.5">
-                    ${c.emoji} ${c.value}
+            let list;
+            if (tipo === 'ingreso') {
+                const base = INCOME_CATEGORIES.filter(c => c.value !== 'Otros');
+                const custom = getCustomIncomeCategories().map(v => ({ value: v, emoji: '⭐' }));
+                list = [...base, ...custom, INCOME_CATEGORIES.find(c => c.value === 'Otros')];
+            } else {
+                list = LEMON_CATEGORIES;
+            }
+            container.innerHTML = list.map(c => `
+                <button type="button" data-lemon-cat="${escapeHtml(c.value)}" class="lemon-cat-pill px-4 py-2.5 rounded-full text-sm font-bold transition-all flex items-center gap-1.5">
+                    ${c.emoji} ${escapeHtml(c.value)}
                 </button>
             `).join('');
+            const otherWrap = document.getElementById('lemon-quickadd-other-wrap');
+            otherWrap.classList.add('hidden');
+            document.getElementById('lemon-quickadd-other').value = '';
             container.querySelectorAll('.lemon-cat-pill').forEach(btn => {
                 btn.addEventListener('click', () => {
                     lemonSelectedCategory = btn.dataset.lemonCat;
                     container.querySelectorAll('.lemon-cat-pill').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
+                    // En ingresos, "Otros" deja escribir una categoría nueva
+                    const showOther = tipo === 'ingreso' && lemonSelectedCategory === 'Otros';
+                    otherWrap.classList.toggle('hidden', !showOther);
+                    if (showOther) setTimeout(() => document.getElementById('lemon-quickadd-other').focus(), 50);
                 });
             });
         }
         buildLemonCategoryPills();
+        document.body.appendChild(document.getElementById('lemon-quickadd-modal'));
+        // En el celular, al tocar Descripción la llevamos arriba del teclado
+        document.getElementById('lemon-quickadd-concept').addEventListener('focus', (e) => {
+            setTimeout(() => e.target.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300);
+        });
 
         // Número gigante tocable: abre la carga rápida del tipo que está activo
         document.getElementById('lemon-big-number').addEventListener('click', () => {
@@ -4524,7 +4587,7 @@
             document.getElementById('lemon-quickadd-concept').value = '';
             document.getElementById('lemon-quickadd-date').value = todayDate;
             lemonSelectedCategory = null;
-            document.querySelectorAll('.lemon-cat-pill').forEach(b => b.classList.remove('active'));
+            buildLemonCategoryPills(tipo);
             document.querySelectorAll('.lemon-date-pill').forEach(b => b.classList.remove('active'));
             document.querySelector('[data-lemon-date-quick="hoy"]').classList.add('active');
             document.getElementById('lemon-quickadd-modal').classList.remove('hidden');
@@ -4564,7 +4627,14 @@
                 return;
             }
             const tipo = currentMovementSubTab === 'egresos' ? 'egreso' : 'ingreso';
-            const categoryVal = lemonSelectedCategory || 'Otros';
+            let categoryVal = lemonSelectedCategory || 'Otros';
+            if (tipo === 'ingreso' && categoryVal === 'Otros') {
+                const custom = document.getElementById('lemon-quickadd-other').value.trim();
+                if (custom) {
+                    categoryVal = custom;
+                    saveCustomIncomeCategory(custom);
+                }
+            }
             const nombre = concept || categoryVal;
             const fuelTypeVal = categoryVal === 'Transporte' ? 'Nafta' : null;
 
@@ -4603,6 +4673,7 @@
             if (mainFab) mainFab.classList.toggle('hidden', tabName === 'lf');
             if (tabName !== 'lf') {
                 document.querySelectorAll('a.bottomnav-btn[href^="libertad-financiera.html"]').forEach(a => a.classList.remove('active'));
+                if (typeof loadSaldoFavorContra === 'function') loadSaldoFavorContra();
                 if (window.__ressetiaMainDirty && currentUser) {
                     window.__ressetiaMainDirty = false;
                     loadAllUserData();
@@ -4759,6 +4830,10 @@
             const typeVal = forcedTransactionType;
 
             let categoryVal = parsed.category || 'Otros';
+            if (typeVal === 'ingreso' && !INCOME_CATEGORIES.some(c => c.value === categoryVal)) {
+                categoryVal = parsed.customCategory || 'Otros';
+                parsed = { ...parsed, customCategory: null };
+            }
             let fuelTypeVal = null;
             if (categoryVal === 'Transporte') {
                 fuelTypeVal = parsed.fuelType || 'Nafta';
@@ -7230,6 +7305,7 @@
         renderEmergencyBox('emergencyBasic');
         renderEmergencyBox('emergencyFull');
         render();
+        if (typeof loadSaldoFavorContra === 'function') loadSaldoFavorContra();
         await showAlertModal('Listo, todo reiniciado. Podés empezar de cero.');
     });
 
@@ -8336,6 +8412,19 @@
     window.updateInvestCurrentPrice = updateInvestCurrentPrice;
     window.LF = {
         show(tab) { switchLfTab(tab || 'saldo'); },
+        // Vuelve a leer todo de la base (después de un reseteo), descartando lo que había en memoria
+        async reload() {
+            lfReadyPromise = null;
+            lfLoadedForUser = null;
+            debts = []; investments = []; history = []; creditBalance = 0;
+            await lfEnsureReady();
+        },
+        async clearCreditBalance() {
+            await lfEnsureReady();
+            creditBalance = 0;
+            await saveStorage();
+            render();
+        },
         ensureReady: lfEnsureReady,
         refresh: lfRefresh,
         runPendingPatrimonioPayment
