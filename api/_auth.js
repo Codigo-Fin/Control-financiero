@@ -82,5 +82,5 @@ export async function requireAiAccess(req, res) {
 // navegador y cualquiera podía mandarse "price: 1" y suscribirse por $1.
 export const PLAN_PRICES = {
   mensual: 6999,
-  anual: 69990
+  anual: 69000
 };

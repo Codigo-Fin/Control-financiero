@@ -223,7 +223,7 @@ async function handleRedeemLifetime(req, res, { SUPABASE_URL, SUPABASE_SERVICE_R
   const messages = {
     ok: null,
     already: null,
-    invalid: 'Ese código no existe. Revisalo en la última página del ebook.',
+    invalid: 'Ese código no existe. Revisalo en el mail de tu compra del ebook.',
     exhausted: 'Ese código ya no tiene cupos disponibles. Escribinos por WhatsApp.'
   };
   if (result === 'ok' || result === 'already') {

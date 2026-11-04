@@ -928,7 +928,7 @@
                 <div id="upgrade-plan-box" class="hidden bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <p class="text-sm text-purple-200">¿Querés pasarte al plan Anual y ahorrar?</p>
                     <button id="btn-upgrade-plan" class="bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/40 text-purple-300 font-bold px-4 py-2 rounded-xl text-sm transition-all whitespace-nowrap">
-                        <i class="fa-solid fa-arrows-rotate"></i> Cambiar a Plan Anual ($69.990)
+                        <i class="fa-solid fa-arrows-rotate"></i> Cambiar a Plan Anual ($69.000)
                     </button>
                 </div>
 
@@ -951,9 +951,9 @@
                             <div class="text-xs text-slate-400">Mensual</div>
                             <div class="text-lg font-bold text-white">$6.999</div>
                         </button>
-                        <button data-plan="anual" data-price="69990" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
+                        <button data-plan="anual" data-price="69000" data-days="365" class="plan-option-btn bg-slate-800 hover:bg-amber-500/20 border border-white/10 hover:border-amber-500/40 rounded-xl p-3 text-center transition-all">
                             <div class="text-xs text-slate-400">Anual</div>
-                            <div class="text-lg font-bold text-white">$69.990</div>
+                            <div class="text-lg font-bold text-white">$69.000</div>
                         </button>
                     </div>
                 </div>
@@ -1263,9 +1263,9 @@
                     <div class="text-[10px] text-slate-400">Mensual</div>
                     <div class="text-sm font-bold text-white">$6.999</div>
                 </button>
-                <button data-plan="anual" data-price="69990" class="payment-setup-plan-btn bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 rounded-xl p-3 text-center transition-all">
+                <button data-plan="anual" data-price="69000" class="payment-setup-plan-btn bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 rounded-xl p-3 text-center transition-all">
                     <div class="text-[10px] text-slate-400">Anual</div>
-                    <div class="text-sm font-bold text-white">$69.990</div>
+                    <div class="text-sm font-bold text-white">$69.000</div>
                 </button>
             </div>
 
@@ -3244,7 +3244,7 @@
 
         document.getElementById('btn-upgrade-plan').addEventListener('click', async () => {
             if (!currentUser) return;
-            if (!(await showConfirmModal('Vas a pasar al plan Anual ($69.990). Te vamos a pedir que autorices el nuevo cobro. ¿Continuar?'))) return;
+            if (!(await showConfirmModal('Vas a pasar al plan Anual ($69.000). Te vamos a pedir que autorices el nuevo cobro. ¿Continuar?'))) return;
             const btn = document.getElementById('btn-upgrade-plan');
             const originalText = btn.textContent;
             btn.textContent = 'Procesando...';
@@ -3252,7 +3252,7 @@
                 const resp = await fetch('/api/subscription', {
                     method: 'POST',
                     headers: await authHeaders(),
-                    body: JSON.stringify({ action: 'change-plan', userId: currentUser.id, userEmail: currentUser.email, newPlan: 'anual', newPrice: 69990 })
+                    body: JSON.stringify({ action: 'change-plan', userId: currentUser.id, userEmail: currentUser.email, newPlan: 'anual', newPrice: 69000 })
                 });
                 const data = await resp.json();
                 if (data.init_point) {
