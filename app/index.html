@@ -1126,7 +1126,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 18 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 19 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -5588,7 +5588,7 @@
             async function getNeuralUrl(text) {
                 if (neuralCache.has(text)) return neuralCache.get(text);
                 const resp = await fetch('/api/tts', { method: 'POST', headers: await authHeaders(), body: JSON.stringify({ text }) });
-                if (resp.status === 501) { neuralUnavailable = true; throw new Error('sin voz neuronal'); }
+                if (resp.status === 501 || resp.status === 429) { neuralUnavailable = true; throw new Error('sin voz neuronal'); }
                 if (!resp.ok) throw new Error('tts ' + resp.status);
                 const url = URL.createObjectURL(await resp.blob());
                 neuralCache.set(text, url);
