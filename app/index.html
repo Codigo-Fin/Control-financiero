@@ -162,7 +162,7 @@
                         <span class="text-lg tracking-tight">Ressetia</span>
                     </a>
                     <h1 id="auth-title" class="neon-title text-3xl sm:text-4xl font-semibold tracking-tight text-white mt-6 leading-tight">Ordená tu plata en 2 minutos</h1>
-                    <p id="auth-subtitle" class="text-slate-400 mt-3 text-[15px]">Creá tu cuenta gratis y probá Ressetia con la Inteligencia Artificial incluida durante 14 días.</p>
+                    <p id="auth-subtitle" class="text-slate-400 mt-3 text-[15px]">Creá tu cuenta gratis, sin tarjeta, y probá Ressetia con la Inteligencia Artificial incluida durante 14 días.</p>
 
                     <ul id="auth-benefits" class="hidden md:flex flex-col gap-3 mt-8 text-left text-[15px]">
                         <li class="flex gap-3 items-start"><span class="mt-0.5 w-7 h-7 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/40 text-fuchsia-300 flex items-center justify-center text-xs flex-shrink-0"><i class="fa-solid fa-microphone"></i></span><span class="text-slate-300"><b class="text-white font-semibold">Cargás gastos hablando</b> o con una foto del ticket, y la IA los ordena sola.</span></li>
@@ -212,8 +212,8 @@
                     <!-- Qué pasa después de registrarse (solo en "Crear cuenta") -->
                     <div id="signup-extras" class="mt-5 space-y-4">
                         <div class="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-                            <p class="text-sm font-semibold text-white flex items-center gap-2"><span class="ai-dot w-2 h-2 rounded-full bg-fuchsia-400"></span>14 días gratis, con IA incluida</p>
-                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Después de crear tu cuenta elegís cómo vas a pagar cuando termine la prueba (Mercado Pago o transferencia). No se cobra nada durante los 14 días y cancelás cuando quieras.</p>
+                            <p class="text-sm font-semibold text-white flex items-center gap-2"><span class="ai-dot w-2 h-2 rounded-full bg-fuchsia-400"></span>14 días gratis con IA, sin tarjeta</p>
+                            <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Probás todo, incluida la Inteligencia Artificial. Cuando terminan los 14 días seguís usando gratis el plan Básico (sin IA), o te suscribís para mantener la IA. Nunca te cobramos nada sin que vos lo actives.</p>
                         </div>
 
                         <!-- Código de descuento (opcional) — si viene por link (?promo=CODIGO) se completa solo -->
@@ -1236,13 +1236,14 @@
     <div id="payment-method-choice-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md hidden items-center justify-center p-4 z-50">
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-5 border border-cyan-500/30 text-center">
             <div class="space-y-1">
-                <i class="fa-solid fa-credit-card text-cyan-400 text-2xl"></i>
-                <h3 class="font-bold text-white text-base">¿Abonás con Mercado Pago?</h3>
-                <p class="text-xs sm:text-sm text-slate-400">Tenés 14 días de prueba gratis sin cargo — solo necesitamos saber cómo vas a pagar cuando termine.</p>
+                <i class="fa-solid fa-gift text-fuchsia-400 text-2xl"></i>
+                <h3 class="font-bold text-white text-base">¡Listo! Ya tenés 14 días con IA gratis</h3>
+                <p class="text-xs sm:text-sm text-slate-400">Usá todo sin límites. Cuando terminen, seguís gratis con el plan Básico (sin IA). Si querés mantener la IA, podés dejar tu suscripción lista ahora: no se cobra nada hasta el día 15.</p>
             </div>
+            <button id="btn-payment-choice-later" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all">Empezar a usar Ressetia</button>
             <div class="grid grid-cols-2 gap-3">
-                <button id="btn-payment-choice-yes" class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-3 rounded-xl text-sm transition-all">Sí</button>
-                <button id="btn-payment-choice-no" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-bold py-3 rounded-xl text-sm transition-all">No</button>
+                <button id="btn-payment-choice-yes" class="bg-slate-800 hover:bg-slate-700 border border-cyan-500/30 text-cyan-200 font-semibold py-2.5 rounded-xl text-xs transition-all">Dejar lista con Mercado Pago</button>
+                <button id="btn-payment-choice-no" class="bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 font-semibold py-2.5 rounded-xl text-xs transition-all">Pagar por transferencia</button>
             </div>
             <button id="btn-payment-choice-ebook" class="text-xs text-emerald-300 hover:text-emerald-200 underline underline-offset-2"><i class="fa-solid fa-book"></i> Compré el ebook, tengo un código</button>
         </div>
@@ -1254,7 +1255,7 @@
             <div class="text-center space-y-1">
                 <i class="fa-solid fa-building-columns text-fuchsia-400 text-2xl"></i>
                 <h3 class="font-bold text-white text-base">Pago por Transferencia</h3>
-                <p class="text-xs sm:text-sm text-slate-400">Tenés 14 días de prueba gratis. Cuando quieras activar tu plan, transferí a estos datos:</p>
+                <p class="text-xs sm:text-sm text-slate-400">Cuando quieras mantener la IA después de tu prueba, transferí a estos datos:</p>
             </div>
 
             <div class="bg-slate-900/70 border border-fuchsia-500/20 rounded-2xl p-4 space-y-3">
@@ -1284,7 +1285,7 @@
                 <a href="https://wa.me/5491162332122?text=Hola!%20Transfer%C3%AD%20para%20activar%20mi%20plan%20de%20Ressetia,%20te%20paso%20el%20comprobante" target="_blank" class="block text-center bg-fuchsia-500/20 hover:bg-fuchsia-500/30 border border-fuchsia-500/40 text-fuchsia-300 font-bold py-2.5 rounded-xl text-sm transition-all">
                     <i class="fa-brands fa-whatsapp"></i> Enviar comprobante por WhatsApp
                 </a>
-                <button onclick="closeBankTransferModal()" class="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">Cerrar y seguir usando mi prueba gratis</button>
+                <button onclick="closeBankTransferModal()" class="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2">Cerrar y seguir usando Ressetia</button>
             </div>
         </div>
     </div>
@@ -1293,8 +1294,8 @@
         <div class="glass-panel p-6 rounded-3xl w-full max-w-sm space-y-4 border border-cyan-500/30">
             <div class="text-center space-y-1">
                 <i class="fa-solid fa-credit-card text-cyan-400 text-2xl"></i>
-                <h3 class="font-bold text-white text-base">Activá tu prueba gratis de 14 días</h3>
-                <p class="text-xs sm:text-sm text-slate-400">Elegí tu plan y autorizá tu medio de pago ahora. No te cobramos nada hasta que termine tu prueba, y podés cancelar antes sin costo.</p>
+                <h3 class="font-bold text-white text-base">Dejá lista tu suscripción con IA</h3>
+                <p class="text-xs sm:text-sm text-slate-400">Elegí tu plan y autorizá Mercado Pago. No se cobra nada hasta que terminen tus 14 días gratis, y podés cancelar antes sin costo.</p>
             </div>
             <div class="grid grid-cols-2 gap-2">
                 <button data-plan="mensual" data-price="6999" class="payment-setup-plan-btn bg-slate-800 hover:bg-cyan-500/20 border border-white/10 hover:border-cyan-500/40 rounded-xl p-3 text-center transition-all">
@@ -1316,7 +1317,8 @@
                 <p id="discount-code-status" class="text-[11px] mt-1 hidden"></p>
             </div>
 
-            <p class="text-[11px] text-slate-500 text-center">Para usar Ressetia es necesario autorizar un medio de pago (no se cobra nada hasta el fin de la prueba gratis).</p>
+            <p class="text-[11px] text-slate-500 text-center">Es opcional: si no lo hacés ahora, el día 15 seguís con el plan Básico gratis.</p>
+            <button type="button" onclick="document.getElementById('payment-setup-modal').classList.add('hidden'); document.getElementById('payment-setup-modal').classList.remove('flex');" class="w-full text-xs text-slate-400 hover:text-slate-200 underline underline-offset-2">Ahora no, seguir probando</button>
         </div>
     </div>
 
@@ -1839,13 +1841,20 @@
             }
         });
 
+        document.getElementById('btn-payment-choice-later').addEventListener('click', async () => {
+            document.getElementById('payment-method-choice-modal').classList.add('hidden');
+            document.getElementById('payment-method-choice-modal').classList.remove('flex');
+            await sb.from('user_settings').upsert({ user_id: currentUser.id, payment_preference: 'ninguna' }, { onConflict: 'user_id' });
+            showToast('🎉 ¡Disfrutá tus 14 días con IA! Cuando quieras suscribirte, está en Mi Perfil.');
+        });
+
         document.getElementById('btn-payment-choice-no').addEventListener('click', async () => {
             document.getElementById('payment-method-choice-modal').classList.add('hidden');
             document.getElementById('payment-method-choice-modal').classList.remove('flex');
 
             await sb.from('user_settings').upsert({ user_id: currentUser.id, payment_preference: 'transferencia' }, { onConflict: 'user_id' });
 
-            showToast('🎉 ¡Listo! Tenés 14 días de prueba gratis, sin cargo.');
+            showToast('🎉 ¡Listo! Tus 14 días con IA siguen igual. Transferí cuando quieras mantener la IA.');
             document.getElementById('bank-transfer-modal').classList.remove('hidden');
             document.getElementById('bank-transfer-modal').classList.add('flex');
         });
@@ -1946,7 +1955,7 @@
             pass.placeholder = isSignup ? 'Mínimo 6 caracteres' : 'Tu contraseña';
             document.getElementById('auth-title').textContent = isSignup ? 'Ordená tu plata en 2 minutos' : 'Qué bueno verte de nuevo';
             document.getElementById('auth-subtitle').textContent = isSignup
-                ? 'Creá tu cuenta gratis y probá Ressetia con la Inteligencia Artificial incluida durante 14 días.'
+                ? 'Creá tu cuenta gratis, sin tarjeta, y probá Ressetia con la Inteligencia Artificial incluida durante 14 días.'
                 : 'Entrá con el email y la contraseña que usaste al registrarte.';
             setAuthMessage('', true);
         }
@@ -2024,11 +2033,11 @@
                 const hasPayment = !!settings.mp_preapproval_id;
 
                 if (settings.payment_preference === 'transferencia') {
-                    toast.innerHTML = `⚠️ Tu prueba gratis termina en ${daysLeft} día(s). Transferí para activar tu plan y no perder el acceso — <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');" class="underline font-bold">ver Alias/CBU</button>`;
+                    toast.innerHTML = `⚠️ Tu prueba con IA termina en ${daysLeft} día(s). Después seguís con el plan Básico gratis; transferí si querés mantener la IA — <button onclick="document.getElementById('bank-transfer-modal').classList.remove('hidden'); document.getElementById('bank-transfer-modal').classList.add('flex');" class="underline font-bold">ver Alias/CBU</button>`;
                 } else {
                     toast.textContent = hasPayment
-                        ? `⏰ Tu prueba gratis termina en ${daysLeft} día(s). Después de eso empieza el cobro automático de tu suscripción.`
-                        : `⚠️ Tu prueba gratis termina en ${daysLeft} día(s) y todavía no autorizaste tu medio de pago. Andá a "Suscribirme" para no perder el acceso.`;
+                        ? `⏰ Tu prueba con IA termina en ${daysLeft} día(s). Después empieza tu suscripción y seguís con la IA.`
+                        : `✨ Tu prueba con IA termina en ${daysLeft} día(s). Después seguís gratis con el plan Básico. Si querés mantener la IA, suscribite en Mi Perfil.`;
                 }
                 toast.classList.remove('hidden');
             }
