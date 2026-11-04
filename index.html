@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   :root {
@@ -22,7 +22,7 @@
     --debt: #fb7185;
     --text: #eef2ff;
     --muted: #8a93a8;
-    --display: 'Unbounded', sans-serif;
+    --display: 'Inter Tight', sans-serif;
     --body: 'Manrope', sans-serif;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,7 +46,7 @@
 
   /* ---------- nav en píldora ---------- */
   .nav { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; gap: 6px; padding: 6px 6px 6px 14px; border-radius: 999px; background: rgba(8,9,16,.72); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); width: max-content; max-width: calc(100% - 24px); }
-  .brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 800; font-size: .95rem; margin-right: 6px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 700; letter-spacing: -0.02em; font-size: .95rem; margin-right: 6px; }
   .brand-mark { width: 26px; height: 26px; border-radius: 8px; background: linear-gradient(135deg, var(--cyan), #0891b2); display: grid; place-items: center; color: #001318; font-size: .8rem; box-shadow: 0 0 14px rgba(34,211,238,.6); }
   .nav-link { font-size: .88rem; font-weight: 600; color: var(--muted); padding: 8px 12px; border-radius: 999px; }
   .nav-link:hover { color: var(--text); }
@@ -61,8 +61,8 @@
   .hero-grid { position: relative; display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
   .ai-chip { display: inline-flex; align-items: center; gap: 8px; font-size: .85rem; font-weight: 700; color: #f5b8ff; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(224,64,251,.45); background: rgba(224,64,251,.08); box-shadow: 0 0 18px rgba(224,64,251,.2); }
   .ai-chip i { color: var(--fuchsia); }
-  .hero h1 { font-family: var(--display); font-weight: 800; font-size: clamp(2.3rem, 5.6vw, 4.4rem); line-height: 1.04; letter-spacing: -0.02em; margin: 22px 0 20px; }
-  .hero h1 .line2 { display: block; font-weight: 600; font-size: .66em; line-height: 1.15; margin-top: .35em; }
+  .hero h1 { font-family: var(--display); font-weight: 600; font-size: clamp(2.5rem, 6vw, 4.6rem); line-height: 1.02; letter-spacing: -0.04em; margin: 22px 0 20px; }
+  .hero h1 .line2 { display: block; font-weight: 500; font-size: .62em; line-height: 1.15; letter-spacing: -0.03em; margin-top: .4em; }
   .rotator { display: block; min-height: 2.3em; }
   .rotator span { display: inline; }
   .hero .lead { font-size: 1.12rem; color: #c3c9d9; max-width: 34em; }
@@ -79,7 +79,7 @@
   .notch { width: 92px; height: 22px; border-radius: 0 0 14px 14px; background: #000; margin: 0 auto; flex-shrink: 0; }
   .screen-top { padding: 12px 18px 10px; border-bottom: 1px solid var(--line); }
   .screen-top small { color: var(--muted); font-size: .72rem; }
-  .balance { font-family: var(--display); font-weight: 800; font-size: 1.6rem; color: var(--money); text-shadow: 0 0 14px rgba(74,222,128,.45); font-variant-numeric: tabular-nums; transition: color .3s; }
+  .balance { font-family: var(--display); font-weight: 600; letter-spacing: -0.03em; font-size: 1.6rem; color: var(--money); text-shadow: 0 0 14px rgba(74,222,128,.45); font-variant-numeric: tabular-nums; transition: color .3s; }
   .chat { flex: 1; padding: 14px 14px 10px; display: flex; flex-direction: column; justify-content: flex-end; gap: 9px; overflow: hidden; }
   .msg { max-width: 86%; font-size: .82rem; line-height: 1.45; padding: 9px 12px; border-radius: 16px; opacity: 0; transform: translateY(8px); transition: opacity .35s ease, transform .35s ease; }
   .msg.show { opacity: 1; transform: none; }
@@ -105,13 +105,13 @@
   section { position: relative; }
   .block { padding: 110px 0; }
   .block-head { max-width: 760px; margin: 0 auto 56px; text-align: center; }
-  .block-head h2 { font-family: var(--display); font-weight: 800; font-size: clamp(1.9rem, 4.2vw, 3.1rem); line-height: 1.1; letter-spacing: -0.015em; }
+  .block-head h2 { font-family: var(--display); font-weight: 600; font-size: clamp(2rem, 4.4vw, 3.2rem); line-height: 1.08; letter-spacing: -0.035em; }
   .block-head p { color: var(--muted); font-size: 1.08rem; margin-top: 16px; }
 
   /* números gigantes de la realidad argentina */
   .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 28px; overflow: hidden; }
   .stat { background: var(--void); padding: 44px 30px; text-align: center; }
-  .stat .big { font-family: var(--display); font-weight: 800; font-size: clamp(3rem, 8vw, 5.4rem); line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat .big { font-family: var(--display); font-weight: 600; letter-spacing: -0.04em; font-size: clamp(3rem, 8vw, 5.4rem); line-height: 1; font-variant-numeric: tabular-nums; }
   .stat p { color: #c3c9d9; margin-top: 14px; max-width: 22em; margin-left: auto; margin-right: auto; }
   .source { text-align: center; color: #5d6478; font-size: .78rem; margin-top: 18px; }
   @media (max-width: 640px) { .stats { grid-template-columns: 1fr; } }
@@ -120,7 +120,7 @@
   .ai-rows { display: flex; flex-direction: column; gap: 26px; }
   .ai-row { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; padding: 36px; border-radius: 32px; background: linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,0)); border: 1px solid var(--line); }
   .ai-row:nth-child(even) .ai-visual { order: -1; }
-  .ai-row h3 { font-family: var(--display); font-weight: 600; font-size: clamp(1.4rem, 2.8vw, 2rem); line-height: 1.15; margin: 14px 0 12px; }
+  .ai-row h3 { font-family: var(--display); font-weight: 600; letter-spacing: -0.03em; font-size: clamp(1.4rem, 2.8vw, 2rem); line-height: 1.15; margin: 14px 0 12px; }
   .ai-row p { color: #c3c9d9; }
   .ai-row .ex { margin-top: 16px; font-size: .92rem; color: var(--muted); }
   .ai-row .ex q { color: var(--text); font-style: normal; }
@@ -155,7 +155,7 @@
   /* pasos (sí es una secuencia) */
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; }
   .step { padding: 30px 26px; border-radius: 26px; border: 1px solid var(--line); background: var(--panel); }
-  .step .n { font-family: var(--display); font-weight: 800; font-size: 2.6rem; line-height: 1; }
+  .step .n { font-family: var(--display); font-weight: 600; font-size: 2.6rem; line-height: 1; }
   .step h3 { font-size: 1.12rem; font-weight: 800; margin: 18px 0 8px; }
   .step p { color: var(--muted); font-size: .96rem; }
   @media (max-width: 820px) { .steps { grid-template-columns: 1fr; } }
@@ -175,7 +175,7 @@
   .plan.star { border-color: rgba(34,211,238,.7); box-shadow: 0 0 0 1px rgba(34,211,238,.35), 0 0 40px rgba(34,211,238,.22), inset 0 0 40px rgba(34,211,238,.05); }
   .plan .ribbon { position: absolute; top: -13px; left: 30px; font-size: .78rem; font-weight: 800; padding: 5px 12px; border-radius: 999px; background: var(--cyan); color: #001318; box-shadow: 0 0 16px rgba(34,211,238,.6); }
   .plan h3 { font-size: 1.05rem; font-weight: 800; color: #c3c9d9; }
-  .plan .price { font-family: var(--display); font-weight: 800; font-size: 2.9rem; margin: 10px 0 2px; font-variant-numeric: tabular-nums; }
+  .plan .price { font-family: var(--display); font-weight: 600; letter-spacing: -0.04em; font-size: 2.9rem; margin: 10px 0 2px; font-variant-numeric: tabular-nums; }
   .plan .price small { font-family: var(--body); font-size: 1rem; font-weight: 600; color: var(--muted); }
   .plan .save { color: var(--money); font-weight: 700; font-size: .92rem; }
   .plan ul { list-style: none; margin: 22px 0 28px; display: flex; flex-direction: column; gap: 10px; font-size: .95rem; color: #c3c9d9; }
@@ -204,7 +204,7 @@
   /* cierre con cartel de neón */
   .final { padding: 120px 0 130px; text-align: center; overflow: hidden; }
   .final::before { content: ""; position: absolute; inset: 0; background: radial-gradient(520px 300px at 50% 55%, rgba(224,64,251,.18), transparent 70%); pointer-events: none; }
-  .sign { position: relative; display: inline-block; font-family: var(--display); font-weight: 800; font-size: clamp(2.2rem, 7vw, 5.2rem); line-height: 1.05; padding: 26px 34px; border-radius: 28px; border: 2px solid rgba(224,64,251,.75); box-shadow: 0 0 20px rgba(224,64,251,.5), inset 0 0 20px rgba(224,64,251,.3); }
+  .sign { position: relative; display: inline-block; font-family: var(--display); font-weight: 600; letter-spacing: -0.04em; font-size: clamp(2.2rem, 7vw, 5.2rem); line-height: 1.05; padding: 26px 34px; border-radius: 28px; border: 2px solid rgba(224,64,251,.75); box-shadow: 0 0 20px rgba(224,64,251,.5), inset 0 0 20px rgba(224,64,251,.3); }
   .final p { position: relative; color: #c3c9d9; margin: 30px auto 34px; max-width: 34em; }
   .final .btn { position: relative; }
   .flicker { animation: flicker 4.5s infinite; }
