@@ -4,7 +4,7 @@
 // hay señal, los gastos/ingresos nuevos se guardan localmente y se sincronizan
 // solos apenas vuelve la conexión (eso lo maneja index.html, no este archivo).
 
-const CACHE_NAME = 'ressetia-shell-v16';
+const CACHE_NAME = 'ressetia-shell-v17';
 const APP_SHELL = [
   './',
   './index.html',
@@ -16,7 +16,8 @@ const APP_SHELL = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).catch((err) => {
+    // cache: 'reload' → siempre baja la versión nueva del servidor, nunca una copia vieja
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL.map((url) => new Request(url, { cache: 'reload' })))).catch((err) => {
       console.warn('No se pudo precachear todo el shell (no es grave):', err);
     })
   );

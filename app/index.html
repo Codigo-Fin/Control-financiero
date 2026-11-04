@@ -1125,6 +1125,8 @@
                         <i class="fa-solid fa-trash-can"></i> Eliminar mi cuenta permanentemente
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
+                    <!-- Sirve para confirmar que el celular ya tiene la última versión -->
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 17 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -4289,6 +4291,7 @@
             renderApp();
             if (window.LF) await window.LF.reload();
             loadSaldoFavorContra();
+            fetchInvestmentsTotal();
             showToast('✅ Reinicio total completado. Todo quedó en cero, de verdad.');
         });
 
@@ -4496,12 +4499,21 @@
         // pestaña activa, estilo Lemon Cash.
         // Trae el total invertido (leyendo directo de la misma tabla que usa
         // Libertad Financiera), para mostrarlo en la tarjeta de "Inversiones" acá.
+        // Total de la cartera para la tarjeta "Inversiones" de Inicio. Usa el precio ACTUAL
+        // (el que se actualiza solo), no el de compra. Primero muestra lo guardado en el
+        // celular (al instante) y después confirma con la base.
         async function fetchInvestmentsTotal() {
+            if (!currentUser) return;
+            const el = document.getElementById('stat-investments-total');
+            try {
+                const raw = localStorage.getItem(`finzia_lf_snapshot_${currentUser.id}`);
+                const snap = raw ? JSON.parse(raw) : null;
+                if (el) el.textContent = formatMoney(snap && typeof snap.inversiones_total === 'number' ? snap.inversiones_total : 0);
+            } catch (e) { /* seguimos con la base */ }
             try {
                 const { data } = await sb.from('libertad_financiera_data').select('investments').eq('user_id', currentUser.id).maybeSingle();
                 const investments = (data && data.investments) || [];
-                const total = investments.reduce((acc, inv) => acc + (parseFloat(inv.qty) || 0) * (parseFloat(inv.price) || 0), 0);
-                const el = document.getElementById('stat-investments-total');
+                const total = investments.reduce((acc, inv) => acc + (parseFloat(inv.qty) || 0) * (parseFloat(inv.currentPrice) || parseFloat(inv.price) || 0), 0);
                 if (el) el.textContent = formatMoney(total);
             } catch (err) {
                 console.warn('No se pudo traer el total de inversiones:', err);
@@ -4753,6 +4765,7 @@
             if (tabName !== 'lf') {
                 document.querySelectorAll('a.bottomnav-btn[href^="libertad-financiera.html"]').forEach(a => a.classList.remove('active'));
                 if (typeof loadSaldoFavorContra === 'function') loadSaldoFavorContra();
+                if (currentUser && typeof fetchInvestmentsTotal === 'function') fetchInvestmentsTotal();
                 if (window.__ressetiaMainDirty && currentUser) {
                     window.__ressetiaMainDirty = false;
                     loadAllUserData();
@@ -5945,7 +5958,22 @@
             checkSession().then(() => { checkReturnFromPayment(); checkPatrimonioPaymentConfirmation(); fetchInvestmentsTotal(); loadSaldoFavorContra(); });
 
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(err => console.error('Error registrando el service worker:', err));
+                // Si ya había una versión guardada en el celular y llega una nueva, recargamos
+                // una sola vez para que la persona use SIEMPRE la última versión (antes podía
+                // quedarse con la vieja hasta cerrar del todo la app).
+                const hadController = !!navigator.serviceWorker.controller;
+                let reloadingForUpdate = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!hadController || reloadingForUpdate) return;
+                    reloadingForUpdate = true;
+                    window.location.reload();
+                });
+                navigator.serviceWorker.register('./sw.js').then((reg) => {
+                    // Al volver a la app (desde otra app del celular) buscamos si hay versión nueva
+                    document.addEventListener('visibilitychange', () => {
+                        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+                    });
+                }).catch(err => console.error('Error registrando el service worker:', err));
             }
 
             // ============================================
@@ -7584,6 +7612,7 @@
         renderEmergencyBox('emergencyFull');
         render();
         if (typeof loadSaldoFavorContra === 'function') loadSaldoFavorContra();
+        if (typeof fetchInvestmentsTotal === 'function') fetchInvestmentsTotal();
         await showAlertModal('Listo, todo reiniciado. Podés empezar de cero.');
     });
 
