@@ -1698,7 +1698,12 @@
             <form id="investForm" class="space-y-3">
                 <div>
                     <label>Nombre del Activo / Acción / ETF</label>
-                    <input type="text" id="investName" placeholder="Ej: S&P 500 (SPY), CEDEAR Nvidia, ETF" required>
+                    <input type="text" id="investName" placeholder="Ej: Google, CEDEAR Nvidia, S&P 500" required>
+                </div>
+                <div>
+                    <label>Ticker (para que el precio se actualice solo)</label>
+                    <input type="text" id="investTicker" maxlength="10" autocapitalize="characters" placeholder="Ej: GOOGL, NVDA, SPY, YPFD" style="text-transform: uppercase">
+                    <p class="text-[11px] text-slate-500 mt-1">El código con el que cotiza en la bolsa argentina (CEDEARs y acciones, en pesos). Si no lo sabés, dejalo vacío y cargá el precio a mano.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -1713,7 +1718,13 @@
                 <button type="submit" class="btn bg-purple-500 hover:bg-purple-400 text-slate-950">Registrar en Cartera</button>
             </form>
             <div>
-                <label>Tus Inversiones Actuales</label>
+                <div class="flex items-center justify-between gap-2 mb-1.5">
+                    <label style="margin-bottom:0">Tus Inversiones Actuales</label>
+                    <button type="button" id="btnRefreshPrices" class="text-[11px] font-bold text-purple-300 bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 px-2.5 py-1 rounded-lg flex items-center gap-1.5">
+                        <i class="fa-solid fa-rotate"></i> Actualizar precios
+                    </button>
+                </div>
+                <p id="pricesUpdatedLabel" class="text-[11px] text-slate-500 mb-2 hidden"></p>
                 <div id="investList" class="space-y-2"></div>
             </div>
         </div>
@@ -6130,6 +6141,7 @@
             userSalary = parseFloat(salary) || 0;
             await fetchExternalPatrimonioNeto();
             await loadLibertadData();
+            refreshInvestmentPrices();
             return true;
         })().catch((err) => {
             console.error('No se pudo cargar Libertad Financiera:', err);
@@ -6146,6 +6158,7 @@
             userSalary = parseFloat(salary) || 0;
             await fetchExternalPatrimonioNeto();
             await loadLibertadData();
+            refreshInvestmentPrices();
         }
     }
 
@@ -6588,11 +6601,92 @@
         const qty = parseFloat(document.getElementById('investQty').value);
         const price = parseFloat(document.getElementById('investPrice').value);
 
-        investments.push({ id: Date.now(), name, ticker: '', market: '', qty, price });
+        const ticker = normalizeTicker(document.getElementById('investTicker').value) || inferTickerFromName(name);
+        investments.push({ id: Date.now(), name, ticker, market: 'BCBA', qty, price });
         investForm.reset();
         await saveStorage();
         render();
+        if (ticker) refreshInvestmentPrices(true);
     });
+
+    // ============================================
+    // PRECIOS EN VIVO DE LA CARTERA (CEDEARs y acciones argentinas, en pesos)
+    // ============================================
+    const PRICE_REFRESH_MS = 10 * 60 * 1000; // como mucho cada 10 minutos
+    let pricesRefreshing = false;
+
+    function normalizeTicker(value) {
+        const t = String(value || '').trim().toUpperCase().replace(/\s+/g, '');
+        return /^[A-Z0-9.\-]{1,10}$/.test(t) ? t : '';
+    }
+    // "Google (GOOGL)" → GOOGL · "nvda" → NVDA. Si no se puede deducir, queda vacío.
+    function inferTickerFromName(name) {
+        const inParens = String(name || '').match(/\(([A-Za-z0-9.]{1,8})\)/);
+        if (inParens) return normalizeTicker(inParens[1]);
+        const trimmed = String(name || '').trim();
+        return /^[A-Za-z]{1,6}$/.test(trimmed) ? trimmed.toUpperCase() : '';
+    }
+
+    async function refreshInvestmentPrices(force = false) {
+        if (!currentUser || pricesRefreshing) return;
+        const withTicker = investments.filter(i => i.ticker);
+        if (withTicker.length === 0) return;
+        const lastKey = `prices_refreshed_at_${currentUser.id}`;
+        const last = parseInt(localStorage.getItem(lastKey) || '0', 10);
+        if (!force && Date.now() - last < PRICE_REFRESH_MS) return;
+
+        pricesRefreshing = true;
+        const btn = document.getElementById('btnRefreshPrices');
+        if (btn) btn.querySelector('i').classList.add('fa-spin');
+        try {
+            const tickers = [...new Set(withTicker.map(i => i.ticker))].join(',');
+            const resp = await fetch(`/api/get-stock-price?tickers=${encodeURIComponent(tickers)}&market=BCBA`);
+            const data = await resp.json();
+            if (!resp.ok || !data.prices) throw new Error(data.error || 'Sin precios');
+            let updated = 0;
+            const notFound = [];
+            withTicker.forEach(inv => {
+                const p = data.prices[inv.ticker];
+                if (p && p.price > 0) {
+                    inv.currentPrice = p.price;
+                    inv.dayChangePct = p.changePct;
+                    inv.priceUpdatedAt = Date.now();
+                    inv.priceAuto = true;
+                    updated++;
+                } else {
+                    notFound.push(inv.ticker);
+                }
+            });
+            localStorage.setItem(lastKey, String(Date.now()));
+            if (updated > 0) {
+                await saveStorage();
+                render();
+            }
+            if (force) {
+                if (notFound.length) showLibertadToast(`No encontré precio para: ${notFound.join(', ')}. Revisá el ticker o cargalo a mano.`);
+                else showLibertadToast(`✅ Precios actualizados (${updated})`);
+            }
+        } catch (err) {
+            console.warn('No se pudieron actualizar los precios:', err);
+            if (force) showLibertadToast('No se pudieron traer los precios ahora. Probá en un rato.');
+        } finally {
+            pricesRefreshing = false;
+            if (btn) btn.querySelector('i').classList.remove('fa-spin');
+        }
+    }
+    document.getElementById('btnRefreshPrices').addEventListener('click', () => refreshInvestmentPrices(true));
+
+    async function setInvestTicker(id, value) {
+        const inv = investments.find(i => i.id == id);
+        if (!inv) return;
+        const t = normalizeTicker(value);
+        if (!t) { showLibertadToast('Escribí un ticker válido, por ejemplo GOOGL'); return; }
+        inv.ticker = t;
+        inv.market = 'BCBA';
+        await saveStorage();
+        render();
+        refreshInvestmentPrices(true);
+    }
 
     async function deleteInvest(id) {
         if (await showConfirmModal('¿Deseas quitar este activo de tu cartera?', true)) {
@@ -6609,6 +6703,8 @@
         if (!inv) return;
         const parsed = parseFloat(newPrice);
         inv.currentPrice = (!isNaN(parsed) && parsed > 0) ? parsed : inv.price;
+        inv.priceAuto = false;
+        inv.priceUpdatedAt = Date.now();
         await saveStorage();
         render();
         showLibertadToast(`Precio de "${inv.name}" actualizado a $${inv.currentPrice.toLocaleString()}`);
@@ -7154,7 +7250,19 @@
                             Guardar
                         </button>
                     </div>
-                    <div class="text-right">
+                    ${ticker ? '' : `
+                    <div class="flex items-center gap-2 bg-purple-500/5 border border-purple-500/20 rounded-xl p-2">
+                        <input type="text" id="ticker-input-${inv.id}" maxlength="10" placeholder="Ticker (ej: GOOGL)" style="text-transform: uppercase"
+                            class="flex-1 min-w-0 bg-slate-800 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white">
+                        <button onclick="setInvestTicker(${inv.id}, document.getElementById('ticker-input-${inv.id}').value)"
+                            class="bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 text-[10px] font-bold px-2 py-1.5 rounded-lg whitespace-nowrap">
+                            Precio automático
+                        </button>
+                    </div>`}
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-[10px] text-slate-500">${inv.priceAuto && inv.priceUpdatedAt
+                            ? `Precio en vivo · ${new Date(inv.priceUpdatedAt).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}${typeof inv.dayChangePct === 'number' ? ` · hoy ${inv.dayChangePct >= 0 ? '+' : ''}${inv.dayChangePct.toFixed(1)}%` : ''}`
+                            : (ticker ? 'Esperando precio en vivo…' : 'Precio cargado a mano')}</span>
                         <span class="text-[11px] font-bold ${gainClass} whitespace-nowrap">${gainSign}$${Math.abs(gainLoss).toLocaleString()} (${gainSign}${gainLossPct}%)</span>
                     </div>
                 `;
@@ -8518,6 +8626,7 @@
     window.injectInvestToDebt = injectInvestToDebt;
     window.payMin = payMin;
     window.payTotal = payTotal;
+    window.setInvestTicker = setInvestTicker;
     window.payOneCuotaGeneric = payOneCuotaGeneric;
     window.promptAportarMeta = promptAportarMeta;
     window.switchLfTab = switchLfTab;
