@@ -1154,7 +1154,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 26 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 27 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -7433,6 +7433,7 @@
     extraForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const { category, detail, amount } = getExtraFormValues();
+        const projectId = document.getElementById('extraProjectLink').value || null; // se lee antes de limpiar el formulario
         if (amount <= 0) { await showAlertModal('Completá un monto válido'); return; }
 
         const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
@@ -7465,12 +7466,13 @@
         // eligió un proyecto, registramos el ingreso también en Control Financiero
         // etiquetado con ese proyecto — así "Mis Proyectos" puede contar cuántas
         // veces cobró cada uno.
-        await tagIncomeWithProjectIfSelected(amount, category, detail);
+        await tagIncomeWithProjectIfSelected(amount, category, detail, projectId);
     });
 
     // Botón "Mantener Dinero Extra" — va directo al Saldo a Favor, sin tocar deudas
     document.getElementById('btnKeepExtra').addEventListener('click', async () => {
         const { category, detail, amount } = getExtraFormValues();
+        const projectId = document.getElementById('extraProjectLink').value || null; // se lee antes de limpiar el formulario
         if (amount <= 0) { await showAlertModal('Completá un monto válido'); return; }
 
         const pendingDebts = debts.filter(d => !d.cleared && d.amount > 0);
@@ -7492,15 +7494,15 @@
         }
 
         resetExtraForm();
-        await tagIncomeWithProjectIfSelected(amount, category, detail);
+        await tagIncomeWithProjectIfSelected(amount, category, detail, projectId);
     });
 
     // Registra el ingreso en Control Financiero, etiquetado con el proyecto elegido
     // (si eligió alguno) — no afecta nada de lo que ya pasó arriba, es adicional.
     // Registra el ingreso en Control Financiero SIEMPRE (antes solo lo hacía si
     // había un proyecto elegido, por eso no se reflejaba en el Saldo).
-    async function tagIncomeWithProjectIfSelected(amount, category, detail) {
-        const projectId = document.getElementById('extraProjectLink').value || null;
+    async function tagIncomeWithProjectIfSelected(amount, category, detail, chosenProjectId) {
+        const projectId = chosenProjectId || findProjectIdByName(detail);
         try {
             const { error } = await lfTx().insert({
                 user_id: currentUser.id,
@@ -7514,6 +7516,7 @@
             if (error) throw error;
             document.getElementById('extraProjectLink').value = '';
             await fetchExternalPatrimonioNeto(); // se registró un ingreso nuevo, refrescamos el Saldo
+            if (projectId) { await loadProjects(); showLibertadToast('✅ Cobro sumado a tu proyecto'); }
         } catch (err) {
             console.error('No se pudo registrar el ingreso en Control Financiero:', err);
             await showAlertModal('No se pudo registrar este ingreso en tu Saldo. Probá de nuevo en un momento.');
@@ -8382,6 +8385,18 @@
         }
     });
 
+    // Proyectos cargados (para reconocer un cobro por el nombre)
+    let loadedProjectsCache = [];
+    function normProjectName(s) {
+        return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    }
+    function findProjectIdByName(text) {
+        const n = normProjectName(text);
+        if (!n) return null;
+        const match = loadedProjectsCache.find(p => normProjectName(p.name) === n);
+        return match ? match.id : null;
+    }
+
     async function loadProjects() {
         try {
             const { data: projects, error } = await sb.from('projects').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
@@ -8389,7 +8404,11 @@
 
             // Traemos también los Ingresos Extras etiquetados, para contar cuántas
             // veces cobró cada proyecto (la señal de que ya es un sistema, no venta suelta)
-            const { data: taggedIncomes } = await sb.from('transactions').select('project_id, price').eq('user_id', currentUser.id).not('project_id', 'is', null);
+            // También los ingresos sin etiqueta que se llaman igual que el proyecto
+            // (ej. cobros cargados antes de crear el proyecto)
+            const { data: allIncomes } = await sb.from('transactions').select('project_id, price, name').eq('user_id', currentUser.id).eq('type', 'ingreso');
+            loadedProjectsCache = projects || [];
+            const taggedIncomes = allIncomes || [];
 
             const projectsList = document.getElementById('projectsList');
             const projectLinkSelect = document.getElementById('extraProjectLink');
@@ -8411,7 +8430,8 @@
             const statusColors = { idea: 'text-slate-400', vendiendo: 'text-amber-400', sistema: 'text-emerald-400' };
 
             projectsList.innerHTML = projects.map(p => {
-                const cobros = (taggedIncomes || []).filter(t => t.project_id === p.id);
+                const cobros = taggedIncomes.filter(t => t.project_id === p.id ||
+                    (!t.project_id && normProjectName(t.name) === normProjectName(p.name)));
                 const totalGenerado = cobros.reduce((acc, t) => acc + parseFloat(t.price || 0), 0);
                 const cantCobros = cobros.length;
                 const esSistema = cantCobros >= 3;
@@ -8425,7 +8445,7 @@
                         <p class="text-[11px] text-slate-500">${p.problem_solved}</p>
                         <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-white/10">
                             <span>${cantCobros} cobro${cantCobros !== 1 ? 's' : ''} registrado${cantCobros !== 1 ? 's' : ''}</span>
-                            <span class="font-bold text-teal-300">$${Math.round(totalGenerado).toLocaleString()}</span>
+                            <span class="font-bold text-teal-300">${formatMoney(totalGenerado)}</span>
                         </div>
                         ${esSistema ? `
                         <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-2.5 text-[11px] text-emerald-300">
