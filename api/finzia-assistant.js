@@ -88,7 +88,12 @@ REGLAS ESTRICTAS QUE TENÉS QUE SEGUIR SIEMPRE (aplican al contenido de "answer"
 11. Si te preguntan qué es "Tu Número de Libertad Financiera" (dentro de "Inversiones"), explicá esto: es cuánta plata necesitás tener invertida para poder vivir de las rentas (la regla del 4% anual) sin tener que trabajar más. Se calcula así: tu gasto mensual para vivir, multiplicado por 12 meses, y ese resultado multiplicado por 25 — ese número es lo que necesitarías invertido. Aclará que esto no se logra de un día para el otro, es el ÚLTIMO paso de todos: primero hay que estar sin deudas, segundo tener el Fondo de Emergencia de 6 meses de sueldo, y recién como tercer paso apuntar a este número.
 12. Si la pregunta no tiene nada que ver con finanzas personales, respondé amablemente que solo podés ayudar con temas de plata dentro de la app, y redirigí la conversación ahí.
 13. No uses markdown con asteriscos ni títulos con #, escribí en texto plano simple, con saltos de línea y números (1, 2, 3) para los pasos, dentro del campo "answer".
-14. Devolvé SOLO el JSON pedido, nada de texto antes ni después.`;
+14. Devolvé SOLO el JSON pedido, nada de texto antes ni después.
+15. USÁ TODA LA HISTORIA DE LA PERSONA, no solo el mes: abajo tenés "HISTORIAL Y TODO LO REGISTRADO EN LA APP" (deudas ya canceladas, pagos hechos a deudas, proyectos con sus cobros, metas de ahorro, sobres del reparto, resumen de los últimos meses y últimos movimientos). Antes de responder, revisalo y conectá la respuesta con eso. Por ejemplo:
+   - Si pregunta cómo pagar sus deudas o dice que está endeudado pero "Deudas activas" está vacía: decile con claridad que en la app no tiene deudas activas; si en "deudas_ya_canceladas" hay alguna, reconocé su logro nombrándolas (y lo pagado si está), y si de verdad tiene una deuda nueva, invitalo a cargarla en Deudas → Registrar para armarle el plan.
+   - Si tiene deudas activas y ya canceló otras, mencioná ese avance como motivación (la bola de nieve ya está rodando).
+   - Si pregunta por un proyecto, una meta, un sobre o un mes anterior, respondé con esos números reales.
+   Nunca inventes datos que no estén ahí; si algo no figura, decí que no lo tenés registrado.`;
 
   const debtStatusLine = snapshot.deudas_no_verificable
     ? '- Deudas activas: NO SE PUDO VERIFICAR AHORA (hubo un error técnico al consultar) — NUNCA le digas a la persona que no tiene deuda por esto. Si te preguntan sobre deudas, aclarales que hubo un problema técnico para chequear y que reintenten en un momento.'
@@ -106,7 +111,10 @@ ${debtStatusLine}
 - Inversiones: ${snapshot.inversiones ? JSON.stringify(snapshot.inversiones) : 'sin datos'}
 - Valor total de inversiones: ${snapshot.inversiones_total !== undefined ? '$' + snapshot.inversiones_total.toLocaleString('es-AR') : 'sin datos'}
 - Saldo a favor o en contra (positivo = a favor, negativo = en contra): ${snapshot.saldo_favor_o_contra !== undefined && snapshot.saldo_favor_o_contra !== null ? '$' + snapshot.saldo_favor_o_contra.toLocaleString('es-AR') : 'sin datos'}
-- Fondo de Emergencia actual (plata ya juntada ahí): ${snapshot.fondo_emergencia_actual !== undefined && snapshot.fondo_emergencia_actual !== null ? '$' + snapshot.fondo_emergencia_actual.toLocaleString('es-AR') : 'sin datos'}`;
+- Fondo de Emergencia actual (plata ya juntada ahí): ${snapshot.fondo_emergencia_actual !== undefined && snapshot.fondo_emergencia_actual !== null ? '$' + snapshot.fondo_emergencia_actual.toLocaleString('es-AR') : 'sin datos'}
+
+HISTORIAL Y TODO LO REGISTRADO EN LA APP (montos en pesos):
+${snapshot.contexto_completo && typeof snapshot.contexto_completo === 'object' ? JSON.stringify(snapshot.contexto_completo).slice(0, 12000) : 'sin datos'}`;
 
   const messages = [];
   if (Array.isArray(history)) {
@@ -122,8 +130,23 @@ ${debtStatusLine}
   }
   messages.push({ role: 'user', content: `${dataContext}\n\nPregunta de la persona: ${String(question).slice(0, 2000)}` });
 
+  // Modelo nuevo (entiende mejor todo el contexto), respuesta directa sin razonamiento largo
+  let useLegacy = false;
+  const modelParams = () => useLegacy
+    ? { model: 'claude-haiku-4-5-20251001', max_tokens: 900 }
+    : { model: 'claude-haiku-5-5', max_tokens: 1200, thinking: { type: 'disabled' }, output_config: { effort: 'medium' } };
+  const callClaude = () => fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({ ...modelParams(), system: systemPrompt, messages })
+    });
+
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    let response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -131,22 +154,30 @@ ${debtStatusLine}
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 900,
+        ...modelParams(),
         system: systemPrompt,
         messages: messages
       })
     });
 
-    const data = await response.json();
+    let data = await response.json();
+    // Si el modelo nuevo no estuviera disponible en la cuenta, se usa el anterior (así nunca se rompe)
+    if (!response.ok && !useLegacy && (response.status === 400 || response.status === 404)) {
+      console.error('Modelo nuevo no disponible, uso el anterior:', JSON.stringify(data));
+      useLegacy = true;
+      response = await callClaude();
+      data = await response.json();
+    }
 
     if (!response.ok) {
       console.error('Error de Anthropic en finzia-assistant:', data);
       return res.status(500).json({ error: 'Error al consultar la IA', detail: data });
     }
 
-    const rawText = data.content?.[0]?.text || '{}';
-    const cleaned = rawText.replace(/```json|```/g, '').trim();
+    const rawText = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('') || '{}';
+    const stripped = rawText.replace(/```json|```/g, '').trim();
+    const jsonMatch = stripped.match(/\{[\s\S]*\}/);
+    const cleaned = jsonMatch ? jsonMatch[0] : stripped;
     let parsed;
     try {
       parsed = JSON.parse(cleaned);

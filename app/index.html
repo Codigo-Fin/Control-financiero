@@ -647,7 +647,7 @@
                     </span>
                     <button onclick="downloadPDF()" title="Compartir comprobante por WhatsApp" class="w-full bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-file-invoice text-rose-300"></i>
-                        <span>Comprobante PDF a WhatsApp</span>
+                        <span>Comprobante PDF (descargar o WhatsApp)</span>
                     </button>
                     <button onclick="shareWhatsApp()" title="Compartir resumen de texto" class="w-full bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-200 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5">
                         <i class="fa-brands fa-whatsapp text-cyan-400 text-sm"></i>
@@ -1154,7 +1154,7 @@
                     </button>
                     <p class="text-[10px] text-slate-600 mt-1.5">Esto borra tu cuenta y todos tus datos de forma permanente. No se puede deshacer.</p>
                     <!-- Sirve para confirmar que el celular ya tiene la última versión -->
-                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 28 (04/11/2026)</p>
+                    <p class="text-[10px] text-slate-600 mt-3">Versión de la app: 29 (04/11/2026)</p>
                 </div>
             </section>
         </div> <!-- fin tab-panel-perfil -->
@@ -3996,7 +3996,136 @@
         // ============================================
         // PDF ESTILO BOLETA/FACTURA + COMPARTIR WHATSAPP
         // ============================================
-        function buildPdfReportHTML(monthProducts) {
+        // ============================================
+        // PDF: gráficos + elegir "Descargar" o "Enviar por WhatsApp" (pedido del dueño)
+        // ============================================
+        // Dibuja un gráfico de Chart.js fuera de pantalla y lo devuelve como imagen
+        function renderChartImage(config, w = 520, h = 320) {
+            if (typeof Chart === 'undefined') return null;
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.style.cssText = `position:fixed;left:-10000px;top:0;width:${w}px;height:${h}px;`;
+            document.body.appendChild(canvas);
+            try {
+                const chart = new Chart(canvas.getContext('2d'), {
+                    ...config,
+                    options: { ...(config.options || {}), responsive: false, maintainAspectRatio: false, animation: false, devicePixelRatio: 2 }
+                });
+                const url = chart.toBase64Image('image/png');
+                chart.destroy();
+                return url;
+            } catch (err) {
+                console.warn('No se pudo dibujar el gráfico del PDF:', err);
+                return null;
+            } finally {
+                canvas.remove();
+            }
+        }
+
+        function buildPdfChartImages(monthProducts) {
+            const totals = {};
+            monthProducts.filter(p => p.type === 'egreso').forEach(p => {
+                const cat = p.category || 'Otros';
+                totals[cat] = (totals[cat] || 0) + (parseFloat(p.price) || 0);
+            });
+            const cats = Object.keys(totals).sort((a, b) => totals[b] - totals[a]);
+            const totalExpenses = cats.reduce((a, c) => a + totals[c], 0);
+            const totalIncome = salary + monthProducts.reduce((a, p) => p.type === 'ingreso' ? a + (parseFloat(p.price) || 0) : a, 0);
+            const net = totalIncome - totalExpenses;
+
+            const pie = cats.length ? renderChartImage({
+                type: 'doughnut',
+                data: { labels: cats, datasets: [{ data: cats.map(c => totals[c]), backgroundColor: cats.map((c, i) => CHART_COLORS[i % CHART_COLORS.length]), borderColor: '#ffffff', borderWidth: 2 }] },
+                options: {
+                    cutout: '55%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#111', font: { size: 11 }, boxWidth: 10, padding: 8 } },
+                        tooltip: { enabled: false }
+                    }
+                }
+            }, 520, 380) : null;
+
+            const bar = renderChartImage({
+                type: 'bar',
+                data: {
+                    labels: ['Ingresos', 'Gastos', 'Saldo'],
+                    datasets: [{ data: [totalIncome, totalExpenses, net], backgroundColor: ['#06b6d4', '#f43f5e', net >= 0 ? '#14b8a6' : '#fb7185'], borderRadius: 6 }]
+                },
+                options: {
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: {
+                        x: { ticks: { color: '#111', font: { size: 12, weight: 'bold' } }, grid: { display: false } },
+                        y: { ticks: { color: '#555', font: { size: 10 }, callback: v => formatMoney(v) }, grid: { color: '#eee' } }
+                    }
+                }
+            }, 520, 380);
+            return { pie, bar };
+        }
+
+        // Ventanita para elegir qué hacer con el PDF ya armado. Se pregunta DESPUÉS de
+        // generarlo: así el toque en "WhatsApp" abre el menú de compartir sin trabas.
+        function askPdfDelivery() {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.className = 'fixed inset-0 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 z-[9999]';
+                overlay.innerHTML = `
+                    <div class="glass-panel p-5 rounded-3xl w-full max-w-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-white text-base"><i class="fa-solid fa-file-pdf text-rose-300"></i> Tu PDF está listo</h3>
+                            <button type="button" data-pdf="close" class="text-slate-400 hover:text-white text-lg w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <button type="button" data-pdf="share" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-3 rounded-xl text-sm flex items-center justify-center gap-2">
+                            <i class="fa-brands fa-whatsapp text-lg"></i> Enviar PDF por WhatsApp
+                        </button>
+                        <button type="button" data-pdf="download" class="w-full bg-slate-800 hover:bg-slate-700 border border-white/10 text-slate-100 font-semibold px-3 py-3 rounded-xl text-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download"></i> Descargar al celular
+                        </button>
+                    </div>`;
+                overlay.addEventListener('click', e => {
+                    const btn = e.target.closest('[data-pdf]');
+                    if (!btn && e.target !== overlay) return;
+                    const choice = btn ? btn.dataset.pdf : 'close';
+                    overlay.remove();
+                    resolve(choice === 'close' ? null : choice);
+                });
+                document.body.appendChild(overlay);
+            });
+        }
+
+        function triggerPdfDownload(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 4000);
+        }
+
+        // Descargar o mandar por WhatsApp (en el celular abre el menú de compartir: elegís WhatsApp)
+        async function deliverPdfFile(blob, filename, title, text) {
+            const choice = await askPdfDelivery();
+            if (!choice) return;
+            if (choice === 'download') {
+                triggerPdfDownload(blob, filename);
+                showToast('✅ PDF descargado (lo encontrás en Descargas)');
+                return;
+            }
+            const file = new File([blob], filename, { type: 'application/pdf' });
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({ files: [file], title, text });
+                    showToast('Elegí WhatsApp y el contacto para mandarlo');
+                    return;
+                } catch (err) {
+                    if (err && err.name === 'AbortError') return; // la persona cerró el menú
+                }
+            }
+            // Sin menú de compartir (ej. computadora): se descarga y se abre WhatsApp para adjuntarlo
+            triggerPdfDownload(blob, filename);
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + ' (te adjunto el PDF)')}`, '_blank');
+            showToast('PDF descargado: adjuntalo en el chat de WhatsApp que se abrió');
+        }
+
+        function buildPdfReportHTML(monthProducts, charts = {}) {
             const totalExpenses = monthProducts.reduce((acc, p) => p.type === 'egreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
             const extraIncome = monthProducts.reduce((acc, p) => p.type === 'ingreso' ? acc + (parseFloat(p.price) || 0) : acc, 0);
             const totalIncome = salary + extraIncome;
@@ -4037,11 +4166,28 @@
                 rowsHTML = `<tr><td colspan="2" style="padding:16px 6px; text-align:center; color:#999; font-size:12px;">Sin gastos registrados este mes</td></tr>`;
             }
 
+            const incomeCell = 'padding:4px 6px; font-size:12px; color:#333; border-bottom:1px solid #eee;';
+            let incomeRowsHTML = salary > 0 ? `<tr><td style="${incomeCell}">Sueldo</td><td style="${incomeCell} text-align:right;">${formatMoney(salary)}</td></tr>` : '';
+            monthProducts.filter(p => p.type === 'ingreso').forEach(p => {
+                incomeRowsHTML += `<tr><td style="${incomeCell}">${escapeHtml(p.name)} — ${formatDateDisplay(p.date)}</td><td style="${incomeCell} text-align:right;">${formatMoney(p.price)}</td></tr>`;
+            });
+
+            let envelopeRowsHTML = '';
+            try {
+                const env = computeEnvelopes(monthProducts);
+                if (env) env.envs.forEach(v => {
+                    const c = 'padding:4px 6px; font-size:11px; color:#333; border-bottom:1px solid #eee;';
+                    envelopeRowsHTML += `<tr><td style="${c}">${escapeHtml(v.name)} (${v.pct}%)</td><td style="${c} text-align:right;">${formatMoney(v.assigned)}</td><td style="${c} text-align:right;">${formatMoney(v.spent)}</td><td style="${c} text-align:right; font-weight:bold; color:${v.left < 0 ? '#e11d48' : '#0d9488'};">${formatMoney(v.left)}</td></tr>`;
+                });
+            } catch (e) {}
+            const receiptNumber = `${selectedMonthFilter.replace('-', '')}-${String(Date.now()).slice(-6)}`;
+
             return `
                 <div style="border-bottom:3px solid #22d3ee; padding-bottom:16px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <h1 style="font-size:20px; font-weight:bold; margin:0; color:#111;">Comprobante Financiero</h1>
                         <p style="font-size:12px; color:#666; margin:4px 0 0 0;">${monthLabel} · Emitido el ${today}</p>
+                        <p style="font-size:11px; color:#888; margin:2px 0 0 0;">Comprobante N° ${receiptNumber}${currentUser?.email ? ' · ' + escapeHtml(currentUser.email) : ''}</p>
                     </div>
                     <div style="font-size:24px;">💰</div>
                 </div>
@@ -4063,6 +4209,28 @@
                     </tr>
                 </table>
 
+                ${(charts.pie || charts.bar) ? `
+                <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">
+                    <tr>
+                        ${charts.pie ? `<td style="width:50%; vertical-align:top; text-align:center; padding:4px;">
+                            <p style="font-size:12px; font-weight:bold; color:#111; margin:0 0 6px 0;">Distribución de Gastos</p>
+                            <img src="${charts.pie}" style="width:100%; max-width:320px;">
+                        </td>` : ''}
+                        ${charts.bar ? `<td style="width:50%; vertical-align:top; text-align:center; padding:4px;">
+                            <p style="font-size:12px; font-weight:bold; color:#111; margin:0 0 6px 0;">Ingresos vs Gastos</p>
+                            <img src="${charts.bar}" style="width:100%; max-width:320px;">
+                        </td>` : ''}
+                    </tr>
+                </table>` : ''}
+                ${incomeRowsHTML ? `
+                <h2 style="font-size:14px; font-weight:bold; color:#111; margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">Detalle de Ingresos</h2>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">${incomeRowsHTML}</table>` : ''}
+                ${envelopeRowsHTML ? `
+                <h2 style="font-size:14px; font-weight:bold; color:#111; margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">Mis Apartados (Reparto)</h2>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:18px;">
+                    <tr style="background:#f1f5f9;"><td style="padding:5px 6px; font-size:11px; font-weight:bold;">Sobre</td><td style="padding:5px 6px; font-size:11px; font-weight:bold; text-align:right;">Apartado</td><td style="padding:5px 6px; font-size:11px; font-weight:bold; text-align:right;">Usado</td><td style="padding:5px 6px; font-size:11px; font-weight:bold; text-align:right;">Queda</td></tr>
+                    ${envelopeRowsHTML}
+                </table>` : ''}
                 <h2 style="font-size:14px; font-weight:bold; color:#111; margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">Detalle de Gastos por Categoría</h2>
                 <table style="width:100%; border-collapse:collapse;">
                     ${rowsHTML}
@@ -4075,7 +4243,9 @@
         async function downloadPDF() {
             const monthProducts = products.filter(p => p.month === selectedMonthFilter);
             const template = document.getElementById('pdf-report-template');
-            document.getElementById('pdf-report-content').innerHTML = buildPdfReportHTML(monthProducts);
+            showToast('Armando tu comprobante...');
+            const charts = buildPdfChartImages(monthProducts);
+            document.getElementById('pdf-report-content').innerHTML = buildPdfReportHTML(monthProducts, charts);
             template.style.display = 'block';
 
             const filename = `Comprobante_${selectedMonthFilter}.pdf`;
@@ -4084,28 +4254,18 @@
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, backgroundColor: '#ffffff' },
-                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
 
             try {
                 await loadHtml2Pdf();
-                const worker = html2pdf().set(opt).from(template);
-                const pdfBlob = await worker.outputPdf('blob');
+                const pdfBlob = await html2pdf().set(opt).from(template).outputPdf('blob');
                 template.style.display = 'none';
-
-                const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: 'Comprobante Financiero', text: `Comprobante de ${formatMonthName(selectedMonthFilter)}` });
-                    showToast('Comprobante compartido');
-                } else {
-                    const url = URL.createObjectURL(pdfBlob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = filename; a.click();
-                    URL.revokeObjectURL(url);
-                    showToast('PDF descargado. Adjuntalo en WhatsApp manualmente.');
-                }
+                await deliverPdfFile(pdfBlob, filename, 'Comprobante Financiero', `Mi comprobante financiero de ${formatMonthName(selectedMonthFilter)}`);
             } catch (err) {
                 template.style.display = 'none';
+                console.error('Error generando el PDF:', err);
                 showToast('Error al generar el PDF', 'warning');
             }
         }
@@ -5740,6 +5900,67 @@
             document.getElementById('assistant-messages').appendChild(welcomeBubble);
         });
 
+        // Todo lo que la persona registró en la app, para que el asistente responda
+        // en base a su historia real (deudas ya canceladas, pagos, proyectos, metas,
+        // sobres, meses anteriores) y no solo con la foto del mes (pedido del dueño)
+        async function buildExtendedAssistantContext() {
+            const ctx = {};
+            if (!currentUser) return ctx;
+            const uid = currentUser.id;
+            const r2 = n => Math.round((Number(n) || 0) * 100) / 100;
+            const d = new Date();
+            const fromMonth = new Date(d.getFullYear(), d.getMonth() - 5, 1).toISOString().slice(0, 7);
+            const [lfRes, projRes, goalsRes, txRes] = await Promise.allSettled([
+                sb.from('libertad_financiera_data').select('debts, history').eq('user_id', uid).maybeSingle(),
+                sb.from('projects').select('id, name, status').eq('user_id', uid),
+                sb.from('savings_goals').select('name, target_amount, saved_amount, target_date').eq('user_id', uid),
+                sb.from('transactions').select('name, price, type, category, month, date, project_id').eq('user_id', uid).gte('month', fromMonth).order('date', { ascending: false }).limit(1500)
+            ]);
+            const ok = r => (r.status === 'fulfilled' && !r.value.error) ? r.value.data : null;
+            const lf = ok(lfRes), projects = ok(projRes), goals = ok(goalsRes), txs = ok(txRes);
+
+            if (lf) {
+                const history = Array.isArray(lf.history) ? lf.history : [];
+                const paidTo = {};
+                history.forEach(h => { if (h && h.targetName) paidTo[h.targetName] = (paidTo[h.targetName] || 0) + (Number(h.amount) || 0); });
+                const allDebts = Array.isArray(lf.debts) ? lf.debts : [];
+                ctx.deudas_ya_canceladas = allDebts.filter(x => x.cleared || !(Number(x.amount) > 0))
+                    .map(x => ({ nombre: x.name, total_pagado_registrado: r2(paidTo[x.name] || 0) }));
+                ctx.historial_de_pagos_a_deudas = history.slice(0, 20).map(h => ({
+                    fecha: h.date, monto: r2(h.amount), a: h.targetName, origen: h.detail || h.category, fue_pago_minimo: !!h.isMin
+                }));
+                ctx.total_pagado_a_deudas_registrado = r2(history.filter(h => h.targetName && h.targetName !== 'Saldo a Favor').reduce((a, h) => a + (Number(h.amount) || 0), 0));
+            }
+            if (txs) {
+                const clean = txs.filter(t => !/\(\d+(?:[.,]\d+)?% automático\)$/.test(t.name || ''));
+                const months = {};
+                clean.forEach(t => {
+                    const m = months[t.month] || (months[t.month] = { ingresos_cargados: 0, gastos: 0 });
+                    if (t.type === 'ingreso') m.ingresos_cargados += Number(t.price) || 0;
+                    if (t.type === 'egreso') m.gastos += Number(t.price) || 0;
+                });
+                ctx.resumen_ultimos_meses = Object.keys(months).sort().map(m => ({ mes: m, ingresos_cargados_sin_sueldo: r2(months[m].ingresos_cargados), gastos: r2(months[m].gastos) }));
+                ctx.ultimos_movimientos = clean.slice(0, 20).map(t => ({ fecha: t.date, tipo: t.type, concepto: t.name, monto: r2(t.price), categoria: t.category }));
+                if (projects) {
+                    const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+                    ctx.proyectos = projects.map(p => {
+                        const cobros = clean.filter(t => t.type === 'ingreso' && (t.project_id === p.id || (!t.project_id && norm(t.name) === norm(p.name))));
+                        return { nombre: p.name, estado: p.status, cobros: cobros.length, total_cobrado: r2(cobros.reduce((a, t) => a + (Number(t.price) || 0), 0)) };
+                    });
+                }
+            } else if (projects) {
+                ctx.proyectos = projects.map(p => ({ nombre: p.name, estado: p.status }));
+            }
+            if (goals) {
+                ctx.metas_de_ahorro = goals.map(g => ({ nombre: g.name, objetivo: r2(g.target_amount), juntado: r2(g.saved_amount), fecha_objetivo: g.target_date }));
+            }
+            try {
+                const env = typeof computeEnvelopes === 'function' ? computeEnvelopes(products.filter(p => p.month === currentM)) : null;
+                if (env) ctx.sobres_del_reparto = env.envs.map(v => ({ sobre: v.name, porcentaje: v.pct, apartado: v.assigned, usado: v.spent, queda: v.left }));
+            } catch (e) {}
+            return ctx;
+        }
+
         async function buildFinancialSnapshot() {
             const monthProducts = products.filter(p => p.month === currentM);
             const totalExpenses = monthProducts.reduce((a, p) => p.type === 'egreso' ? a + p.price : a, 0);
@@ -6308,6 +6529,7 @@
 
             try {
                 const snapshot = await buildFinancialSnapshot();
+                try { snapshot.contexto_completo = await buildExtendedAssistantContext(); } catch (e) { console.warn('Sin contexto extendido:', e); }
                 const resp = await fetch('/api/finzia-assistant', {
                     method: 'POST',
                     headers: await authHeaders(),
@@ -7956,26 +8178,7 @@
             const pdfBlob = await worker.outputPdf('blob');
             template.style.display = 'none';
 
-            const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-            let shared = false;
-
-            if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                try {
-                    await navigator.share({ files: [file], title: 'Estado Financiero', text: 'Mi estado financiero actualizado' });
-                    shared = true;
-                } catch (shareErr) {
-                    // El usuario canceló el share, o el navegador lo rechazó — no es un error grave, pasamos a descargar igual.
-                    shared = false;
-                }
-            }
-
-            if (!shared) {
-                const url = URL.createObjectURL(pdfBlob);
-                const a = document.createElement('a');
-                a.href = url; a.download = filename; a.click();
-                URL.revokeObjectURL(url);
-                await showAlertModal('PDF descargado. Adjuntalo en WhatsApp manualmente (en computadora, los navegadores no permiten compartir directo).');
-            }
+            await deliverPdfFile(pdfBlob, filename, 'Estado Financiero', 'Mi estado financiero actualizado');
         } catch (err) {
             template.style.display = 'none';
             console.error('Error generando el PDF:', err);
@@ -9040,6 +9243,7 @@
 
         try {
             const snapshot = await buildFinancialSnapshotLF();
+            try { snapshot.contexto_completo = await buildExtendedAssistantContext(); } catch (e) { console.warn('Sin contexto extendido:', e); }
             const resp = await fetch('/api/finzia-assistant', {
                 method: 'POST',
                 headers: await authHeaders(),
