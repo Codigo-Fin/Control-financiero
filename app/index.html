@@ -254,6 +254,11 @@
                             </div>
                         </div>
 
+                        <div id="ebook-code-banner" class="hidden rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-3 py-2.5 text-[13px] text-emerald-200 leading-snug">
+                            🎁 <b>Código del eBook listo:</b> <span id="ebook-code-banner-code" class="font-mono font-bold"></span><br>
+                            Se activa solo apenas crees tu cuenta (o entres si ya tenés una): app de por vida + 3 meses de IA gratis. No te pedimos tarjeta.
+                        </div>
+
                         <p id="auth-message" class="text-xs min-h-[16px]" role="status" aria-live="polite"></p>
 
                         <button type="submit" id="btn-signup" class="auth-primary w-full font-bold py-3.5 rounded-xl text-[15px] transition-all active:scale-[.98]">
@@ -2768,6 +2773,54 @@
             checkAndShowPromoCode(document.getElementById('promo-code-input').value.trim());
         });
 
+        // 🎁 Código del eBook en el link (ressetia.com/app?codigo=EBOOK-XXXX): lo guardamos en este
+        // dispositivo y se canjea solo apenas la persona crea su cuenta o entra (ver loadAllUserData).
+        // Así no ve el cartel de "dejá tu tarjeta" ni tiene que escribir nada.
+        function getPendingEbookCode() {
+            try { return localStorage.getItem('ebook_code_pending') || ''; } catch (e) { return ''; }
+        }
+        function clearPendingEbookCode() {
+            try { localStorage.removeItem('ebook_code_pending'); } catch (e) { /* nada */ }
+            document.getElementById('ebook-code-banner')?.classList.add('hidden');
+        }
+        (function checkEbookCodeFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const fromUrl = (params.get('codigo') || '').trim().toUpperCase().slice(0, 64);
+            if (fromUrl) {
+                try { localStorage.setItem('ebook_code_pending', fromUrl); } catch (e) { /* sin localStorage: queda el campo autocompletado */ }
+                params.delete('codigo');
+                const rest = params.toString();
+                window.history.replaceState({}, '', window.location.pathname + (rest ? '?' + rest : ''));
+            }
+            const code = fromUrl || getPendingEbookCode();
+            if (!code) return;
+            ['ebook-code-input', 'paywall-code-input'].forEach(id => { const el = document.getElementById(id); if (el) el.value = code; });
+            document.getElementById('ebook-code-banner-code').textContent = code;
+            document.getElementById('ebook-code-banner').classList.remove('hidden');
+        })();
+
+        // Canjea el código pendiente sin que la persona toque nada. Devuelve true si quedó activado.
+        async function redeemPendingEbookCode(code) {
+            try {
+                const resp = await fetch('/api/subscription', {
+                    method: 'POST',
+                    headers: await authHeaders(),
+                    body: JSON.stringify({ action: 'redeem-lifetime', code })
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok && data.ok) {
+                    clearPendingEbookCode();
+                    showToast(data.alreadyHad ? '✅ Tu app ya estaba activada de por vida' : '🎉 ¡Código del eBook activado! App de por vida + 3 meses de IA');
+                    return true;
+                }
+                // Código inválido o sin cupos: lo olvidamos y dejamos el campo para que lo revise a mano
+                if (resp.status === 400) clearPendingEbookCode();
+                return false;
+            } catch (e) {
+                return false; // sin conexión: se reintenta la próxima vez que entre
+            }
+        }
+
         // Si la persona llegó con un link tipo ressetia.com?promo=CONTROL, lo detectamos solo
         (function checkPromoFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -3166,6 +3219,17 @@
             try {
                 const { data: settings, error: settingsError } = await sb.from('user_settings').select('*').eq('user_id', currentUser.id).maybeSingle();
                 if (settingsError) throw settingsError; // si falló de verdad, no lo confundimos con "usuario nuevo"
+
+                // 🎁 Llegó con el código del eBook en el link: lo activamos antes de mostrar
+                // cualquier cartel de prueba gratis o de pago, y recargamos con el plan ya activo.
+                const pendingEbookCode = getPendingEbookCode();
+                if (pendingEbookCode) {
+                    if (settings && settings.lifetime_access) {
+                        clearPendingEbookCode();
+                    } else if (retryCount < 3 && await redeemPendingEbookCode(pendingEbookCode)) {
+                        return await loadAllUserData(retryCount + 1);
+                    }
+                }
 
                 if (settings) {
                     salary = (settings.salary !== null && settings.salary !== undefined) ? parseFloat(settings.salary) : 500000;
