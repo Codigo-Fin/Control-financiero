@@ -342,7 +342,7 @@
 
                 <div class="rounded-3xl p-5 border border-emerald-500/35 bg-[rgba(8,10,18,.85)]">
                     <p class="text-white font-semibold flex items-center gap-2"><i class="fa-solid fa-book-open text-emerald-400"></i> App de por vida + 3 meses de IA</p>
-                    <p class="text-xs text-slate-400 mt-1">Viene con el ebook El Plan de Rescate Financiero. Pago único de $19.999: app Básica para siempre + 3 meses de IA gratis. Después, si querés seguir con la IA, $4.999/mes.</p>
+                    <p class="text-xs text-slate-400 mt-1">Viene con el ebook El Plan de Rescate Financiero (si te registrás con el mail de tu compra, se activa solo). Pago único de $19.999: app Básica para siempre + 3 meses de IA gratis. Después, si querés seguir con la IA, $4.999/mes.</p>
                     <div class="flex gap-2 mt-4">
                         <input type="text" id="paywall-code-input" placeholder="Tengo el código" class="flex-1 min-w-0 bg-slate-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white uppercase placeholder-slate-600 focus:outline-none focus:border-emerald-500">
                         <button type="button" id="btn-paywall-redeem" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold px-4 rounded-xl whitespace-nowrap">Activar</button>
@@ -1126,7 +1126,7 @@
                 <!-- Bono del ebook: canjear código → plan Básico de por vida (sin IA) -->
                 <div id="ebook-code-box" class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
                     <p class="text-sm font-semibold text-emerald-300"><i class="fa-solid fa-book"></i> ¿Compraste el ebook? Activá tu app de por vida</p>
-                    <p class="text-[11px] text-slate-400">Ingresá el código que viene en el ebook. Te da acceso de por vida a todo el plan Básico y <b class="text-emerald-300">3 meses de IA gratis</b> desde hoy. Cuando terminan, la app vuelve sola a la Básica y no se te cobra nada; si querés seguir con la IA, son $4.999/mes.</p>
+                    <p class="text-[11px] text-slate-400">Si te registraste con el mismo mail de tu compra, se activa solo. Si no, ingresá tu código personal (está en el mail de tu compra y sirve una sola vez). Te da acceso de por vida a todo el plan Básico y <b class="text-emerald-300">3 meses de IA gratis</b> desde hoy. Cuando terminan, la app vuelve sola a la Básica y no se te cobra nada; si querés seguir con la IA, son $4.999/mes.</p>
                     <div class="flex gap-2">
                         <input type="text" id="ebook-code-input" placeholder="Ej. EBOOK-XXXXXX" class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-emerald-500">
                         <button type="button" id="btn-redeem-ebook" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold px-3 rounded-xl whitespace-nowrap">Activar</button>
@@ -2821,6 +2821,29 @@
             }
         }
 
+        // Activa el plan del ebook si el mail de la cuenta es el de una compra (una vez por sesión).
+        async function claimEbookByEmail() {
+            const key = currentUser ? `ebook_claim_checked_${currentUser.id}` : '';
+            try { if (key && sessionStorage.getItem(key)) return false; } catch (e) { /* nada */ }
+            try {
+                const resp = await fetch('/api/subscription', {
+                    method: 'POST',
+                    headers: await authHeaders(),
+                    body: JSON.stringify({ action: 'claim-ebook' })
+                });
+                const data = await resp.json().catch(() => ({}));
+                if (resp.ok) { try { sessionStorage.setItem(key, '1'); } catch (e) { /* nada */ } }
+                if (resp.ok && data.result === 'ok') {
+                    clearPendingEbookCode();
+                    showToast('🎉 ¡Encontramos tu compra del eBook! App de por vida + 3 meses de IA activados');
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                return false;
+            }
+        }
+
         // Si la persona llegó con un link tipo ressetia.com?promo=CONTROL, lo detectamos solo
         (function checkPromoFromURL() {
             const params = new URLSearchParams(window.location.search);
@@ -3229,6 +3252,10 @@
                     } else if (retryCount < 3 && await redeemPendingEbookCode(pendingEbookCode)) {
                         return await loadAllUserData(retryCount + 1);
                     }
+                }
+                // 🎁 Sin código: si se registró con el mismo mail con el que compró el ebook, se activa solo.
+                if (!(settings && settings.lifetime_access) && retryCount < 3 && await claimEbookByEmail()) {
+                    return await loadAllUserData(retryCount + 1);
                 }
 
                 if (settings) {

@@ -235,12 +235,28 @@ async function handleRedeemLifetime(req, res, { SUPABASE_URL, SUPABASE_SERVICE_R
     ok: null,
     already: null,
     invalid: 'Ese código no existe. Revisalo en el mail de tu compra del ebook.',
-    exhausted: 'Ese código ya no tiene cupos disponibles. Escribinos por WhatsApp.'
+    exhausted: 'Ese código ya fue usado: cada código sirve una sola vez. Si compraste el ebook, entrá con el mismo mail de tu compra o escribinos.'
   };
   if (result === 'ok' || result === 'already') {
     return res.status(200).json({ ok: true, alreadyHad: result === 'already' });
   }
   return res.status(400).json({ error: messages[result] || 'Código inválido' });
+}
+
+// 🎁 Activación sin código: si el mail (confirmado) de la cuenta es el de una compra del ebook.
+async function handleClaimEbook(req, res, { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY }) {
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/claim_ebook_by_email`, {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_SERVICE_ROLE_KEY, 'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_user: req.body.userId })
+  });
+  const result = await resp.json();
+  if (!resp.ok) {
+    console.error('Error al activar por mail de compra:', result);
+    return res.status(500).json({ error: 'No se pudo verificar la compra.' });
+  }
+  // ok = activado ahora · already = ya tenía el plan · none/used/unconfirmed = no corresponde
+  return res.status(200).json({ ok: result === 'ok' || result === 'already', result });
 }
 
 export default async function handler(req, res) {
@@ -272,7 +288,7 @@ export default async function handler(req, res) {
       req.body.newPrice = PLAN_PRICES[req.body.newPlan];
     }
     // 🎁 Quien compró el ebook (plan de por vida) paga la IA mensual a precio exclusivo.
-    if (action !== 'redeem-lifetime' && action !== 'cancel') {
+    if (action !== 'redeem-lifetime' && action !== 'claim-ebook' && action !== 'cancel') {
       const access = await getAccess(user.id);
       if (access?.lifetimeBasic) {
         if (req.body.plan === 'mensual') req.body.price = EBOOK_AI_MONTHLY_PRICE;
@@ -291,6 +307,9 @@ export default async function handler(req, res) {
     // No necesita Mercado Pago, por eso va antes de ese chequeo.
     if (action === 'redeem-lifetime') {
       return await handleRedeemLifetime(req, res, env);
+    }
+    if (action === 'claim-ebook') {
+      return await handleClaimEbook(req, res, env);
     }
 
     if (!env.MP_ACCESS_TOKEN) {
