@@ -12,7 +12,7 @@
     <title>Ressetia - Control Financiero & Mercado</title>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" href="./icons/icon-192.png">
-    <meta name="theme-color" content="#22d3ee">
+    <meta name="theme-color" content="#05070d">
     <link rel="apple-touch-icon" href="./icons/icon-192.png">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,6 +27,19 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 🎨 TEMA NEÓN (igual al celular de la página de ventas): casi negro + cian neón + verde menta.
+        // Redefinimos la paleta una sola vez acá, así todas las pantallas cambian juntas.
+        // Violeta y fucsia pasan a la familia cian/turquesa para un look minimalista.
+        tailwind.config = { theme: { extend: { colors: {
+            slate:   { 50:'#f8fafc',100:'#f1f5f9',200:'#e2e8f0',300:'#cbd5e1',400:'#94a3b8',500:'#64748b',600:'#3b475c',700:'#1f2a3f',800:'#131c2e',900:'#0b1120',950:'#05070d' },
+            purple:  { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#14b8a6',600:'#0d9488',700:'#0f766e',800:'#115e59',900:'#134e4a',950:'#042f2e' },
+            violet:  { 50:'#f0fdfa',100:'#ccfbf1',200:'#99f6e4',300:'#5eead4',400:'#2dd4bf',500:'#14b8a6',600:'#0d9488',700:'#0f766e',800:'#115e59',900:'#134e4a',950:'#042f2e' },
+            fuchsia: { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63',950:'#083344' },
+            sky:     { 50:'#ecfeff',100:'#cffafe',200:'#a5f3fc',300:'#67e8f9',400:'#22d3ee',500:'#06b6d4',600:'#0891b2',700:'#0e7490',800:'#155e75',900:'#164e63',950:'#083344' },
+            emerald: { 50:'#ecfdf5',100:'#d1fae5',200:'#a7f3d0',300:'#6ee7b7',400:'#5eead4',500:'#34d399',600:'#10b981',700:'#047857',800:'#065f46',900:'#064e3b',950:'#022c22' }
+        } } } };
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -79,9 +92,9 @@
 
         /* Pastillas del modal "Nuevo Ingreso/Gasto" */
         .lemon-cat-pill { background: #1e293b; color: #cbd5e1; }
-        .lemon-cat-pill.active { background: #a3e635; color: #0f172a; }
+        .lemon-cat-pill.active { background: #22d3ee; color: #0f172a; }
         .lemon-date-pill { background: #1e293b; color: #cbd5e1; }
-        .lemon-date-pill.active { background: #a3e635; color: #0f172a; }
+        .lemon-date-pill.active { background: #22d3ee; color: #0f172a; }
         .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom, 0); }
         /* Espacio para que el contenido no quede tapado por la barra fija de abajo */
         #app-content { padding-bottom: 90px; }
@@ -166,7 +179,7 @@
         #tab-panel-lf ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
         #tab-panel-lf .neon-cyan { box-shadow: 0 0 0 1px rgba(16,185,129,0.35), 0 0 18px rgba(16,185,129,0.25), inset 0 0 20px rgba(16,185,129,0.04); }
         #tab-panel-lf .neon-rose { box-shadow: 0 0 0 1px rgba(244,63,94,0.35), 0 0 18px rgba(244,63,94,0.25), inset 0 0 20px rgba(244,63,94,0.04); }
-        #tab-panel-lf .neon-purple { box-shadow: 0 0 0 1px rgba(168,85,247,0.35), 0 0 18px rgba(168,85,247,0.25), inset 0 0 20px rgba(168,85,247,0.04); }
+        #tab-panel-lf .neon-purple { box-shadow: 0 0 0 1px rgba(45,212,191,0.35), 0 0 18px rgba(45,212,191,0.25), inset 0 0 20px rgba(45,212,191,0.04); }
         #tab-panel-lf .neon-teal { box-shadow: 0 0 0 1px rgba(45,212,191,0.35), 0 0 18px rgba(45,212,191,0.25), inset 0 0 20px rgba(45,212,191,0.04); }
         #tab-panel-lf .neon-amber { box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 0 18px rgba(251,191,36,0.25), inset 0 0 20px rgba(251,191,36,0.04); }
         #tab-panel-lf .neon-blue { box-shadow: 0 0 0 1px rgba(56,189,248,0.4), 0 0 18px rgba(56,189,248,0.3), inset 0 0 20px rgba(56,189,248,0.05); }
@@ -186,6 +199,49 @@
         #tab-panel-lf label { display:block; font-size:12px; font-weight:600; color:#94a3b8; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.03em; }
         #tab-panel-lf .btn { width:100%; padding:13px; border:none; border-radius:12px; font-weight:700; font-size:14px; cursor:pointer; text-align:center; transition: all 0.2s ease; }
         #tab-panel-lf .btn:active { transform: scale(0.97); }
+
+        /* ==================== 🎨 TEMA NEÓN (estilo del celular de la página de ventas) ==================== */
+        :root {
+            --neon-bg: #05070d; --neon-card: rgba(11, 17, 32, 0.92); --neon-line: rgba(34, 211, 238, 0.16);
+            --neon-cyan: #22d3ee; --neon-cyan-deep: #0891b2; --neon-mint: #6ee7b7;
+        }
+        html, body { background-color: var(--neon-bg); }
+        body {
+            background:
+                radial-gradient(700px 420px at 100% 0%, rgba(34, 211, 238, 0.10), transparent 70%),
+                radial-gradient(600px 420px at 0% 100%, rgba(45, 212, 191, 0.07), transparent 70%),
+                var(--neon-bg) !important;
+            background-attachment: fixed !important;
+        }
+        /* Tarjetas: fondo oscuro sólido con borde fino de neón, como las filas del celular */
+        .glass-panel, .glass-card {
+            background: var(--neon-card) !important;
+            border: 1px solid var(--neon-line) !important;
+            box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.03), 0 14px 34px -18px rgba(0, 0, 0, 0.9) !important;
+        }
+        .glass-card:hover { border-color: rgba(34, 211, 238, 0.42) !important; box-shadow: 0 0 22px -6px rgba(34, 211, 238, 0.35) !important; }
+        /* Botón principal cian con degradé y brillo (como «+ Cargar gasto») */
+        .bg-cyan-400, .bg-cyan-500 {
+            background-image: linear-gradient(135deg, #22d3ee, #0891b2) !important;
+            box-shadow: 0 0 22px -4px rgba(34, 211, 238, 0.55);
+        }
+        /* Montos grandes con brillo suave */
+        .text-cyan-300, .text-cyan-400 { text-shadow: 0 0 18px rgba(34, 211, 238, 0.28); }
+        .text-emerald-300, .text-emerald-400 { text-shadow: 0 0 16px rgba(110, 231, 183, 0.22); }
+        .text-rose-400 { text-shadow: 0 0 16px rgba(251, 113, 133, 0.25); }
+        /* Barra de abajo: casi negra con línea de neón arriba */
+        .bottomnav-btn { color: #5b6b82; }
+        .bottomnav-btn.active { color: var(--neon-cyan); text-shadow: 0 0 12px rgba(34, 211, 238, 0.7); }
+        div.fixed.bottom-0.left-0.right-0.z-40 { background: rgba(5, 7, 13, 0.96) !important; border-top: 1px solid rgba(34, 211, 238, 0.22) !important; box-shadow: 0 -10px 30px -18px rgba(34, 211, 238, 0.5); }
+        /* Pestañas y pastillas activas en cian (antes verde lima) */
+        .lemon-pill.active-ingreso { background: rgba(34, 211, 238, 0.14); color: var(--neon-cyan); box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.45); }
+        .lemon-pill.active-egreso { background: rgba(251, 113, 133, 0.12); color: #fb7185; box-shadow: inset 0 0 0 1px rgba(251, 113, 133, 0.4); }
+        .lemon-cat-pill { background: #0f172a; color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.06); }
+        .lemon-date-pill { background: #0f172a; color: #cbd5e1; border: 1px solid rgba(255, 255, 255, 0.06); }
+        .lemon-cat-pill.active, .lemon-date-pill.active { background: var(--neon-cyan); color: #04131a; box-shadow: 0 0 16px -2px rgba(34, 211, 238, 0.6); }
+        /* Campos de texto */
+        input:focus, select:focus, textarea:focus { border-color: rgba(34, 211, 238, 0.6) !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15) !important; outline: none; }
+        ::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.25); }
     </style>
 </head>
 <body class="text-slate-100 p-3 sm:p-6 md:p-8 relative overflow-x-hidden min-h-screen flex flex-col justify-between">
@@ -196,7 +252,7 @@
     <!-- LOGIN / SIGNUP SCREEN -->
     <div id="login-screen" class="fixed inset-0 z-50 overflow-y-auto bg-black">
         <style>
-            #login-screen .auth-glow { background: radial-gradient(520px 340px at 85% 10%, rgba(224,64,251,.16), transparent 70%), radial-gradient(520px 360px at 10% 90%, rgba(34,211,238,.14), transparent 70%); }
+            #login-screen .auth-glow { background: radial-gradient(520px 340px at 85% 10%, rgba(34,211,238,.16), transparent 70%), radial-gradient(520px 360px at 10% 90%, rgba(34,211,238,.14), transparent 70%); }
             #login-screen .auth-card { background: rgba(8,10,18,.82); border: 1px solid rgba(255,255,255,.09); box-shadow: 0 0 0 1px rgba(34,211,238,.18), 0 0 50px rgba(34,211,238,.10); backdrop-filter: blur(14px); }
             #login-screen .auth-input { background: #0b0e19; border: 1px solid rgba(255,255,255,.10); }
             #login-screen .auth-input:focus { outline: none; border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.18); }
@@ -205,7 +261,7 @@
             #login-screen .auth-primary { background: #22d3ee; color: #001318; box-shadow: 0 0 22px rgba(34,211,238,.5); }
             #login-screen .auth-primary:hover { box-shadow: 0 0 30px rgba(34,211,238,.7); }
             #login-screen .neon-title { text-shadow: 0 0 18px rgba(34,211,238,.45); }
-            #login-screen .ai-dot { box-shadow: 0 0 10px #e040fb; }
+            #login-screen .ai-dot { box-shadow: 0 0 10px #22d3ee; }
         </style>
         <div class="auth-glow min-h-full w-full flex items-center justify-center px-4 py-10">
             <div class="w-full max-w-4xl grid md:grid-cols-2 gap-8 md:gap-12 items-center">
@@ -316,7 +372,7 @@
 
     <!-- Prueba terminada: hay que elegir un plan para seguir (los datos quedan guardados) -->
     <div id="paywall-screen" class="hidden fixed inset-0 z-[45] overflow-y-auto bg-black">
-        <div class="min-h-full w-full flex items-center justify-center px-4 py-10" style="background: radial-gradient(520px 340px at 85% 5%, rgba(224,64,251,.16), transparent 70%), radial-gradient(520px 360px at 10% 95%, rgba(34,211,238,.14), transparent 70%);">
+        <div class="min-h-full w-full flex items-center justify-center px-4 py-10" style="background: radial-gradient(520px 340px at 85% 5%, rgba(34,211,238,.16), transparent 70%), radial-gradient(520px 360px at 10% 95%, rgba(34,211,238,.14), transparent 70%);">
             <div class="w-full max-w-md space-y-5">
                 <div class="text-center">
                     <span class="inline-flex w-12 h-12 rounded-2xl bg-fuchsia-500/15 border border-fuchsia-500/40 text-fuchsia-300 items-center justify-center text-xl"><i class="fa-solid fa-hourglass-end"></i></span>
@@ -684,7 +740,7 @@
                     <i class="fa-solid fa-chart-line"></i>
                 </div>
                 </div>
-                <div class="mt-2 flex items-baseline justify-between">
+                <div class="mt-2 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
                 <span id="stat-networth" class="text-2xl sm:text-3xl font-bold text-teal-300">$0</span>
                 <span id="networth-badge" class="text-[10px] px-2 py-0.5 rounded-full font-semibold">Disponible</span>
                 </div>
@@ -1503,7 +1559,7 @@
         <!-- Estrategia de Pago: calculadora de cuotas, adelantos y plazo de pago,
              pensada para préstamos prendarios / planes de ahorro tipo Rombo. -->
         <!-- AUTOMOTRIZ -->
-        <div class="rounded-3xl overflow-hidden border-2 border-purple-500/30 shadow-[0_0_20px_rgba(168,85,247,0.15)]">
+        <div class="rounded-3xl overflow-hidden border-2 border-purple-500/30 shadow-[0_0_20px_rgba(45,212,191,0.15)]">
             <button data-accordion-pd="calc-automotriz" class="accordion-header-pd w-full flex items-center justify-between p-4 bg-purple-950/40 hover:bg-purple-950/60 transition-all">
                 <span class="font-bold text-purple-300 flex items-center gap-2 text-sm sm:text-base">
                     <i class="fa-solid fa-car"></i> AUTOMOTRIZ
@@ -2427,7 +2483,7 @@
             'Otros': '🛒'
         };
 
-        const CHART_COLORS = ['#22d3ee', '#f59e0b', '#3b82f6', '#ec4899', '#8b5cf6', '#06b6d4', '#14b8a6', '#84cc16', '#6366f1', '#d946ef', '#22d3ee', '#a3e635', '#fb7185', '#c084fc'];
+        const CHART_COLORS = ['#22d3ee', '#f59e0b', '#3b82f6', '#ec4899', '#2dd4bf', '#06b6d4', '#14b8a6', '#84cc16', '#6366f1', '#22d3ee', '#22d3ee', '#22d3ee', '#fb7185', '#5eead4'];
 
         // Categorías propias de los INGRESOS (los gastos usan las de siempre)
         const INCOME_CATEGORIES = [
@@ -5441,17 +5497,31 @@
                     const h = img.naturalHeight || img.height;
                     const MAX_EDGE = 1568;
 
+                    // Un solo lienzo reutilizado y liberado al final: en celulares con poca memoria,
+                    // crear un lienzo grande por cada parte del ticket hacía que el navegador se quedara sin RAM.
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let quality = 0.85;
                     const render = (sy, sh, scale) => {
-                        const canvas = document.createElement('canvas');
                         canvas.width = Math.max(1, Math.round(w * scale));
                         canvas.height = Math.max(1, Math.round(sh * scale));
-                        const ctx = canvas.getContext('2d');
                         ctx.imageSmoothingEnabled = true;
                         ctx.imageSmoothingQuality = 'high';
                         ctx.fillStyle = '#fff';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         ctx.drawImage(img, 0, sy, w, sh, 0, 0, canvas.width, canvas.height);
-                        return canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
+                        return canvas.toDataURL('image/jpeg', quality).split(',')[1];
+                    };
+                    // El servidor acepta hasta ~4,5 MB por envío: si las partes suman más, bajamos la calidad
+                    const MAX_TOTAL = 3.4 * 1024 * 1024;
+                    const fitToLimit = (makeAll) => {
+                        let parts = makeAll();
+                        while (parts.reduce((s, p) => s + p.length, 0) > MAX_TOTAL && quality > 0.5) {
+                            quality = Math.round((quality - 0.12) * 100) / 100;
+                            parts = makeAll();
+                        }
+                        canvas.width = 0; canvas.height = 0; // libera la memoria del lienzo
+                        return parts;
                     };
 
                     if (h / w > 2.2) {
@@ -5465,19 +5535,25 @@
                             tileH = h / (count - (count - 1) * 0.1);
                             overlap = tileH * 0.1;
                         }
-                        const images = [];
-                        for (let i = 0; i < count; i++) {
-                            const sy = Math.min(Math.round(i * (tileH - overlap)), Math.max(0, h - tileH));
-                            const sh = Math.min(tileH, h - sy);
-                            images.push(render(sy, sh, Math.min(scale, MAX_EDGE / sh, MAX_EDGE / w)));
-                        }
+                        const images = fitToLimit(() => {
+                            const out = [];
+                            for (let i = 0; i < count; i++) {
+                                const sy = Math.min(Math.round(i * (tileH - overlap)), Math.max(0, h - tileH));
+                                const sh = Math.min(tileH, h - sy);
+                                out.push(render(sy, sh, Math.min(scale, MAX_EDGE / sh, MAX_EDGE / w)));
+                            }
+                            return out;
+                        });
+                        img.src = '';
                         resolve({ images, mediaType: 'image/jpeg' });
                         return;
                     }
 
                     const longEdge = Math.max(w, h);
                     const scale = longEdge < 1200 ? Math.min(3, 1400 / longEdge) : Math.min(1, MAX_EDGE / longEdge);
-                    resolve({ images: [render(0, h, scale)], mediaType: 'image/jpeg' });
+                    const images = fitToLimit(() => [render(0, h, scale)]);
+                    img.src = '';
+                    resolve({ images, mediaType: 'image/jpeg' });
                 };
 
                 img.onerror = () => {
@@ -5539,7 +5615,12 @@
                     headers: await authHeaders(),
                     body: JSON.stringify(body)
                 });
-                const parsed = await resp.json();
+                if (resp.status === 413) {
+                    showToast('📷 La foto es demasiado pesada. Probá sacarla un poco más lejos o recortala, y volvé a intentar.', 'warning');
+                    statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
+                    return;
+                }
+                const parsed = await resp.json().catch(() => ({ error: `El servidor respondió ${resp.status}` }));
                 if (resp.status === 403 && parsed.code === 'AI_REQUIRES_PREMIUM') {
                     userAccess.aiAllowed = false;
                     statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
@@ -5552,7 +5633,10 @@
                 statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
             } catch (err) {
                 console.error('Error al procesar el comprobante:', err);
-                showToast('⚠️ No se pudo leer el comprobante. Probá con otra foto o cargalo a mano.', 'warning');
+                const sinMemoria = /memory|memoria|allocation|out of/i.test(String(err && err.message));
+                showToast(sinMemoria
+                    ? '📷 Al celular le faltó memoria para procesar la foto. Cerrá otras apps y probá de nuevo, o elegí la foto desde la galería.'
+                    : '⚠️ No se pudo leer el comprobante. Probá con otra foto (con buena luz y el TOTAL a la vista) o cargalo a mano.', 'warning');
                 statusEl.textContent = 'Sacá una foto del ticket, elegí una de tu galería, o subí un PDF de factura';
             }
         }
@@ -5639,9 +5723,9 @@
         // ============================================
         const ALLOCATION_RULES = {
             diezmo: [{ name: 'Ofrenda / Diezmo', pct: 10, color: '#22d3ee' }, { name: 'Vivir', pct: 90, color: '#38bdf8' }],
-            babilonia: [{ name: 'Invertir', pct: 10, color: '#a855f7' }, { name: 'Vivir', pct: 90, color: '#38bdf8' }],
-            ramsey: [{ name: 'Invertir', pct: 65, color: '#a855f7' }, { name: 'Vivir', pct: 35, color: '#38bdf8' }],
-            '503020': [{ name: 'Necesidades', pct: 50, color: '#38bdf8' }, { name: 'Deseos', pct: 30, color: '#f472b6' }, { name: 'Ahorro', pct: 20, color: '#a855f7' }]
+            babilonia: [{ name: 'Invertir', pct: 10, color: '#2dd4bf' }, { name: 'Vivir', pct: 90, color: '#38bdf8' }],
+            ramsey: [{ name: 'Invertir', pct: 65, color: '#2dd4bf' }, { name: 'Vivir', pct: 35, color: '#38bdf8' }],
+            '503020': [{ name: 'Necesidades', pct: 50, color: '#38bdf8' }, { name: 'Deseos', pct: 30, color: '#f472b6' }, { name: 'Ahorro', pct: 20, color: '#2dd4bf' }]
         };
 
         function getCurrentMonthIncomeForAllocation() {
@@ -5870,7 +5954,7 @@
         document.getElementById('btn-save-allocation-custom').addEventListener('click', async () => {
             const rows = document.querySelectorAll('.allocation-custom-row');
             const buckets = [];
-            const colors = ['#22d3ee', '#38bdf8', '#a855f7', '#f472b6', '#22d3ee', '#84cc16'];
+            const colors = ['#22d3ee', '#38bdf8', '#2dd4bf', '#f472b6', '#22d3ee', '#84cc16'];
             let total = 0;
             rows.forEach((row, i) => {
                 const name = row.querySelector('.alloc-name').value.trim();
@@ -7881,7 +7965,7 @@
         const sorted = [...grouped].sort((a, b) => b.total - a.total);
         const totalDebtAll = grouped.reduce((acc, g) => acc + g.total, 0);
 
-        const colors = ['#f43f5e', '#38bdf8', '#fbbf24', '#22d3ee', '#a855f7', '#f472b6', '#84cc16', '#c084fc'];
+        const colors = ['#f43f5e', '#38bdf8', '#fbbf24', '#22d3ee', '#2dd4bf', '#f472b6', '#84cc16', '#5eead4'];
 
         function buildBarRow(item, color) {
             const pct = totalDebtAll > 0 ? (item.total / totalDebtAll) * 100 : 0;
@@ -8246,7 +8330,7 @@
                         <div style="font-size:15px; font-weight:bold; color:#111;">$${Math.abs(balanceStatus).toLocaleString()}</div>
                     </td>
                     <td style="padding:8px; background:#faf5ff;">
-                        <div style="font-size:10px; color:#9333ea; font-weight:bold;">INVERSIONES</div>
+                        <div style="font-size:10px; color:#14b8a6; font-weight:bold;">INVERSIONES</div>
                         <div style="font-size:15px; font-weight:bold; color:#111;">$${totalInvestVal.toLocaleString()}</div>
                     </td>
                     <td style="padding:8px; background:#f0fdfa; border-radius:0 6px 6px 0;">

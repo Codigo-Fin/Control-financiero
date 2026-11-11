@@ -25,6 +25,17 @@ const CATEGORIES = [
 
 import { requireAiAccess } from './_auth.js';
 
+// Convierte un monto escrito "a la argentina" dentro del JSON de la IA a un número válido:
+// "amount": 527.181,61 → 527181.61 · "amount": 1.250.000 → 1250000 · "amount": "5.890,00" → 5890
+export function fixArgentineAmount(raw) {
+  return raw.replace(/("amount"\s*:\s*)"?(-?\d[\d.]*(?:,\d+)?)"?/, (m, prefix, num) => {
+    let n = num;
+    if (n.includes(',')) n = n.replace(/\./g, '').replace(',', '.');      // coma = decimales
+    else if ((n.match(/\./g) || []).length > 1) n = n.replace(/\./g, ''); // varios puntos = miles
+    return prefix + n;
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
@@ -150,11 +161,25 @@ Reglas:
     // La respuesta puede traer bloques de razonamiento antes del texto
     const textResponse = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('') || '{}';
     const match = textResponse.replace(/```json|```/g, '').match(/\{[\s\S]*\}/);
+    const raw = match ? match[0] : textResponse;
     try {
-      return { parsed: JSON.parse(match ? match[0] : textResponse) };
+      const parsed = JSON.parse(raw);
+      // Monto entre comillas ("5.890,00"): lo pasamos a número
+      if (parsed && typeof parsed.amount === 'string') {
+        let clean = parsed.amount.replace(/[^\d.,-]/g, '');
+        if (/^-?\d{1,3}\.\d{3}$/.test(clean)) clean = clean.replace('.', ''); // "12.500" = doce mil quinientos
+        const fixed = JSON.parse(fixArgentineAmount(`{"amount": ${clean || 'null'}}`));
+        parsed.amount = Number.isFinite(fixed.amount) ? fixed.amount : null;
+      }
+      return { parsed };
     } catch (e) {
-      console.error('No se pudo parsear la respuesta de la IA:', textResponse);
-      return { parsed: null };
+      // A veces la IA escribe el monto con formato argentino ("amount": 527.181,61), que no es JSON válido
+      try {
+        return { parsed: JSON.parse(fixArgentineAmount(raw)) };
+      } catch (e2) {
+        console.error('No se pudo parsear la respuesta de la IA:', textResponse);
+        return { parsed: null };
+      }
     }
   }
 
