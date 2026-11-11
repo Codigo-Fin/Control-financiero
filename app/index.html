@@ -336,8 +336,8 @@
                 </div>
 
                 <div class="rounded-3xl p-5 border border-emerald-500/35 bg-[rgba(8,10,18,.85)]">
-                    <p class="text-white font-semibold flex items-center gap-2"><i class="fa-solid fa-book-open text-emerald-400"></i> App de por vida, sin IA</p>
-                    <p class="text-xs text-slate-400 mt-1">Viene con el ebook El Plan de Rescate Financiero. Pago único de $27.000, sin suscripción.</p>
+                    <p class="text-white font-semibold flex items-center gap-2"><i class="fa-solid fa-book-open text-emerald-400"></i> App de por vida + 3 meses de IA</p>
+                    <p class="text-xs text-slate-400 mt-1">Viene con el ebook El Plan de Rescate Financiero. Pago único de $19.999: app Básica para siempre + 3 meses de IA gratis. Después, si querés seguir con la IA, $4.999/mes.</p>
                     <div class="flex gap-2 mt-4">
                         <input type="text" id="paywall-code-input" placeholder="Tengo el código" class="flex-1 min-w-0 bg-slate-900 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white uppercase placeholder-slate-600 focus:outline-none focus:border-emerald-500">
                         <button type="button" id="btn-paywall-redeem" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold px-4 rounded-xl whitespace-nowrap">Activar</button>
@@ -1121,7 +1121,7 @@
                 <!-- Bono del ebook: canjear código → plan Básico de por vida (sin IA) -->
                 <div id="ebook-code-box" class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 space-y-2">
                     <p class="text-sm font-semibold text-emerald-300"><i class="fa-solid fa-book"></i> ¿Compraste el ebook? Activá tu app de por vida</p>
-                    <p class="text-[11px] text-slate-400">Ingresá el código que viene en el ebook. Te da acceso de por vida a todo el plan Básico (sin funciones de IA).</p>
+                    <p class="text-[11px] text-slate-400">Ingresá el código que viene en el ebook. Te da acceso de por vida a todo el plan Básico y <b class="text-emerald-300">3 meses de IA gratis</b> desde hoy. Cuando terminan, la app vuelve sola a la Básica y no se te cobra nada; si querés seguir con la IA, son $4.999/mes.</p>
                     <div class="flex gap-2">
                         <input type="text" id="ebook-code-input" placeholder="Ej. EBOOK-XXXXXX" class="flex-1 min-w-0 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-sm text-white uppercase focus:outline-none focus:border-emerald-500">
                         <button type="button" id="btn-redeem-ebook" class="bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-bold px-3 rounded-xl whitespace-nowrap">Activar</button>
@@ -2841,10 +2841,14 @@
                 const data = await resp.json();
                 if (!resp.ok || !data.ok) throw new Error(data.error || 'Código inválido');
                 userAccess.lifetimeBasic = true;
+                if (!data.alreadyHad) userAccess.aiAllowed = true; // 3 meses de IA de regalo
                 applyPremiumUI(userAccess.subscriptionActive, null, true);
                 statusEl.classList.add('text-emerald-400');
-                statusEl.textContent = '¡Listo! Ya tenés el plan Básico de por vida.';
-                showToast('🎉 ¡App activada de por vida!');
+                statusEl.textContent = data.alreadyHad
+                    ? 'Ya tenías el plan Básico de por vida activado.'
+                    : '¡Listo! App de por vida + 3 meses de IA gratis.';
+                showToast(data.alreadyHad ? '✅ Tu app ya estaba activada de por vida' : '🎉 ¡App de por vida + 3 meses de IA activados!');
+                if (!data.alreadyHad) setTimeout(() => loadAllUserData(), 800);
                 hidePaywall();
                 return true;
             } catch (err) {
@@ -3048,6 +3052,14 @@
                 lifetimeBadge.classList.toggle('flex', !!isLifetime);
             }
             if (ebookBox) ebookBox.classList.toggle('hidden', !!isLifetime);
+            // Compradores del ebook: la IA mensual sale $4.999 (el servidor cobra ese precio igual).
+            const monthly = isLifetime ? 4999 : 6999;
+            const monthlyLabel = '$' + monthly.toLocaleString('es-AR');
+            document.querySelectorAll('[data-plan="mensual"]').forEach(btn => {
+                if (btn.dataset.price) btn.dataset.price = String(monthly);
+                const priceEl = btn.querySelector('.text-lg, .text-sm.font-bold');
+                if (priceEl) priceEl.textContent = monthlyLabel;
+            });
             const subscribeLabel = document.getElementById('btn-subscribe-label');
             if (subscribeLabel) subscribeLabel.textContent = isLifetime ? 'Activar IA (Premium)' : 'Suscribirme';
             const btnSubscribe = document.getElementById('btn-subscribe');
@@ -3080,6 +3092,16 @@
         }
 
         function checkTrialEndingSoon(settings) {
+            // Compradores del ebook: avisamos antes de que terminen sus 3 meses de IA de regalo.
+            if (settings && settings.lifetime_access && settings.trial_ends_at && !settings.is_premium) {
+                const iaDays = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
+                if (iaDays <= 5 && iaDays >= 0) {
+                    const toast = document.getElementById('trial-ending-toast');
+                    toast.textContent = `🤖 Tu IA de regalo termina en ${iaDays} día(s). Después seguís con la app Básica sin pagar nada; si querés mantener la IA, activala en Mi Perfil por $4.999/mes.`;
+                    toast.classList.remove('hidden');
+                }
+                return;
+            }
             if (!settings || !settings.trial_ends_at || settings.is_premium || settings.lifetime_access) return;
             const daysLeft = Math.ceil((new Date(settings.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24));
             if (daysLeft <= 2 && daysLeft >= 0) {
@@ -3158,6 +3180,12 @@
                         aiAllowed: subscriptionActive || trialActive
                     };
                     applyPremiumUI(subscriptionActive, settings.current_plan, settings.lifetime_access === true);
+                    const lifetimeBadgeEl = document.getElementById('lifetime-badge');
+                    if (lifetimeBadgeEl && settings.lifetime_access === true) {
+                        lifetimeBadgeEl.innerHTML = trialActive && !subscriptionActive
+                            ? `<i class="fa-solid fa-infinity"></i> Plan de por vida + IA hasta el ${new Date(settings.trial_ends_at).toLocaleDateString('es-AR')}`
+                            : '<i class="fa-solid fa-infinity"></i> Plan Básico de por vida';
+                    }
                     // Sin suscripción, sin prueba vigente y sin el plan de por vida: hay que elegir un plan.
                     const hasAccess = subscriptionActive || trialActive || settings.lifetime_access === true;
                     if (hasAccess) {

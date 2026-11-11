@@ -84,3 +84,7 @@ export const PLAN_PRICES = {
   mensual: 6999,
   anual: 69000
 };
+
+// Precio mensual exclusivo de la IA para quienes compraron el ebook (tienen lifetime_access).
+// Se puede cambiar sin tocar código con EBOOK_AI_MONTHLY_PRICE en Vercel.
+export const EBOOK_AI_MONTHLY_PRICE = Number(process.env.EBOOK_AI_MONTHLY_PRICE || 4999);

@@ -10,7 +10,7 @@
 // plan asociado, y esa URL exacta muestra "Esta página no existe" para
 // cualquier cuenta. La misma URL SIN ese parámetro funciona bien. Esta función
 // lo saca antes de mandarle el link al usuario.
-import { requireAuth, PLAN_PRICES } from './_auth.js';
+import { requireAuth, getAccess, PLAN_PRICES, EBOOK_AI_MONTHLY_PRICE } from './_auth.js';
 
 function limpiarInitPoint(initPoint) {
   if (!initPoint) return initPoint;
@@ -271,6 +271,14 @@ export default async function handler(req, res) {
       req.body.newPlan = req.body.newPlan === 'anual' ? 'anual' : 'mensual';
       req.body.newPrice = PLAN_PRICES[req.body.newPlan];
     }
+    // 🎁 Quien compró el ebook (plan de por vida) paga la IA mensual a precio exclusivo.
+    if (action !== 'redeem-lifetime' && action !== 'cancel') {
+      const access = await getAccess(user.id);
+      if (access?.lifetimeBasic) {
+        if (req.body.plan === 'mensual') req.body.price = EBOOK_AI_MONTHLY_PRICE;
+        if (req.body.newPlan === 'mensual') req.body.newPrice = EBOOK_AI_MONTHLY_PRICE;
+      }
+    }
     const env = {
       MP_ACCESS_TOKEN: process.env.MP_ACCESS_TOKEN,
       SUPABASE_URL: process.env.SUPABASE_URL,
@@ -278,7 +286,8 @@ export default async function handler(req, res) {
       SITE_URL: process.env.SITE_URL || `https://${req.headers.host}`
     };
 
-    // 🎁 Canje del código del ebook → plan Básico de por vida (sin IA).
+    // 🎁 Canje del código del ebook → plan Básico de por vida + 3 meses de IA de regalo
+    // (la función redeem_lifetime_code de Supabase extiende trial_ends_at 3 meses).
     // No necesita Mercado Pago, por eso va antes de ese chequeo.
     if (action === 'redeem-lifetime') {
       return await handleRedeemLifetime(req, res, env);
